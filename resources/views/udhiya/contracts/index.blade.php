@@ -1,46 +1,90 @@
 @extends('layouts.master')
+
 @section('page-header')
 <div class="page-header">
     <div class="page-leftheader">
-        <h4 class="page-title mb-0">الصكوك</h4>
-        <ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">الأضاحي</a></li><li class="breadcrumb-item active">الصكوك</li></ol>
+        <h4 class="page-title"><span class="page-title-emoji">📋</span> الصكوك</h4>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('udhiya.dashboard') }}">الرئيسية</a></li>
+            <li class="breadcrumb-item active">الصكوك</li>
+        </ol>
     </div>
     <div class="page-rightheader">
         <a href="{{ route('udhiya.contracts.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus ml-1"></i> صك جديد
+            ➕ صك جديد
         </a>
     </div>
 </div>
 @endsection
+
 @section('content')
+
 <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>📋 قائمة الصكوك</span>
+        <span class="badge badge-primary">{{ $contracts->total() }} صك</span>
+    </div>
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="thead-light">
-                <tr><th>رقم الصك</th><th>العميل</th><th>يوم الذبح</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th><th>الإجراءات</th></tr>
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>رقم الصك</th>
+                    <th>العميل</th>
+                    <th>يوم الذبح</th>
+                    <th>الإجمالي</th>
+                    <th>المحصّل</th>
+                    <th>المتبقي</th>
+                    <th>الحالة</th>
+                    <th class="text-center">إجراءات</th>
+                </tr>
             </thead>
             <tbody>
                 @forelse($contracts as $contract)
                 <tr>
-                    <td><a href="{{ route('udhiya.contracts.show', $contract) }}">{{ $contract->contract_number }}</a></td>
-                    <td>{{ $contract->customer->name }}</td>
-                    <td>{{ $contract->slaughter_day ?? '—' }}</td>
-                    <td>{{ number_format($contract->total_amount, 2) }} ج.م</td>
-                    <td class="text-success">{{ number_format($contract->paid_amount, 2) }} ج.م</td>
-                    <td class="{{ $contract->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($contract->remaining_amount, 2) }} ج.م</td>
                     <td>
-                        @if($contract->status === 'active') <span class="badge badge-warning">نشط</span>
-                        @elseif($contract->status === 'completed') <span class="badge badge-success">مكتمل</span>
-                        @else <span class="badge badge-danger">ملغى</span>
+                        <a href="{{ route('udhiya.contracts.show', $contract) }}"
+                           style="color:var(--primary);font-weight:700;">
+                            {{ $contract->contract_number }}
+                        </a>
+                    </td>
+                    <td><strong>{{ $contract->customer->name }}</strong></td>
+                    <td style="font-size:.82rem;color:var(--text-muted);">{{ $contract->slaughter_day ?? '—' }}</td>
+                    <td>{{ number_format($contract->total_amount) }} <small class="text-muted">ج.م</small></td>
+                    <td><span class="badge badge-success">{{ number_format($contract->paid_amount) }} ج.م</span></td>
+                    <td>
+                        @if($contract->remaining_amount > 0)
+                            <span class="badge badge-danger">{{ number_format($contract->remaining_amount) }} ج.م</span>
+                        @else
+                            <span class="badge badge-success">مسدد ✅</span>
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('udhiya.contracts.show', $contract) }}" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>
-                        <a href="{{ route('udhiya.contracts.print', $contract) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a>
+                        @if($contract->status === 'active')
+                            <span class="badge badge-warning">🟡 نشط</span>
+                        @elseif($contract->status === 'completed')
+                            <span class="badge badge-success">✅ مكتمل</span>
+                        @else
+                            <span class="badge badge-danger">🚫 ملغى</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="{{ route('udhiya.contracts.show', $contract) }}"
+                               class="btn btn-sm btn-info btn-action" title="عرض">👁️</a>
+                            <a href="{{ route('udhiya.contracts.print', $contract) }}" target="_blank"
+                               class="btn btn-sm btn-secondary btn-action" title="طباعة">🖨️</a>
+                        </div>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center text-muted py-4">لا توجد صكوك بعد</td></tr>
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <span class="empty-icon">📋</span>
+                            <p>لا توجد صكوك بعد</p>
+                        </div>
+                    </td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
@@ -49,4 +93,5 @@
     <div class="card-footer">{{ $contracts->links() }}</div>
     @endif
 </div>
+
 @endsection

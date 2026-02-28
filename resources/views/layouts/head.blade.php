@@ -1,5 +1,5 @@
 <!-- Title -->
-<title> Valex -  Premium dashboard ui bootstrap rwd admin html5 template </title>
+<title>برنامج الأضاحي 🐄</title>
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <!-- Favicon -->
@@ -21,3 +21,5 @@
 <link href="{{URL::asset('assets/css-rtl/skin-modes.css')}}" rel="stylesheet">
 <!-- Theme Override CSS -->
 <link href="{{URL::asset('assets/css/theme-override.css')}}" rel="stylesheet">
+<!-- App Custom Theme -->
+<link href="{{URL::asset('assets/css/app-custom.css')}}" rel="stylesheet">

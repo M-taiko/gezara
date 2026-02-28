@@ -1,30 +1,59 @@
 @extends('layouts.master')
+
 @section('page-header')
 <div class="page-header">
     <div class="page-leftheader">
-        <h4 class="page-title mb-0">التقارير</h4>
-        <ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">الأضاحي</a></li><li class="breadcrumb-item active">التقارير</li></ol>
+        <h4 class="page-title"><span class="page-title-emoji">📊</span> التقارير</h4>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('udhiya.dashboard') }}">الرئيسية</a></li>
+            <li class="breadcrumb-item active">التقارير</li>
+        </ol>
     </div>
 </div>
 @endsection
+
 @section('content')
-<div class="row">
-    @foreach([
-        ['route' => route('udhiya.reports.animals'), 'icon' => 'fa-horse', 'title' => 'تقرير الحيوانات', 'desc' => 'نسب الإشغال وحالات الحيوانات', 'color' => 'primary'],
-        ['route' => route('udhiya.reports.profit'), 'icon' => 'fa-chart-line', 'title' => 'تقرير الأرباح', 'desc' => 'الإيرادات والتكاليف والربح الصافي', 'color' => 'success'],
-        ['route' => route('udhiya.reports.slaughter'), 'icon' => 'fa-calendar-alt', 'title' => 'جدول الذبح', 'desc' => 'مواعيد الذبح مرتبة بالتاريخ والترتيب', 'color' => 'warning'],
-    ] as $report)
-    <div class="col-xl-4 col-md-6">
-        <a href="{{ $report['route'] }}" class="card card-link text-decoration-none">
-            <div class="card-body text-center py-5">
-                <div class="icon-box bg-{{ $report['color'] }} text-white rounded-circle mx-auto mb-3" style="width:70px;height:70px;line-height:70px;font-size:28px;">
-                    <i class="fas {{ $report['icon'] }}"></i>
+
+<div class="row g-3">
+    <div class="col-12 col-md-4">
+        <a href="{{ route('udhiya.reports.animals') }}" class="text-decoration-none">
+            <div class="card h-100 text-center" style="cursor:pointer;transition:transform .2s;"
+                 onmouseover="this.style.transform='translateY(-4px)'"
+                 onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body py-5">
+                    <div style="font-size:3rem;margin-bottom:.75rem;">🐄</div>
+                    <h5 style="font-weight:700;color:var(--primary);">تقرير الحيوانات</h5>
+                    <p style="font-size:.85rem;color:var(--text-muted);margin:0;">نسب الإشغال وحالات الحيوانات</p>
                 </div>
-                <h5 class="text-dark">{{ $report['title'] }}</h5>
-                <p class="text-muted mb-0">{{ $report['desc'] }}</p>
             </div>
         </a>
     </div>
-    @endforeach
+    <div class="col-12 col-md-4">
+        <a href="{{ route('udhiya.reports.profit') }}" class="text-decoration-none">
+            <div class="card h-100 text-center" style="cursor:pointer;transition:transform .2s;"
+                 onmouseover="this.style.transform='translateY(-4px)'"
+                 onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body py-5">
+                    <div style="font-size:3rem;margin-bottom:.75rem;">💹</div>
+                    <h5 style="font-weight:700;color:var(--primary);">تقرير الأرباح</h5>
+                    <p style="font-size:.85rem;color:var(--text-muted);margin:0;">الإيرادات والتكاليف والربح الصافي</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a href="{{ route('udhiya.reports.slaughter') }}" class="text-decoration-none">
+            <div class="card h-100 text-center" style="cursor:pointer;transition:transform .2s;"
+                 onmouseover="this.style.transform='translateY(-4px)'"
+                 onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body py-5">
+                    <div style="font-size:3rem;margin-bottom:.75rem;">📅</div>
+                    <h5 style="font-weight:700;color:var(--primary);">جدول الذبح</h5>
+                    <p style="font-size:.85rem;color:var(--text-muted);margin:0;">مواعيد الذبح مرتبة بالتاريخ والترتيب</p>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
+
 @endsection

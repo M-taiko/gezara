@@ -1,0 +1,807 @@
+/* ================================================================
+   برنامج الأضاحي — Custom UI Theme
+   Colors: Purple #7C3AED / Pink #EC4899
+   ================================================================ */
+
+:root {
+  --primary:       #7C3AED;
+  --primary-dark:  #5B21B6;
+  --primary-light: #EDE9FE;
+  --accent:        #EC4899;
+  --accent-light:  #FCE7F3;
+  --success:       #10B981;
+  --warning:       #F59E0B;
+  --danger:        #EF4444;
+  --info:          #3B82F6;
+  --bg:            #F5F3FF;
+  --bg-card:       #FFFFFF;
+  --text:          #1E1B4B;
+  --text-muted:    #6B7280;
+  --border:        #E5E7EB;
+  --sidebar-bg:    #1E1B4B;
+  --sidebar-width: 240px;
+  --radius:        14px;
+  --radius-sm:     8px;
+  --shadow:        0 4px 24px rgba(124,58,237,.10);
+  --shadow-sm:     0 2px 8px rgba(0,0,0,.06);
+}
+
+/* ----------------------------------------------------------------
+   Reset / Body
+---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', 'Cairo', Tahoma, sans-serif !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  direction: rtl;
+}
+
+/* ================================================================
+   SIDEBAR
+================================================================ */
+.app-sidebar {
+  background: var(--sidebar-bg) !important;
+  width: var(--sidebar-width) !important;
+  border: none !important;
+  box-shadow: 4px 0 24px rgba(0,0,0,.18) !important;
+}
+
+/* Brand / Logo area */
+.main-sidebar-header {
+  background: var(--primary-dark) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  padding: 18px 20px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70px;
+}
+
+.sidebar-brand-text {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* User info */
+.app-sidebar__user {
+  padding: 20px 16px 12px !important;
+  border-bottom: 1px solid rgba(255,255,255,.07) !important;
+}
+.app-sidebar__user .user-info h4 {
+  color: #fff !important;
+  font-size: .95rem !important;
+  font-weight: 600 !important;
+  margin: 8px 0 2px !important;
+}
+.app-sidebar__user .user-info span {
+  color: rgba(255,255,255,.5) !important;
+  font-size: .78rem !important;
+}
+.app-sidebar__user img.avatar {
+  border: 3px solid var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(124,58,237,.25) !important;
+}
+
+/* Category labels */
+.side-menu .side-item-category {
+  color: rgba(255,255,255,.35) !important;
+  font-size: .68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  padding: 18px 20px 6px !important;
+}
+
+/* Menu items */
+.side-menu__item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  margin: 2px 10px !important;
+  color: rgba(255,255,255,.65) !important;
+  transition: all .2s ease !important;
+  font-size: .9rem !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+.side-menu__item:hover {
+  background: rgba(124,58,237,.35) !important;
+  color: #fff !important;
+}
+.side-menu__item.active {
+  background: linear-gradient(135deg, var(--primary), var(--accent)) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 15px rgba(124,58,237,.4) !important;
+}
+.side-menu__icon {
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0 !important;
+  opacity: .75;
+}
+.side-menu__item.active .side-menu__icon,
+.side-menu__item:hover .side-menu__icon { opacity: 1; }
+
+.side-menu__item .emoji-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* ================================================================
+   TOP HEADER
+================================================================ */
+.main-header {
+  background: #fff !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  height: 62px !important;
+}
+
+/* ================================================================
+   MAIN CONTENT
+================================================================ */
+.main-content.app-content {
+  background: var(--bg) !important;
+}
+
+/* ================================================================
+   PAGE HEADER
+================================================================ */
+.page-header {
+  background: transparent !important;
+  padding: 0 0 16px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.page-title {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+}
+.page-title-emoji {
+  font-size: 1.5rem;
+  margin-left: 8px;
+}
+.breadcrumb-item a { color: var(--primary) !important; }
+.breadcrumb-item.active { color: var(--text-muted) !important; }
+.breadcrumb-item + .breadcrumb-item::before { color: var(--text-muted) !important; }
+
+/* ================================================================
+   CARDS
+================================================================ */
+.card {
+  border: none !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: var(--bg-card) !important;
+}
+.card-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 16px 20px !important;
+  font-weight: 600 !important;
+  font-size: .95rem !important;
+}
+.card-body { padding: 20px !important; }
+.card-footer {
+  background: transparent !important;
+  border-top: 1px solid var(--border) !important;
+  padding: 12px 20px !important;
+}
+
+/* Stat Cards */
+.stat-card {
+  border-radius: var(--radius) !important;
+  padding: 22px !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow) !important; }
+.stat-card .stat-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  display: block;
+}
+.stat-card .stat-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-card .stat-label {
+  font-size: .82rem;
+  font-weight: 500;
+  opacity: .85;
+}
+
+.stat-card.purple { background: linear-gradient(135deg, #7C3AED, #5B21B6); color: #fff; }
+.stat-card.pink   { background: linear-gradient(135deg, #EC4899, #BE185D); color: #fff; }
+.stat-card.green  { background: linear-gradient(135deg, #10B981, #047857); color: #fff; }
+.stat-card.orange { background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff; }
+.stat-card.blue   { background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #fff; }
+.stat-card.teal   { background: linear-gradient(135deg, #14B8A6, #0F766E); color: #fff; }
+
+/* ================================================================
+   BUTTONS
+================================================================ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(124,58,237,.3) !important;
+  transition: all .2s !important;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124,58,237,.4) !important; }
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent), #BE185D) !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(236,72,153,.3) !important;
+}
+.btn-accent:hover { transform: translateY(-1px); }
+
+.btn-light {
+  background: #F3F4F6 !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: var(--radius-sm) !important;
+}
+.btn-outline-primary {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  border-radius: var(--radius-sm) !important;
+}
+.btn-outline-primary:hover { background: var(--primary) !important; color: #fff !important; }
+
+.btn-success  { background: linear-gradient(135deg, #10B981, #047857) !important; border: none !important; border-radius: var(--radius-sm) !important; }
+.btn-danger   { background: linear-gradient(135deg, #EF4444, #B91C1C) !important; border: none !important; border-radius: var(--radius-sm) !important; }
+.btn-warning  { background: linear-gradient(135deg, #F59E0B, #D97706) !important; border: none !important; border-radius: var(--radius-sm) !important; color: #fff !important; }
+.btn-info     { background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important; border: none !important; border-radius: var(--radius-sm) !important; }
+
+/* ================================================================
+   TABLES
+================================================================ */
+.table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: .88rem !important;
+}
+.table thead th {
+  background: var(--primary-light) !important;
+  color: var(--primary-dark) !important;
+  font-weight: 700 !important;
+  font-size: .78rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: .5px !important;
+  padding: 12px 16px !important;
+  border: none !important;
+}
+.table tbody tr {
+  transition: background .15s;
+}
+.table tbody tr:hover { background: #F9F5FF !important; }
+.table tbody td {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-top: none !important;
+  vertical-align: middle !important;
+}
+.table-hover tbody tr:hover { background: #F9F5FF !important; }
+
+/* ================================================================
+   BADGES
+================================================================ */
+.badge {
+  border-radius: 6px !important;
+  font-size: .72rem !important;
+  font-weight: 600 !important;
+  padding: 4px 9px !important;
+}
+.badge-success  { background: #D1FAE5 !important; color: #065F46 !important; }
+.badge-warning  { background: #FEF3C7 !important; color: #92400E !important; }
+.badge-danger   { background: #FEE2E2 !important; color: #991B1B !important; }
+.badge-primary  { background: var(--primary-light) !important; color: var(--primary-dark) !important; }
+.badge-info     { background: #DBEAFE !important; color: #1E40AF !important; }
+.badge-dark     { background: #374151 !important; color: #fff !important; }
+.badge-secondary { background: #F3F4F6 !important; color: #6B7280 !important; }
+
+/* ================================================================
+   FORMS
+================================================================ */
+.form-control, .form-select {
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: .88rem !important;
+  padding: 9px 13px !important;
+  transition: border-color .2s, box-shadow .2s !important;
+  background: #fff !important;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
+  outline: none !important;
+}
+.form-label {
+  font-size: .82rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 5px !important;
+}
+label.small {
+  font-size: .8rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+}
+
+/* ================================================================
+   MODALS
+================================================================ */
+.modal-content {
+  border: none !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 25px 60px rgba(0,0,0,.2) !important;
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--primary), var(--accent)) !important;
+  color: #fff !important;
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  padding: 16px 22px !important;
+  border: none !important;
+}
+.modal-header .modal-title { color: #fff !important; font-weight: 700 !important; }
+.modal-header .close { color: #fff !important; opacity: .8 !important; }
+.modal-header .close:hover { opacity: 1 !important; }
+.modal-footer {
+  border-top: 1px solid var(--border) !important;
+  padding: 14px 22px !important;
+}
+
+/* ================================================================
+   PAGINATION
+================================================================ */
+.page-link {
+  border-radius: var(--radius-sm) !important;
+  margin: 0 2px !important;
+  border: 1px solid var(--border) !important;
+  color: var(--primary) !important;
+  font-size: .83rem !important;
+}
+.page-item.active .page-link {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* ================================================================
+   TOAST
+================================================================ */
+#toast-container {
+  bottom: 24px !important;
+  left: 24px !important;
+}
+.toast-msg {
+  border-radius: var(--radius-sm) !important;
+  padding: 14px 20px !important;
+  font-weight: 600 !important;
+  font-size: .88rem !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 280px !important;
+}
+.toast-success { background: linear-gradient(135deg, #10B981, #047857) !important; color: #fff !important; }
+.toast-error   { background: linear-gradient(135deg, #EF4444, #B91C1C) !important; color: #fff !important; }
+.toast-warning { background: linear-gradient(135deg, #F59E0B, #D97706) !important; color: #fff !important; }
+.toast-info    { background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important; color: #fff !important; }
+
+/* ================================================================
+   PROGRESS BARS
+================================================================ */
+.progress {
+  height: 8px !important;
+  border-radius: 99px !important;
+  background: #E5E7EB !important;
+}
+.progress-bar {
+  border-radius: 99px !important;
+  background: linear-gradient(90deg, var(--primary), var(--accent)) !important;
+}
+
+/* ================================================================
+   SEARCH / FILTER CARD
+================================================================ */
+.filter-card {
+  border-radius: var(--radius) !important;
+  background: #fff !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 16px 20px !important;
+  margin-bottom: 20px !important;
+}
+
+/* ================================================================
+   EMPTY STATES
+================================================================ */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 12px; display: block; }
+.empty-state p { font-size: .9rem; }
+
+/* ================================================================
+   RESPONSIVE
+================================================================ */
+@media (max-width: 767px) {
+  :root { --sidebar-width: 240px; }
+  .stat-card .stat-value { font-size: 1.5rem; }
+  .page-title { font-size: 1.1rem !important; }
+  .table { font-size: .82rem !important; }
+  .card-body { padding: 14px !important; }
+  .btn { font-size: .82rem !important; }
+  .container-fluid { padding: 0 12px !important; }
+}
+
+/* ================================================================
+   MISC UTILITIES
+================================================================ */
+.rounded-lg { border-radius: var(--radius) !important; }
+.rounded-sm { border-radius: var(--radius-sm) !important; }
+.text-primary { color: var(--primary) !important; }
+.text-accent  { color: var(--accent) !important; }
+.bg-primary-light { background: var(--primary-light) !important; }
+.gap-2 { gap: .5rem !important; }
+.gap-3 { gap: 1rem !important; }
+
+/* Fix RTL table */
+.table th, .table td { text-align: right !important; }
+.table .text-center { text-align: center !important; }
+
+/* Action buttons in table */
+.btn-action {
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px !important;
+  font-size: .82rem;
+}
+
+/* ================================================================
+   OVERRIDE VALEX SPECIFICS
+================================================================ */
+.main-body .main-header.sticky { position: sticky !important; top: 0; z-index: 100; }
+
+/* ── Sidebar scroll container ── */
+.app-sidebar .main-sidemenu {
+  padding-top: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - 140px);
+}
+
+/* ── Force sidebar ul/li structure ── */
+.app-sidebar .side-menu {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.app-sidebar .side-menu .slide {
+  display: block !important;
+  list-style: none !important;
+}
+
+/* ── Category label ── */
+.app-sidebar .side-menu .slide.side-item {
+  pointer-events: none;
+}
+
+/* ── Make sure links display as flex ── */
+.app-sidebar .side-menu__item {
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+}
+
+/* ── User avatar section ── */
+.app-sidebar__user {
+  background: transparent !important;
+}
+.app-sidebar__user .dropdown {
+  text-align: center;
+}
+.app-sidebar__user .avatar-xl {
+  width: 56px !important;
+  height: 56px !important;
+}
+
+/* ── Sidebar overlay (mobile) ── */
+.app-sidebar__overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 999;
+}
+@media (max-width: 991px) {
+  .sidenav-toggled .app-sidebar__overlay { display: block; }
+}
+
+/* ── Fix body margin when sidebar is open ── */
+@media (min-width: 768px) {
+  .main-content.app-content,
+  .app-content {
+    margin-right: 240px !important;
+    margin-left: 0 !important;
+  }
+  .app.sidenav-toggled .main-content.app-content,
+  .app.sidenav-toggled .app-content {
+    margin-right: 80px !important;
+  }
+}
+@media (max-width: 767px) {
+  .main-content.app-content,
+  .app-content { margin-right: 0 !important; }
+}
+
+/* ── Gap utility for older Bootstrap ── */
+.gap-1 { gap: .25rem !important; }
+.gap-2 { gap: .5rem !important; }
+.gap-3 { gap: 1rem !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* ── Extra specificity overrides for Valex ── */
+body.main-body .app-sidebar {
+  background: var(--sidebar-bg) !important;
+  width: 240px !important;
+}
+body.main-body .main-sidebar-header.active {
+  background: var(--primary-dark) !important;
+  height: 70px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 20px !important;
+}
+body.main-body .app-sidebar .side-menu__item,
+body.main-body .app-sidebar .side-menu__item span,
+body.main-body .app-sidebar .side-menu__label {
+  color: rgba(255,255,255,.9) !important;
+}
+body.main-body .app-sidebar .side-menu__item:hover,
+body.main-body .app-sidebar .side-menu__item:hover span,
+body.main-body .app-sidebar .side-menu__item:hover .side-menu__label,
+body.main-body .app-sidebar .side-menu__item.active,
+body.main-body .app-sidebar .side-menu__item.active span,
+body.main-body .app-sidebar .side-menu__item.active .side-menu__label {
+  color: #fff !important;
+}
+body.main-body .app-sidebar .side-item-category,
+body.main-body .app-sidebar li.side-item-category {
+  color: rgba(255,255,255,.5) !important;
+  font-size: .7rem !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  padding: 16px 20px 4px !important;
+  display: block !important;
+}
+/* User name and role in sidebar */
+body.main-body .app-sidebar__user .user-info h4,
+body.main-body .app-sidebar__user h4 {
+  color: #fff !important;
+  font-size: .95rem !important;
+}
+body.main-body .app-sidebar__user .user-info span,
+body.main-body .app-sidebar__user span:not(.avatar-status) {
+  color: rgba(255,255,255,.6) !important;
+  font-size: .78rem !important;
+}
+
+/* ================================================================
+   LAYOUT FIX — NUCLEAR OPTION
+================================================================ */
+
+/* Force the sidebar to not overlap content */
+body.main-body {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  min-height: 100vh !important;
+}
+
+body.main-body .app-sidebar {
+  position: fixed !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 240px !important;
+  z-index: 1000 !important;
+  flex-shrink: 0 !important;
+}
+
+body.main-body .main-content.app-content {
+  flex: 1 !important;
+  margin-right: 240px !important;
+  margin-left: 0 !important;
+  min-width: 0 !important;
+  width: calc(100% - 240px) !important;
+  max-width: calc(100% - 240px) !important;
+}
+
+@media (max-width: 767px) {
+  body.main-body .main-content.app-content {
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ── Always show sidebar on desktop, hide on mobile ── */
+@media (min-width: 768px) {
+  body.sidebar-gone .app-sidebar {
+    right: 0 !important;
+    display: block !important;
+  }
+  body.sidebar-gone .main-content.app-content {
+    margin-right: 240px !important;
+  }
+}
+
+/* ================================================================
+   MINI SIDEBAR (sidenav-toggled) — Emoji Icons + Labels
+================================================================ */
+.app.sidenav-toggled .app-sidebar {
+  width: 72px !important;
+}
+.app.sidenav-toggled .main-content.app-content {
+  margin-right: 72px !important;
+  width: calc(100% - 72px) !important;
+  max-width: calc(100% - 72px) !important;
+}
+
+/* Hide section categories + user info text */
+.app.sidenav-toggled .side-item-category,
+.app.sidenav-toggled li.side-item-category {
+  display: none !important;
+}
+.app.sidenav-toggled .app-sidebar__user .user-info {
+  display: none !important;
+}
+
+/* Mini mode menu item: stack emoji + label vertically */
+.app.sidenav-toggled .side-menu__item {
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 8px 4px !important;
+  margin: 2px 6px !important;
+  border-radius: 10px !important;
+  gap: 2px !important;
+}
+.app.sidenav-toggled .side-menu__item .emoji-icon {
+  font-size: 1.3rem !important;
+  line-height: 1 !important;
+}
+.app.sidenav-toggled .side-menu__label {
+  display: block !important;
+  font-size: .58rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  max-width: 60px !important;
+  text-overflow: ellipsis !important;
+  opacity: .85;
+  line-height: 1.2 !important;
+}
+
+/* Mini avatar */
+.app.sidenav-toggled .app-sidebar__user {
+  padding: 10px 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+.app.sidenav-toggled .app-sidebar__user img.avatar {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* ── Mini sidebar brand header ── */
+.app.sidenav-toggled .main-sidebar-header {
+  padding: 0 !important;
+  justify-content: center !important;
+  min-height: 70px !important;
+}
+.app.sidenav-toggled .sidebar-brand-text span:last-child {
+  display: none !important;
+}
+.app.sidenav-toggled .sidebar-brand-text {
+  justify-content: center !important;
+  gap: 0 !important;
+}
+.app.sidenav-toggled .sidebar-brand-text span:first-child {
+  font-size: 1.8rem !important;
+}
+
+/* ================================================================
+   TOGGLE BUTTON — Fixed on sidebar edge
+================================================================ */
+
+/* Style the toggle button as a pill on the sidebar edge */
+.app-sidebar__toggle {
+  position: fixed !important;
+  top: 18px !important;
+  right: 253px !important; /* sidebar 240px - button ~20px overlap */
+  z-index: 1100 !important;
+  background: var(--primary) !important;
+  border-radius: 50% !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(124,58,237,.4) !important;
+  cursor: pointer !important;
+  transition: right .3s ease !important;
+}
+.app-sidebar__toggle a {
+  color: #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+.app-sidebar__toggle a i {
+  font-size: 1rem !important;
+  color: #fff !important;
+}
+/* Move toggle button when sidebar is mini */
+.app.sidenav-toggled .app-sidebar__toggle {
+  right: 81px !important;
+}
+/* Hide the close-toggle (X) always; show open-toggle always */
+.app-sidebar__toggle .close-toggle {
+  display: none !important;
+}
+.app-sidebar__toggle .open-toggle {
+  display: flex !important;
+}
+
+@media (max-width: 767px) {
+  .app-sidebar__toggle {
+    position: static !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+  }
+  .app-sidebar__toggle a i {
+    color: var(--primary) !important;
+  }
+}

@@ -10,7 +10,7 @@
 		@include('layouts.head')
 	</head>
 
-	<body class="main-body app sidebar-mini @auth @if(Auth::user()->dark_mode === 'dark') dark-mode @endif @endauth">
+	<body class="main-body app @auth @if(Auth::user()->dark_mode === 'dark') dark-mode @endif @endauth">
 		<!-- Loader -->
 		<div id="global-loader">
 			<img src="{{URL::asset('assets/img/loader.svg')}}" class="loader-img" alt="Loader">
