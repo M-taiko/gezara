@@ -1,0 +1,158 @@
+<!-- main-sidebar -->
+	<div class="app-sidebar__overlay" data-toggle="sidebar"></div>
+	<aside class="app-sidebar sidebar-scroll">
+		<div class="main-sidebar-header active">
+			<?php $company = \App\Models\Company::getInstance(); ?>
+			@if($company && $company->sidebar_logo_expanded)
+				<!-- Expanded Sidebar Logo -->
+				<a class="desktop-logo logo-light active" href="{{ url('/') }}"><img src="{{ asset($company->sidebar_logo_expanded) }}" class="main-logo" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+				<a class="desktop-logo logo-dark active" href="{{ url('/') }}"><img src="{{ asset($company->sidebar_logo_expanded) }}" class="main-logo dark-theme" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+				<!-- Collapsed Sidebar Logo -->
+				<a class="logo-icon mobile-logo icon-light active" href="{{ url('/') }}"><img src="{{ asset($company->sidebar_logo_collapsed ?? $company->sidebar_logo_expanded) }}" class="logo-icon" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+				<a class="logo-icon mobile-logo icon-dark active" href="{{ url('/') }}"><img src="{{ asset($company->sidebar_logo_collapsed ?? $company->sidebar_logo_expanded) }}" class="logo-icon dark-theme" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+			@elseif($company && $company->logo)
+				<!-- Fallback to main company logo -->
+				<a class="desktop-logo logo-light active" href="{{ url('/') }}"><img src="{{ asset($company->logo) }}" class="main-logo" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+				<a class="desktop-logo logo-dark active" href="{{ url('/') }}"><img src="{{ asset($company->logo) }}" class="main-logo dark-theme" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+				<a class="logo-icon mobile-logo icon-light active" href="{{ url('/') }}"><img src="{{ asset($company->logo) }}" class="logo-icon" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+				<a class="logo-icon mobile-logo icon-dark active" href="{{ url('/') }}"><img src="{{ asset($company->logo) }}" class="logo-icon dark-theme" alt="{{ $company->name ?? 'logo' }}" style="max-height: 40px;"></a>
+			@else
+				<!-- Default logos -->
+				<a class="desktop-logo logo-light active" href="{{ url('/') }}"><img src="{{URL::asset('assets/img/brand/logo.png')}}" class="main-logo" alt="logo"></a>
+				<a class="desktop-logo logo-dark active" href="{{ url('/') }}"><img src="{{URL::asset('assets/img/brand/logo-white.png')}}" class="main-logo dark-theme" alt="logo"></a>
+				<a class="logo-icon mobile-logo icon-light active" href="{{ url('/') }}"><img src="{{URL::asset('assets/img/brand/favicon.png')}}" class="logo-icon" alt="logo"></a>
+				<a class="logo-icon mobile-logo icon-dark active" href="{{ url('/') }}"><img src="{{URL::asset('assets/img/brand/favicon-white.png')}}" class="logo-icon dark-theme" alt="logo"></a>
+			@endif
+		</div>
+		<div class="main-sidemenu">
+			<div class="app-sidebar__user clearfix">
+				<div class="dropdown user-pro-body">
+					<div class="">
+						@if(Auth::check())
+							<?php
+								$user = Auth::user();
+								$profile = $user->profile;
+								$avatarUrl = ($profile && $profile->avatar) ? asset($profile->avatar) : URL::asset('assets/img/faces/6.jpg');
+							?>
+							<img alt="user-img" class="avatar avatar-xl brround" src="{{ $avatarUrl }}"><span class="avatar-status profile-status bg-green"></span>
+						@else
+							<img alt="user-img" class="avatar avatar-xl brround" src="{{URL::asset('assets/img/faces/1.jpg')}}">
+						@endif
+					</div>
+					<div class="user-info">
+						@if(Auth::check())
+							<h4 class="font-weight-semibold mt-3 mb-0">{{ Auth::user()->name }}</h4>
+							<span class="mb-0 text-muted">User</span>
+						@else
+							<h4 class="font-weight-semibold mt-3 mb-0">Guest</h4>
+							<span class="mb-0 text-muted">Not Logged In</span>
+						@endif
+					</div>
+				</div>
+			</div>
+			<ul class="side-menu">
+
+			{{-- ============================================ --}}
+			{{-- UDHIYA MANAGEMENT SECTION                    --}}
+			{{-- ============================================ --}}
+			@if(Auth::check())
+			<li class="side-item side-item-category">إدارة الأضاحي</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.dashboard') ? 'active' : '' }}"
+				   href="{{ route('udhiya.dashboard') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M5 5h4v6H5zm10 8h4v6h-4zM5 17h4v2H5zM15 5h4v2h-4z" opacity=".3"/><path d="M3 13h8V3H3v10zm2-8h4v6H5V5zm8 16h8V11h-8v10zm2-8h4v6h-4v-6zM13 3v6h8V3h-8zm6 4h-4V5h4v2zM3 21h8v-6H3v6zm2-4h4v2H5v-2z"/></svg>
+					<span class="side-menu__label">لوحة التحكم</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.suppliers.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.suppliers.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z" fill="currentColor"/></svg>
+					<span class="side-menu__label">الموردون</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.purchases.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.purchases.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" fill="currentColor"/></svg>
+					<span class="side-menu__label">المشتريات</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.animals.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.animals.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" fill="currentColor"/></svg>
+					<span class="side-menu__label">الحيوانات</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.customers.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.customers.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg>
+					<span class="side-menu__label">العملاء</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.contracts.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.contracts.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="currentColor"/></svg>
+					<span class="side-menu__label">الصكوك</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.groups.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.groups.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg>
+					<span class="side-menu__label">المجموعات</span>
+				</a>
+			</li>
+			<li class="slide">
+				<a class="side-menu__item {{ request()->routeIs('udhiya.reports.*') ? 'active' : '' }}"
+				   href="{{ route('udhiya.reports.index') }}">
+					<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" fill="currentColor"/></svg>
+					<span class="side-menu__label">التقارير</span>
+				</a>
+			</li>
+			@endif
+
+				{{-- ============================================ --}}
+				{{-- SYSTEM SECTION                               --}}
+				{{-- ============================================ --}}
+				<li class="side-item side-item-category">النظام</li>
+				<li class="slide">
+					<a class="side-menu__item" href="{{ url('/') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M5 5h4v6H5zm10 8h4v6h-4zM5 17h4v2H5zM15 5h4v2h-4z" opacity=".3"/><path d="M3 13h8V3H3v10zm2-8h4v6H5V5zm8 16h8V11h-8v10zm2-8h4v6h-4v-6zM13 3v6h8V3h-8zm6 4h-4V5h4v2zM3 21h8v-6H3v6zm2-4h4v2H5v-2z"/></svg><span class="side-menu__label">الصفحة الرئيسية</span></a>
+				</li>
+
+				@if(Auth::check())
+					{{-- Messages hidden: feature disabled --}}
+
+					@if(Auth::user()->isAdmin())
+						<li class="side-item side-item-category">إدارة المستخدمين</li>
+						<li class="slide">
+							<a class="side-menu__item" href="{{ route('admin.users.index') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M15 13c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-8-6c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-6.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.64 1.97 1.97 1.97 3.45V19h6v-6.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg><span class="side-menu__label">المستخدمون</span></a>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" href="{{ route('admin.roles.index') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z" fill="currentColor"/></svg><span class="side-menu__label">الأدوار</span></a>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" href="{{ route('admin.activity-logs.index') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm-7-7H9v5h3v-5z" fill="currentColor"/></svg><span class="side-menu__label">سجل النشاطات</span></a>
+						</li>
+					@endif
+
+					<li class="side-item side-item-category">الإعدادات</li>
+					<li class="slide">
+						<a class="side-menu__item" href="{{ route('company.settings') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 15.5c1.93 0 3.5-1.57 3.5-3.5S13.93 8.5 12 8.5s-3.5 1.57-3.5 3.5 1.57 3.5 3.5 3.5z" opacity=".3"/><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.52l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.34.24.52.49.52h4c.25 0 .46-.18.49-.52l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg><span class="side-menu__label">إعدادات الشركة</span></a>
+					</li>
+				@else
+					<li class="side-item side-item-category">الدخول والتسجيل</li>
+					<li class="slide">
+						<a class="side-menu__item" href="{{ route('signin') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5h3V9h4v3h3l-5 5z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z"/></svg><span class="side-menu__label">تسجيل الدخول</span></a>
+					</li>
+					<li class="slide">
+						<a class="side-menu__item" href="{{ route('signup') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 11h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z"/></svg><span class="side-menu__label">إنشاء حساب</span></a>
+					</li>
+				@endif
+			</ul>
+		</div>
+	</aside>
+	<!-- main-sidebar closed -->
