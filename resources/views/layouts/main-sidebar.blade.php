@@ -116,42 +116,7 @@
 			@endif
 
 				{{-- ============================================ --}}
-				{{-- SYSTEM SECTION                               --}}
-				{{-- ============================================ --}}
-				<li class="side-item side-item-category">النظام</li>
-				<li class="slide">
-					<a class="side-menu__item" href="{{ url('/') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M5 5h4v6H5zm10 8h4v6h-4zM5 17h4v2H5zM15 5h4v2h-4z" opacity=".3"/><path d="M3 13h8V3H3v10zm2-8h4v6H5V5zm8 16h8V11h-8v10zm2-8h4v6h-4v-6zM13 3v6h8V3h-8zm6 4h-4V5h4v2zM3 21h8v-6H3v6zm2-4h4v2H5v-2z"/></svg><span class="side-menu__label">الصفحة الرئيسية</span></a>
-				</li>
-
-				@if(Auth::check())
-					{{-- Messages hidden: feature disabled --}}
-
-					@if(Auth::user()->isAdmin())
-						<li class="side-item side-item-category">إدارة المستخدمين</li>
-						<li class="slide">
-							<a class="side-menu__item" href="{{ route('admin.users.index') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M15 13c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-8-6c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-6.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.64 1.97 1.97 1.97 3.45V19h6v-6.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg><span class="side-menu__label">المستخدمون</span></a>
-						</li>
-						<li class="slide">
-							<a class="side-menu__item" href="{{ route('admin.roles.index') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z" fill="currentColor"/></svg><span class="side-menu__label">الأدوار</span></a>
-						</li>
-						<li class="slide">
-							<a class="side-menu__item" href="{{ route('admin.activity-logs.index') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm-7-7H9v5h3v-5z" fill="currentColor"/></svg><span class="side-menu__label">سجل النشاطات</span></a>
-						</li>
-					@endif
-
-					<li class="side-item side-item-category">الإعدادات</li>
-					<li class="slide">
-						<a class="side-menu__item" href="{{ route('company.settings') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 15.5c1.93 0 3.5-1.57 3.5-3.5S13.93 8.5 12 8.5s-3.5 1.57-3.5 3.5 1.57 3.5 3.5 3.5z" opacity=".3"/><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.52l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.34.24.52.49.52h4c.25 0 .46-.18.49-.52l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg><span class="side-menu__label">إعدادات الشركة</span></a>
-					</li>
-				@else
-					<li class="side-item side-item-category">الدخول والتسجيل</li>
-					<li class="slide">
-						<a class="side-menu__item" href="{{ route('signin') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5h3V9h4v3h3l-5 5z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z"/></svg><span class="side-menu__label">تسجيل الدخول</span></a>
-					</li>
-					<li class="slide">
-						<a class="side-menu__item" href="{{ route('signup') }}"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 11h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9h-3v3h-2v-3h-3v-2h3V8h2v3h3v2z"/></svg><span class="side-menu__label">إنشاء حساب</span></a>
-					</li>
-				@endif
+				
 			</ul>
 		</div>
 	</aside>

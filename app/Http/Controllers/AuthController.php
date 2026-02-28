@@ -49,7 +49,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect('/profile')->with('success', 'Account created successfully!');
+        return redirect()->route('udhiya.dashboard')->with('success', 'Account created successfully!');
     }
 
     public function showSignin()
@@ -99,7 +99,7 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            return redirect('/profile')->with('success', 'Logged in successfully!');
+            return redirect()->route('udhiya.dashboard')->with('success', 'Logged in successfully!');
         }
 
         return back()
