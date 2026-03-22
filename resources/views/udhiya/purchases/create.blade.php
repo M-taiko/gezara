@@ -14,7 +14,7 @@
 <form action="{{ route('udhiya.purchases.store') }}" method="POST" id="purchaseForm">
     @csrf
     <div class="row">
-        <div class="col-xl-8">
+        <div class="col-12 col-lg-8">
             <div class="card">
                 <div class="card-header"><h6 class="card-title mb-0">أصناف المشترى</h6></div>
                 <div class="card-body">
@@ -59,7 +59,7 @@
             </div>
         </div>
 
-        <div class="col-xl-4">
+        <div class="col-12 col-lg-4">
             <div class="card">
                 <div class="card-header"><h6 class="card-title mb-0">بيانات المشترى</h6></div>
                 <div class="card-body">

@@ -110,26 +110,28 @@
                 <a href="{{ route('udhiya.contracts.index') }}" class="btn btn-sm btn-primary">عرض الكل</a>
             </div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>رقم الصك</th><th>العميل</th><th>المبلغ</th><th>الحالة</th></tr></thead>
-                    <tbody>
-                        @forelse($recentContracts as $c)
-                        <tr>
-                            <td><strong style="color:var(--primary);">{{ $c->contract_number }}</strong></td>
-                            <td>{{ $c->customer->name }}</td>
-                            <td>{{ number_format($c->total_amount) }} <small class="text-muted">ج.م</small></td>
-                            <td>
-                                @if($c->status==='active') <span class="badge badge-warning">🟡 نشط</span>
-                                @elseif($c->status==='completed') <span class="badge badge-success">✅ مكتمل</span>
-                                @else <span class="badge badge-secondary">{{ $c->status }}</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="4" class="empty-state"><span class="empty-icon">📋</span><p>لا توجد صكوك</p></td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>رقم الصك</th><th>العميل</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+                        <tbody>
+                            @forelse($recentContracts as $c)
+                            <tr>
+                                <td><strong style="color:var(--primary);">{{ $c->contract_number }}</strong></td>
+                                <td>{{ $c->customer->name }}</td>
+                                <td>{{ number_format($c->total_amount) }} <small class="text-muted">ج.م</small></td>
+                                <td>
+                                    @if($c->status==='active') <span class="badge badge-warning">🟡 نشط</span>
+                                    @elseif($c->status==='completed') <span class="badge badge-success">✅ مكتمل</span>
+                                    @else <span class="badge badge-secondary">{{ $c->status }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="empty-state"><span class="empty-icon">📋</span><p>لا توجد صكوك</p></td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -140,26 +142,28 @@
                 <a href="{{ route('udhiya.purchases.index') }}" class="btn btn-sm btn-primary">عرض الكل</a>
             </div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>المورد</th><th>التاريخ</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
-                    <tbody>
-                        @forelse($recentPurchases as $p)
-                        <tr>
-                            <td><strong>{{ $p->supplier->name }}</strong></td>
-                            <td style="font-size:.82rem;color:var(--text-muted);">{{ $p->date }}</td>
-                            <td>{{ number_format($p->total) }} <small class="text-muted">ج.م</small></td>
-                            <td>
-                                @if($p->status==='confirmed') <span class="badge badge-success">✅ مؤكدة</span>
-                                @elseif($p->status==='pending') <span class="badge badge-warning">⏳ معلقة</span>
-                                @else <span class="badge badge-secondary">{{ $p->status }}</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="4" class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مشتريات</p></td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>المورد</th><th>التاريخ</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+                        <tbody>
+                            @forelse($recentPurchases as $p)
+                            <tr>
+                                <td><strong>{{ $p->supplier->name }}</strong></td>
+                                <td style="font-size:.82rem;color:var(--text-muted);">{{ $p->date }}</td>
+                                <td>{{ number_format($p->total) }} <small class="text-muted">ج.م</small></td>
+                                <td>
+                                    @if($p->status==='confirmed') <span class="badge badge-success">✅ مؤكدة</span>
+                                    @elseif($p->status==='pending') <span class="badge badge-warning">⏳ معلقة</span>
+                                    @else <span class="badge badge-secondary">{{ $p->status }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مشتريات</p></td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

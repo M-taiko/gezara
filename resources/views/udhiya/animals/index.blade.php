@@ -70,6 +70,7 @@
 {{-- Table --}}
 <div class="card">
     <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="thead-light">
                 <tr>
@@ -126,6 +127,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
     @if($animals->hasPages())
     <div class="card-footer">{{ $animals->links() }}</div>
@@ -280,6 +282,7 @@
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body p-0">
+                <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="thead-light">
                         <tr>
@@ -354,6 +357,7 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-dismiss="modal">إغلاق</button>

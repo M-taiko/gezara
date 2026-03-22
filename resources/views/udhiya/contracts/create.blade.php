@@ -19,7 +19,7 @@
     <div class="row">
 
         {{-- ========== ITEMS TABLE ========== --}}
-        <div class="col-xl-8">
+        <div class="col-12 col-lg-8">
             <div class="card">
                 <div class="card-header"><h6 class="card-title mb-0">الحيوانات والأنصبة</h6></div>
                 <div class="card-body p-2">
@@ -102,7 +102,7 @@
         </div>
 
         {{-- ========== CONTRACT META ========== --}}
-        <div class="col-xl-4">
+        <div class="col-12 col-lg-4">
             <div class="card">
                 <div class="card-header"><h6 class="card-title mb-0">بيانات الصك</h6></div>
                 <div class="card-body">

@@ -949,3 +949,242 @@ body.main-body .main-content.app-content {
     display: block !important; /* Show user info on mobile */
   }
 }
+
+/* ================================================================
+   MOBILE-FIRST RESPONSIVE — All Screens
+================================================================ */
+
+/* ── Page Header Responsive ── */
+@media (max-width: 575px) {
+  .page-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .page-leftheader {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .page-rightheader {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .page-rightheader .btn {
+    flex: 1;
+    min-width: 100px;
+    font-size: .8rem;
+    padding: 6px 10px;
+  }
+  .breadcrumb {
+    font-size: .7rem;
+    margin-bottom: 0;
+  }
+  .page-title {
+    font-size: .95rem;
+    margin-bottom: 0;
+  }
+}
+
+/* ── Tables Responsive ── */
+@media (max-width: 767px) {
+  .table {
+    font-size: .78rem;
+  }
+  .table th {
+    padding: 8px 6px !important;
+    font-size: .7rem;
+    font-weight: 600;
+  }
+  .table td {
+    padding: 8px 6px !important;
+  }
+  .table .btn-action {
+    width: 28px;
+    height: 28px;
+    font-size: .65rem;
+    padding: 2px !important;
+  }
+}
+
+/* ── Modals Responsive ── */
+@media (max-width: 575px) {
+  .modal-dialog {
+    margin: 8px;
+    max-width: calc(100% - 16px);
+  }
+  .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .modal-footer {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+  }
+  .modal-footer .btn {
+    flex: 1;
+    font-size: .8rem;
+    padding: 6px 8px;
+    min-width: 90px;
+  }
+}
+
+/* ── Navbar / Header Mobile ── */
+@media (max-width: 575px) {
+  .main-header .container-fluid {
+    padding: 0 8px;
+  }
+  .main-header-right .nav {
+    gap: 4px;
+  }
+  .main-header-right .nav-item {
+    margin-left: 4px;
+  }
+  .main-header-right img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+/* ── Footer Mobile ── */
+@media (max-width: 575px) {
+  .main-footer {
+    text-align: center;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 16px;
+  }
+  .main-footer p {
+    font-size: .75rem;
+    margin: 0;
+  }
+}
+
+/* ── Forms Inside Cards ── */
+@media (max-width: 575px) {
+  .form-group label {
+    font-size: .8rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .form-control,
+  select.form-control,
+  .form-select {
+    font-size: .8rem;
+    padding: 6px 10px;
+    height: auto;
+  }
+  .input-group {
+    flex-wrap: nowrap;
+  }
+  .input-group .form-control {
+    font-size: .8rem;
+  }
+  .input-group-append .btn,
+  .input-group-prepend .btn {
+    font-size: .8rem;
+    padding: 6px 12px;
+  }
+}
+
+/* ── Toast Notifications Mobile ── */
+@media (max-width: 575px) {
+  #toast-container.toast-bottom-right {
+    bottom: 16px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: calc(100% - 24px) !important;
+  }
+  .toast-msg {
+    min-width: unset !important;
+    width: 100% !important;
+    font-size: .8rem;
+  }
+}
+
+/* ── Dropdowns Mobile ── */
+@media (max-width: 575px) {
+  .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 200px !important;
+  }
+  .dropdown-item {
+    font-size: .8rem;
+    padding: 8px 12px;
+  }
+}
+
+/* ── Cards Mobile ── */
+@media (max-width: 575px) {
+  .card {
+    margin-bottom: 12px;
+  }
+  .card-body {
+    padding: 12px;
+  }
+  .card-header {
+    padding: 10px 12px;
+    font-size: .85rem;
+  }
+  .card-title {
+    font-size: .9rem;
+    margin-bottom: 8px;
+  }
+}
+
+/* ── Badges and Alerts ── */
+@media (max-width: 575px) {
+  .badge {
+    font-size: .7rem;
+    padding: 4px 6px;
+  }
+  .alert {
+    font-size: .8rem;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+}
+
+/* ── Container Padding ── */
+@media (max-width: 575px) {
+  .container-fluid {
+    padding: 0 12px !important;
+  }
+}
+
+/* ── Stat Cards (Report Pages) ── */
+@media (max-width: 575px) {
+  .stat-card {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .stat-card .stat-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+  }
+  .stat-card .stat-label {
+    font-size: .75rem;
+  }
+  .stat-card .stat-value {
+    font-size: 1.2rem;
+  }
+}
+
+/* ── Action Button Groups ── */
+@media (max-width: 767px) {
+  .btn-group-action {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .btn-group-action .btn {
+    flex: 1;
+    min-width: 70px;
+    font-size: .75rem;
+    padding: 5px 8px;
+  }
+}

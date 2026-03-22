@@ -24,7 +24,7 @@
 @endsection
 @section('content')
 <div class="row">
-    <div class="col-xl-4">
+    <div class="col-12 col-lg-4">
         <div class="card">
             <div class="card-header"><h6 class="card-title mb-0">تفاصيل الصك</h6></div>
             <div class="card-body">
@@ -90,29 +90,31 @@
         @endif
     </div>
 
-    <div class="col-xl-8">
+    <div class="col-12 col-lg-8">
         {{-- Contract Items --}}
         <div class="card">
             <div class="card-header"><h6 class="card-title mb-0">الحيوانات والأنصبة</h6></div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead class="thead-light"><tr><th>الحيوان</th><th>النوع</th><th>نوع الحصة</th><th>الأنصبة</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
-                    <tbody>
-                        @foreach($contract->items as $item)
-                        <tr>
-                            <td><a href="{{ route('udhiya.animals.show', $item->animal) }}">{{ $item->animal->code }}</a></td>
-                            <td>{{ $item->animal->product->name }}</td>
-                            <td>{{ $item->share_type === 'full' ? 'كامل' : ($item->share_type ?? '—') }}</td>
-                            <td>{{ $item->shares_count }}</td>
-                            <td>{{ number_format($item->unit_price, 2) }} ج.م</td>
-                            <td><strong>{{ number_format($item->total_price, 2) }} ج.م</strong></td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-light"><td colspan="5" class="text-left font-weight-bold">الإجمالي</td><td class="font-weight-bold">{{ number_format($contract->total_amount, 2) }} ج.م</td></tr>
-                    </tfoot>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="thead-light"><tr><th>الحيوان</th><th>النوع</th><th>نوع الحصة</th><th>الأنصبة</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+                        <tbody>
+                            @foreach($contract->items as $item)
+                            <tr>
+                                <td><a href="{{ route('udhiya.animals.show', $item->animal) }}">{{ $item->animal->code }}</a></td>
+                                <td>{{ $item->animal->product->name }}</td>
+                                <td>{{ $item->share_type === 'full' ? 'كامل' : ($item->share_type ?? '—') }}</td>
+                                <td>{{ $item->shares_count }}</td>
+                                <td>{{ number_format($item->unit_price, 2) }} ج.م</td>
+                                <td><strong>{{ number_format($item->total_price, 2) }} ج.م</strong></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-light"><td colspan="5" class="text-left font-weight-bold">الإجمالي</td><td class="font-weight-bold">{{ number_format($contract->total_amount, 2) }} ج.م</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -120,22 +122,24 @@
         <div class="card">
             <div class="card-header"><h6 class="card-title mb-0">الدفعات ({{ $contract->payments->count() }})</h6></div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead class="thead-light"><tr><th>رقم الإيصال</th><th>التاريخ</th><th>طريقة الدفع</th><th>المبلغ</th><th>ملاحظات</th><th></th></tr></thead>
-                    <tbody>
-                        @forelse($contract->payments as $payment)
-                        <tr>
-                            <td>{{ $payment->receipt_number }}</td>
-                            <td>{{ $payment->date }}</td>
-                            <td>{{ ['cash'=>'نقدي','bank'=>'بنك','transfer'=>'تحويل'][$payment->payment_method] }}</td>
-                            <td class="text-success"><strong>{{ number_format($payment->amount, 2) }} ج.م</strong></td>
-                            <td>{{ $payment->notes ?? '—' }}</td>
-                            <td><a href="{{ route('udhiya.payments.print', $payment) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a></td>
-                        </tr>
-                        @empty<tr><td colspan="6" class="text-center text-muted">لا توجد دفعات بعد</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="thead-light"><tr><th>رقم الإيصال</th><th>التاريخ</th><th>طريقة الدفع</th><th>المبلغ</th><th>ملاحظات</th><th></th></tr></thead>
+                        <tbody>
+                            @forelse($contract->payments as $payment)
+                            <tr>
+                                <td>{{ $payment->receipt_number }}</td>
+                                <td>{{ $payment->date }}</td>
+                                <td>{{ ['cash'=>'نقدي','bank'=>'بنك','transfer'=>'تحويل'][$payment->payment_method] }}</td>
+                                <td class="text-success"><strong>{{ number_format($payment->amount, 2) }} ج.م</strong></td>
+                                <td>{{ $payment->notes ?? '—' }}</td>
+                                <td><a href="{{ route('udhiya.payments.print', $payment) }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print"></i></a></td>
+                            </tr>
+                            @empty<tr><td colspan="6" class="text-center text-muted">لا توجد دفعات بعد</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

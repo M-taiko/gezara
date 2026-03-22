@@ -13,7 +13,7 @@
 @section('content')
 <div class="row">
     {{-- Details Card --}}
-    <div class="col-xl-4">
+    <div class="col-12 col-lg-4">
         <div class="card">
             <div class="card-header"><h6 class="card-title mb-0">البيانات الأساسية</h6></div>
             <div class="card-body">
@@ -138,27 +138,29 @@
         @endif
     </div>
 
-    <div class="col-xl-8">
+    <div class="col-12 col-lg-8">
         {{-- Contracts --}}
         <div class="card">
             <div class="card-header"><h6 class="card-title mb-0">الصكوك المرتبطة</h6></div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead class="thead-light"><tr><th>رقم الصك</th><th>العميل</th><th>نوع الحصة</th><th>الأنصبة</th><th>السعر</th><th></th></tr></thead>
-                    <tbody>
-                        @forelse($animal->contractItems as $item)
-                        <tr>
-                            <td>{{ $item->contract->contract_number }}</td>
-                            <td>{{ $item->contract->customer->name }}</td>
-                            <td>{{ $item->share_type ?? 'كامل' }}</td>
-                            <td>{{ $item->shares_count }}</td>
-                            <td>{{ number_format($item->total_price, 2) }} ج.م</td>
-                            <td><a href="{{ route('udhiya.contracts.show', $item->contract) }}" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a></td>
-                        </tr>
-                        @empty<tr><td colspan="6" class="text-center text-muted">لا توجد صكوك</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="thead-light"><tr><th>رقم الصك</th><th>العميل</th><th>نوع الحصة</th><th>الأنصبة</th><th>السعر</th><th></th></tr></thead>
+                        <tbody>
+                            @forelse($animal->contractItems as $item)
+                            <tr>
+                                <td>{{ $item->contract->contract_number }}</td>
+                                <td>{{ $item->contract->customer->name }}</td>
+                                <td>{{ $item->share_type ?? 'كامل' }}</td>
+                                <td>{{ $item->shares_count }}</td>
+                                <td>{{ number_format($item->total_price, 2) }} ج.م</td>
+                                <td><a href="{{ route('udhiya.contracts.show', $item->contract) }}" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a></td>
+                            </tr>
+                            @empty<tr><td colspan="6" class="text-center text-muted">لا توجد صكوك</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -166,21 +168,23 @@
         <div class="card">
             <div class="card-header"><h6 class="card-title mb-0">سجل النقل</h6></div>
             <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead class="thead-light"><tr><th>من</th><th>إلى</th><th>بواسطة</th><th>التاريخ</th><th>ملاحظات</th></tr></thead>
-                    <tbody>
-                        @forelse($animal->transfers as $transfer)
-                        <tr>
-                            <td>{{ $transfer->fromWarehouse->name }}</td>
-                            <td>{{ $transfer->toWarehouse->name }}</td>
-                            <td>{{ $transfer->transferredBy->name }}</td>
-                            <td>{{ $transfer->transferred_at->format('Y-m-d H:i') }}</td>
-                            <td>{{ $transfer->notes ?? '—' }}</td>
-                        </tr>
-                        @empty<tr><td colspan="5" class="text-center text-muted">لا توجد عمليات نقل</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="thead-light"><tr><th>من</th><th>إلى</th><th>بواسطة</th><th>التاريخ</th><th>ملاحظات</th></tr></thead>
+                        <tbody>
+                            @forelse($animal->transfers as $transfer)
+                            <tr>
+                                <td>{{ $transfer->fromWarehouse->name }}</td>
+                                <td>{{ $transfer->toWarehouse->name }}</td>
+                                <td>{{ $transfer->transferredBy->name }}</td>
+                                <td>{{ $transfer->transferred_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ $transfer->notes ?? '—' }}</td>
+                            </tr>
+                            @empty<tr><td colspan="5" class="text-center text-muted">لا توجد عمليات نقل</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

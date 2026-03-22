@@ -25,51 +25,53 @@
         <span class="badge badge-primary">{{ $customers->total() }} عميل</span>
     </div>
     <div class="card-body p-0">
-        <table class="table mb-0">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>الاسم</th>
-                    <th>الهاتف</th>
-                    <th>العنوان</th>
-                    <th>الصكوك</th>
-                    <th class="text-center">إجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($customers as $customer)
-                <tr>
-                    <td style="color:var(--text-muted);font-size:.82rem;">{{ $loop->iteration }}</td>
-                    <td><strong>{{ $customer->name }}</strong></td>
-                    <td style="font-size:.85rem;color:var(--text-muted);">{{ $customer->phone }}</td>
-                    <td style="font-size:.85rem;color:var(--text-muted);">{{ $customer->address ?? '—' }}</td>
-                    <td><span class="badge badge-primary">{{ $customer->contracts_count }}</span></td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-1">
-                            <button class="btn btn-sm btn-warning btn-action" data-toggle="modal"
-                                    data-target="#editCustomerModal{{ $customer->id }}" title="تعديل">✏️</button>
-                            <a href="{{ route('udhiya.reports.customer', $customer) }}"
-                               class="btn btn-sm btn-info btn-action" title="تقرير">📊</a>
-                            <form action="{{ route('udhiya.customers.destroy', $customer) }}" method="POST" class="d-inline"
-                                  onsubmit="return confirm('هل تريد حذف هذا العميل؟')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger btn-action" title="حذف">🗑️</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <span class="empty-icon">🙋</span>
-                            <p>لا يوجد عملاء بعد</p>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>الهاتف</th>
+                        <th>العنوان</th>
+                        <th>الصكوك</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($customers as $customer)
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:.82rem;">{{ $loop->iteration }}</td>
+                        <td><strong>{{ $customer->name }}</strong></td>
+                        <td style="font-size:.85rem;color:var(--text-muted);">{{ $customer->phone }}</td>
+                        <td style="font-size:.85rem;color:var(--text-muted);">{{ $customer->address ?? '—' }}</td>
+                        <td><span class="badge badge-primary">{{ $customer->contracts_count }}</span></td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-sm btn-warning btn-action" data-toggle="modal"
+                                        data-target="#editCustomerModal{{ $customer->id }}" title="تعديل">✏️</button>
+                                <a href="{{ route('udhiya.reports.customer', $customer) }}"
+                                   class="btn btn-sm btn-info btn-action" title="تقرير">📊</a>
+                                <form action="{{ route('udhiya.customers.destroy', $customer) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('هل تريد حذف هذا العميل؟')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger btn-action" title="حذف">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <span class="empty-icon">🙋</span>
+                                <p>لا يوجد عملاء بعد</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
     @if($customers->hasPages())
     <div class="card-footer">{{ $customers->links() }}</div>
