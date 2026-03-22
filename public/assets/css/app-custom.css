@@ -829,6 +829,42 @@ body.main-body .main-content.app-content {
     font-size: 1rem !important;
   }
 
+  /* Show full sidebar with visible labels on mobile */
+  .app-sidebar {
+    width: 240px !important;
+  }
+  .side-menu__item {
+    flex-direction: row !important;
+    gap: 12px !important;
+    padding: 10px 16px !important;
+  }
+  .emoji-icon {
+    font-size: 1.2rem !important;
+    flex-shrink: 0;
+    min-width: 24px;
+    display: flex !important;
+    align-items: center !important;
+  }
+  .side-menu__label {
+    display: block !important;
+    font-size: .85rem !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,.9) !important;
+    opacity: 1 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    flex: 1;
+  }
+  .side-item-category {
+    font-size: .75rem !important;
+    color: rgba(255,255,255,.5) !important;
+    padding: 12px 16px 6px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+
   /* Hide mini sidebar styles on mobile */
   .app.sidenav-toggled .app-sidebar {
     right: 0 !important; /* Override: still show full sidebar on mobile when toggled */
@@ -837,5 +873,62 @@ body.main-body .main-content.app-content {
   .app.sidenav-toggled .main-content.app-content {
     margin-right: 0 !important; /* Content is pushed by overlay, not margin */
     width: 100% !important;
+  }
+
+  /* Mobile sidebar header */
+  .main-sidebar-header {
+    padding: 16px 20px !important;
+    min-height: auto !important;
+  }
+  .sidebar-brand-text {
+    gap: 10px !important;
+    justify-content: flex-start !important;
+  }
+  .sidebar-brand-text span:first-child {
+    font-size: 1.4rem !important;
+  }
+  .sidebar-brand-text span:last-child {
+    display: block !important;
+    font-size: .95rem !important;
+  }
+
+  /* Mobile user section */
+  .app-sidebar__user {
+    padding: 16px !important;
+    background: rgba(255,255,255,.08) !important;
+    border-radius: 10px !important;
+    margin: 12px 12px !important;
+    text-align: center;
+  }
+  .app-sidebar__user img.avatar {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .app-sidebar__user .user-info h4 {
+    font-size: .9rem !important;
+    margin-top: 8px !important;
+  }
+  .app-sidebar__user .user-info span {
+    font-size: .75rem !important;
+  }
+
+  /* Override mini sidebar styles on mobile */
+  .app.sidenav-toggled .side-menu__item {
+    flex-direction: row !important; /* Stay horizontal on mobile */
+    padding: 10px 16px !important;
+    gap: 12px !important;
+  }
+  .app.sidenav-toggled .side-menu__label {
+    font-size: .85rem !important;
+    max-width: 100% !important;
+    opacity: 1 !important;
+    display: block !important;
+  }
+  .app.sidenav-toggled .emoji-icon {
+    font-size: 1.2rem !important;
+    flex-shrink: 0;
+  }
+  .app.sidenav-toggled .app-sidebar__user .user-info {
+    display: block !important; /* Show user info on mobile */
   }
 }
