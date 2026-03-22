@@ -652,11 +652,29 @@ body.main-body .main-content.app-content {
   max-width: calc(100% - 240px) !important;
 }
 
+/* Mobile: sidebar overlay mode */
 @media (max-width: 767px) {
+  body.main-body .app-sidebar {
+    position: fixed !important;
+    right: -240px !important; /* Hidden off-screen by default */
+    transition: right .3s ease !important;
+    z-index: 1050 !important;
+  }
+
+  /* Show sidebar when sidenav-toggled on mobile */
+  body.main-body.sidenav-toggled .app-sidebar {
+    right: 0 !important;
+  }
+
   body.main-body .main-content.app-content {
     margin-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  /* Show overlay when sidebar is open on mobile */
+  body.main-body.sidenav-toggled .app-sidebar__overlay {
+    display: block !important;
   }
 }
 
@@ -792,16 +810,32 @@ body.main-body .main-content.app-content {
   display: flex !important;
 }
 
+/* Mobile toggle button */
 @media (max-width: 767px) {
   .app-sidebar__toggle {
-    position: static !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    width: auto !important;
-    height: auto !important;
-    border-radius: 0 !important;
+    position: fixed !important;
+    top: 12px !important;
+    right: 12px !important;
+    background: var(--primary) !important;
+    box-shadow: 0 2px 8px rgba(124,58,237,.4) !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    z-index: 1051 !important;
+    display: flex !important;
   }
   .app-sidebar__toggle a i {
-    color: var(--primary) !important;
+    color: #fff !important;
+    font-size: 1rem !important;
+  }
+
+  /* Hide mini sidebar styles on mobile */
+  .app.sidenav-toggled .app-sidebar {
+    right: 0 !important; /* Override: still show full sidebar on mobile when toggled */
+    width: 240px !important; /* Don't shrink to 72px on mobile */
+  }
+  .app.sidenav-toggled .main-content.app-content {
+    margin-right: 0 !important; /* Content is pushed by overlay, not margin */
+    width: 100% !important;
   }
 }
