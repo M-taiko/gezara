@@ -918,6 +918,11 @@ body.main-body .main-content.app-content {
     padding-top: 4px !important;
     height: calc(100vh - 280px) !important;
   }
+  .app-sidebar .main-sidemenu .mCSB_container {
+    position: relative !important;
+    top: 78px !important;
+    left: 1px !important;
+  }
 
   /* Override mini sidebar styles on mobile */
   .app.sidenav-toggled .side-menu__item {
