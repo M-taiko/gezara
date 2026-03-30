@@ -17,9 +17,11 @@ class StoreContractRequest extends FormRequest
             'notes'                    => 'nullable|string',
             'items'                    => 'required|array|min:1',
             'items.*.animal_id'        => 'required|exists:animals,id',
-            'items.*.share_type'       => 'required|in:full,seven,five,quarter,half',
+            'items.*.share_type'       => 'required|in:full,seven,six,five,quarter,third,half',
             'items.*.shares_count'     => 'required|integer|min:1|max:7',
             'items.*.group_id'         => 'nullable|exists:slaughter_groups,id',
+            'payment_amount'           => 'nullable|numeric|min:0',
+            'payment_method'           => 'nullable|in:cash,bank,check',
         ];
     }
 

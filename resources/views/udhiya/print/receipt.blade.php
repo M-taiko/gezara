@@ -8,27 +8,27 @@
 
 <div class="info-grid">
     <div class="info-box">
-        <label>استلمنا من</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">استلمنا من</label>
         <span>{{ $payment->contract->customer->name }}</span>
     </div>
     <div class="info-box">
-        <label>رقم الهاتف</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">رقم الهاتف</label>
         <span>{{ $payment->contract->customer->phone }}</span>
     </div>
     <div class="info-box">
-        <label>رقم الصك</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">رقم الصك</label>
         <span>{{ $payment->contract->contract_number }}</span>
     </div>
     <div class="info-box">
-        <label>تاريخ الإيصال</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">تاريخ الإيصال</label>
         <span>{{ $payment->date }}</span>
     </div>
     <div class="info-box">
-        <label>طريقة الدفع</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">طريقة الدفع</label>
         <span>{{ ['cash'=>'نقدي','bank'=>'بنك','transfer'=>'تحويل'][$payment->payment_method] }}</span>
     </div>
     <div class="info-box">
-        <label>رصيد الصك بعد الدفعة</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">رصيد الصك بعد الدفعة</label>
         <span>{{ number_format($payment->contract->remaining_amount, 2) }} ج.م</span>
     </div>
 </div>

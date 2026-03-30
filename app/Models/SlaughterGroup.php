@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SlaughterGroup extends Model
 {
-    const SHARE_MAP = ['seven' => 7, 'five' => 5, 'quarter' => 4, 'half' => 2, 'full' => 1];
+    const SHARE_MAP = ['seven' => 7, 'six' => 6, 'five' => 5, 'quarter' => 4, 'third' => 3, 'half' => 2, 'full' => 1];
 
     const SHARE_LABELS = [
         'seven'   => 'سُبع (7 أنصبة)',
+        'six'     => 'سُدس (6 أنصبة)',
         'five'    => 'خُمس (5 أنصبة)',
         'quarter' => 'ربع (4 أنصبة)',
+        'third'   => 'ثُلث (3 أنصبة)',
         'half'    => 'نصف (2 نصيب)',
         'full'    => 'كامل',
     ];

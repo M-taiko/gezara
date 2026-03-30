@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Animal extends Model
 {
-    const SHARE_MAP = ['seven' => 7, 'five' => 5, 'quarter' => 4, 'half' => 2];
+    const SHARE_MAP = ['seven' => 7, 'six' => 6, 'five' => 5, 'quarter' => 4, 'third' => 3, 'half' => 2, 'full' => 1];
 
     const STATUS_LABELS = [
         'available'           => 'متاح',
@@ -24,22 +24,27 @@ class Animal extends Model
     ];
 
     const SHARE_LABELS = [
-        'seven'   => 'سبع (7 أنصبة)',
-        'five'    => 'خمس (5 أنصبة)',
+        'seven'   => 'سُبع (7 أنصبة)',
+        'six'     => 'سُدس (6 أنصبة)',
+        'five'    => 'خُمس (5 أنصبة)',
         'quarter' => 'ربع (4 أنصبة)',
+        'third'   => 'ثُلث (3 أنصبة)',
         'half'    => 'نصف (2 نصيب)',
+        'full'    => 'كامل',
     ];
 
     protected $fillable = [
         'product_id', 'supplier_id', 'purchase_id', 'warehouse_id',
-        'code', 'weight', 'cost', 'is_grouped', 'status',
-        'price_full', 'price_seven', 'price_five', 'price_quarter', 'price_half', 'notes',
+        'code', 'weight', 'price_per_kg', 'cost', 'is_grouped', 'status',
+        'price_full', 'price_seven', 'price_six', 'price_five',
+        'price_quarter', 'price_third', 'price_half', 'notes',
     ];
 
     protected $casts = [
-        'weight' => 'float', 'cost' => 'float', 'is_grouped' => 'boolean',
-        'price_full' => 'float', 'price_seven' => 'float',
-        'price_five' => 'float', 'price_quarter' => 'float', 'price_half' => 'float',
+        'weight' => 'float', 'price_per_kg' => 'float', 'cost' => 'float', 'is_grouped' => 'boolean',
+        'price_full' => 'float', 'price_seven' => 'float', 'price_six' => 'float',
+        'price_five' => 'float', 'price_quarter' => 'float',
+        'price_third' => 'float', 'price_half' => 'float',
     ];
 
     // ─── Auto-generate code on create ───────────────────────────────────────

@@ -10,7 +10,9 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::withCount('contracts')->latest()->paginate(15);
+        $customers = Customer::withCount('contracts')
+            ->with(['groupMembers.group'])
+            ->latest()->paginate(20);
         return view('udhiya.customers.index', compact('customers'));
     }
 

@@ -21,5 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\LogActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Redirect method-not-allowed (e.g. GET /login) to signin
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, \Illuminate\Http\Request $request) {
+            return redirect()->route('signin');
+        });
     })->create();

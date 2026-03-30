@@ -8,29 +8,29 @@
 
 <div class="info-grid">
     <div class="info-box">
-        <label>العميل</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">العميل</label>
         <span>{{ $contract->customer->name }}</span>
     </div>
     <div class="info-box">
-        <label>رقم الهاتف</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">رقم الهاتف</label>
         <span>{{ $contract->customer->phone }}</span>
     </div>
     @if($contract->slaughter_day)
     <div class="info-box">
-        <label>يوم الذبح</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">يوم الذبح</label>
         <span>{{ $contract->slaughter_day }}</span>
     </div>
     <div class="info-box">
-        <label>ترتيب الذبح</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">ترتيب الذبح</label>
         <span>{{ $contract->slaughter_order ?? '—' }}</span>
     </div>
     @endif
     <div class="info-box">
-        <label>تاريخ الصك</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">تاريخ الصك</label>
         <span>{{ $contract->created_at->format('Y-m-d') }}</span>
     </div>
     <div class="info-box">
-        <label>الحالة</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-4">الحالة</label>
         <span>{{ ['active'=>'نشط','completed'=>'مكتمل','cancelled'=>'ملغى'][$contract->status] }}</span>
     </div>
 </div>
@@ -38,25 +38,25 @@
 <table>
     <thead>
         <tr>
-            <th>#</th>
-            <th>الحيوان</th>
-            <th>النوع</th>
-            <th>نوع الحصة</th>
-            <th>الأنصبة</th>
-            <th>سعر الوحدة</th>
-            <th>الإجمالي</th>
+            <th class="px-6 py-4 font-bold tracking-wider">#</th>
+            <th class="px-6 py-4 font-bold tracking-wider">الحيوان</th>
+            <th class="px-6 py-4 font-bold tracking-wider">النوع</th>
+            <th class="px-6 py-4 font-bold tracking-wider">نوع الحصة</th>
+            <th class="px-6 py-4 font-bold tracking-wider">الأنصبة</th>
+            <th class="px-6 py-4 font-bold tracking-wider">سعر الوحدة</th>
+            <th class="px-6 py-4 font-bold tracking-wider">الإجمالي</th>
         </tr>
     </thead>
     <tbody>
         @foreach($contract->items as $i => $item)
         <tr>
-            <td>{{ $i + 1 }}</td>
-            <td>{{ $item->animal->code }}</td>
-            <td>{{ $item->animal->product->name }}</td>
-            <td>{{ $item->share_type === 'full' ? 'كامل' : ($item->share_type ?? '—') }}</td>
-            <td>{{ $item->shares_count }}</td>
-            <td>{{ number_format($item->unit_price, 2) }} ج.م</td>
-            <td>{{ number_format($item->total_price, 2) }} ج.م</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $i + 1 }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $item->animal->code }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $item->animal->product->name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $item->share_type === 'full' ? 'كامل' : ($item->share_type ?? '—') }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $item->shares_count }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ number_format($item->unit_price, 2) }} ج.م</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ number_format($item->total_price, 2) }} ج.م</td>
         </tr>
         @endforeach
     </tbody>
@@ -71,14 +71,14 @@
 @if($contract->payments->count() > 0)
 <h4 style="margin-top:20px;margin-bottom:10px;">الدفعات</h4>
 <table>
-    <thead><tr><th>رقم الإيصال</th><th>التاريخ</th><th>الطريقة</th><th>المبلغ</th></tr></thead>
+    <thead class="text-xs text-slate-600 uppercase bg-slate-100/80 font-bold border-b border-slate-200"><tr><th class="px-6 py-4 font-bold tracking-wider">رقم الإيصال</th><th class="px-6 py-4 font-bold tracking-wider">التاريخ</th><th class="px-6 py-4 font-bold tracking-wider">الطريقة</th><th class="px-6 py-4 font-bold tracking-wider">المبلغ</th></tr></thead>
     <tbody>
         @foreach($contract->payments as $payment)
         <tr>
-            <td>{{ $payment->receipt_number }}</td>
-            <td>{{ $payment->date }}</td>
-            <td>{{ ['cash'=>'نقدي','bank'=>'بنك','transfer'=>'تحويل'][$payment->payment_method] }}</td>
-            <td>{{ number_format($payment->amount, 2) }} ج.م</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $payment->receipt_number }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $payment->date }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ ['cash'=>'نقدي','bank'=>'بنك','transfer'=>'تحويل'][$payment->payment_method] }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ number_format($payment->amount, 2) }} ج.م</td>
         </tr>
         @endforeach
     </tbody>

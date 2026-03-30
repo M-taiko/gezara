@@ -1,420 +1,320 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>مشروع الأضاحي - الحصص المتاحة</title>
-    <link rel="icon" href="{{ URL::asset('assets/img/brand/favicon.png') }}" type="image/x-icon">
-    <link href="{{ URL::asset('assets/css-rtl/style.css') }}" rel="stylesheet">
-    <link href="{{ URL::asset('assets/css/icons.css') }}" rel="stylesheet">
-    <link href="{{ URL::asset('assets/plugins/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #f0f4f8;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            direction: rtl;
+        body { font-family: 'Cairo', sans-serif; }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         }
-        .public-navbar {
-            background: linear-gradient(135deg, #5f46e4 0%, #4a35c8 100%);
-            padding: 14px 0;
-            box-shadow: 0 4px 20px rgba(95,70,228,.3);
-            position: sticky;
-            top: 0;
-            z-index: 999;
+        .mesh-gradient {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
         }
-        .public-navbar .brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-        }
-        .public-navbar .brand span { color: #ffd700; }
-
-        .hero-section {
-            background: linear-gradient(135deg, #5f46e4 0%, #7c64f0 50%, #9b84ff 100%);
-            padding: 60px 0 80px;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: -40%; left: -10%;
-            width: 500px; height: 500px;
-            background: rgba(255,255,255,.05);
-            border-radius: 50%;
-        }
-        .hero-section h1 { font-size: 2.5rem; font-weight: 800; color: #fff; }
-        .hero-section p  { color: rgba(255,255,255,.85); font-size: 1.1rem; }
-
-        .stat-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,.08);
-            text-align: center;
-            transition: transform .2s;
-            margin-top: -40px;
-        }
-        .stat-card:hover { transform: translateY(-4px); }
-        .stat-card .stat-icon   { font-size: 2.5rem; margin-bottom: 8px; display: block; }
-        .stat-card .stat-num    { font-size: 2rem; font-weight: 800; line-height: 1; }
-        .stat-card .stat-label  { font-size: .85rem; color: #666; margin-top: 4px; }
-
-        .filter-bar {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.06);
-            margin-bottom: 24px;
-        }
-        .filter-btn {
-            border-radius: 50px;
-            padding: 6px 20px;
-            border: 2px solid #5f46e4;
-            color: #5f46e4;
-            background: transparent;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .2s;
-            margin-left: 8px;
-        }
-        .filter-btn.active, .filter-btn:hover { background: #5f46e4; color: #fff; }
-
-        .animal-card {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,.07);
-            overflow: hidden;
-            transition: transform .25s, box-shadow .25s;
-            height: 100%;
-        }
-        .animal-card:hover { transform: translateY(-6px); box-shadow: 0 12px 35px rgba(0,0,0,.14); }
-        .animal-card.status-slaughtered { opacity: .65; }
-
-        .animal-emoji-placeholder {
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 90px;
-        }
-        .bg-cattle { background: linear-gradient(135deg, #e3f0ff, #c8e1ff); }
-        .bg-sheep  { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
-        .bg-goat   { background: linear-gradient(135deg, #fff3e0, #ffe0b2); }
-        .bg-camel  { background: linear-gradient(135deg, #fdf3e7, #f5d0a9); }
-
-        .animal-body { padding: 18px; }
-
-        .type-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 4px 14px; border-radius: 50px;
-            font-size: .8rem; font-weight: 700; margin-bottom: 10px;
-        }
-        .type-badge.BQR { background: #e3f0ff; color: #1565c0; }
-        .type-badge.GHN { background: #e8f5e9; color: #2e7d32; }
-        .type-badge.JDN { background: #fff3e0; color: #e65100; }
-        .type-badge.JML { background: #fdf3e7; color: #795548; }
-
-        .status-badge {
-            display: inline-block; padding: 3px 12px;
-            border-radius: 50px; font-size: .75rem; font-weight: 700;
-        }
-        .status-available         { background: #e8f5e9; color: #2e7d32; }
-        .status-partially_allocated { background: #fff8e1; color: #f57f17; }
-        .status-fully_allocated   { background: #fce4ec; color: #c62828; }
-        .status-slaughtered       { background: #f3f3f3; color: #777; }
-
-        .price-tag { font-size: 1.4rem; font-weight: 800; color: #5f46e4; }
-        .price-per-share { font-size: .8rem; color: #888; }
-
-        .shares-progress { margin: 14px 0; }
-        .shares-progress .label {
-            display: flex; justify-content: space-between;
-            font-size: .82rem; margin-bottom: 5px; color: #555;
-        }
-        .shares-track { background: #f0f0f0; border-radius: 50px; height: 10px; overflow: hidden; }
-        .shares-fill  { height: 100%; border-radius: 50px; transition: width .6s ease; }
-        .fill-available  { background: linear-gradient(90deg, #43a047, #66bb6a); }
-        .fill-partial    { background: linear-gradient(90deg, #f57f17, #ffa726); }
-        .fill-full       { background: linear-gradient(90deg, #c62828, #ef5350); }
-        .fill-slaughtered { background: linear-gradient(90deg, #777, #aaa); }
-
-        .share-dots { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
-        .share-dot {
-            width: 28px; height: 28px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: .7rem; font-weight: 700; border: 2px solid;
-        }
-        .dot-taken { background: #5f46e4; border-color: #5f46e4; color: #fff; }
-        .dot-free  { background: #fff; border-color: #ddd; color: #bbb; }
-
-        .remaining-badge {
-            background: #f3f0ff; color: #5f46e4;
-            padding: 6px 14px; border-radius: 10px;
-            font-size: .85rem; font-weight: 700;
-            text-align: center; margin-top: 10px;
-        }
-        .remaining-badge.none { background: #fce4ec; color: #c62828; }
-
-        .public-footer {
-            background: #2d2d3f; color: rgba(255,255,255,.6);
-            text-align: center; padding: 24px; font-size: .85rem; margin-top: 60px;
-        }
-        .section-title { font-size: 1.6rem; font-weight: 800; color: #2d2d3f; margin-bottom: 4px; }
-        .section-sub   { color: #888; font-size: .95rem; margin-bottom: 28px; }
-        .empty-state   { text-align: center; padding: 60px 20px; color: #aaa; }
-        .empty-state .empty-icon { font-size: 80px; margin-bottom: 16px; }
-
-        @media (max-width: 576px) {
-            .hero-section h1 { font-size: 1.7rem; }
-            .stat-card { margin-top: 12px; }
-        }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 antialiased overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
-<!-- NAVBAR -->
-<nav class="public-navbar">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <a href="{{ url('/') }}" class="brand">
-                🐄 مشروع <span>الأضاحي</span>
-            </a>
-            <div class="d-flex gap-2">
-                @auth
-                <a href="{{ route('udhiya.dashboard') }}" class="btn btn-sm btn-light font-weight-bold">
-                    <i class="las la-tachometer-alt mr-1"></i> لوحة التحكم
+    <!-- Decorative Background Splashes -->
+    <div class="absolute top-[-10%] start-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-indigo-400/20 to-purple-400/20 blur-3xl -z-10 pointer-events-none"></div>
+    <div class="absolute top-[20%] end-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-sky-400/10 to-blue-400/10 blur-3xl -z-10 pointer-events-none"></div>
+
+    <!-- NAVBAR -->
+    <nav class="glass-nav fixed top-0 w-full z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-200 transform group-hover:rotate-12 transition duration-300">
+                        🐄
+                    </div>
+                    <span class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">مشروع <span class="text-indigo-600">الأضاحي</span></span>
                 </a>
-                @else
-                <a href="{{ route('signin') }}" class="btn btn-sm btn-light font-weight-bold">
-                    <i class="las la-sign-in-alt mr-1"></i> تسجيل الدخول
-                </a>
-                @endauth
-            </div>
-        </div>
-    </div>
-</nav>
-
-<!-- HERO -->
-<section class="hero-section">
-    <div class="container text-center position-relative" style="z-index:1;">
-        <h1>🐄 حصص الأضاحي المتاحة</h1>
-        <p class="mb-0">تصفح الأضاحي المتوفرة واشترك في حصتك قبل نفاد الأماكن</p>
-    </div>
-</section>
-
-<!-- STATS -->
-<div class="container">
-    <div class="row">
-        <div class="col-6 col-md-3 mb-3">
-            <div class="stat-card">
-                <span class="stat-icon">🐄</span>
-                <div class="stat-num text-primary">{{ $stats['total'] }}</div>
-                <div class="stat-label">إجمالي الأضاحي</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 mb-3">
-            <div class="stat-card">
-                <span class="stat-icon">✅</span>
-                <div class="stat-num text-success">{{ $stats['available'] }}</div>
-                <div class="stat-label">متاح للاشتراك</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 mb-3">
-            <div class="stat-card">
-                <span class="stat-icon">🎫</span>
-                <div class="stat-num text-warning">{{ $stats['total_spots'] }}</div>
-                <div class="stat-label">حصة متبقية</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 mb-3">
-            <div class="stat-card">
-                <span class="stat-icon">🔪</span>
-                <div class="stat-num text-danger">{{ $stats['slaughtered'] }}</div>
-                <div class="stat-label">تم ذبحها</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- GRID -->
-<div class="container mt-4">
-
-    <!-- Filter Bar -->
-    <div class="filter-bar d-flex align-items-center flex-wrap gap-2">
-        <strong class="ml-3" style="color:#444;">تصفية:</strong>
-        <button class="filter-btn active" onclick="filterCards('all', this)">الكل ({{ $animals->count() }})</button>
-        @foreach($categories as $cat)
-        @php $catCount = $animals->filter(fn($a) => $a->product?->mainCategory?->id === $cat->id)->count(); @endphp
-        <button class="filter-btn" onclick="filterCards('{{ $cat->code }}', this)">
-            {{ match($cat->code) { 'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾' } }}
-            {{ $cat->name }} ({{ $catCount }})
-        </button>
-        @endforeach
-        <button class="filter-btn" onclick="filterCards('available', this)">✅ متاح</button>
-        <button class="filter-btn" onclick="filterCards('fully_allocated', this)">🔒 مكتمل</button>
-    </div>
-
-    <div>
-        <h2 class="section-title">قائمة الأضاحي</h2>
-        <p class="section-sub">يمكنك الاشتراك في أي أضحية متاحة — تواصل مع المسؤول لتأكيد حجزك</p>
-    </div>
-
-    @if($animals->isEmpty())
-    <div class="empty-state">
-        <div class="empty-icon">🐄</div>
-        <h4 class="text-muted">لا توجد أضاحي مضافة بعد</h4>
-    </div>
-    @else
-    <div class="row" id="livestockGrid">
-        @foreach($animals as $animal)
-        @php
-            $catCode  = $animal->product?->mainCategory?->code ?? 'BQR';
-            $catName  = $animal->product?->mainCategory?->name ?? 'حيوان';
-            $emoji    = match($catCode) { 'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾' };
-            $bgClass  = match($catCode) { 'BQR' => 'bg-cattle', 'GHN' => 'bg-sheep', 'JDN' => 'bg-goat', 'JML' => 'bg-camel', default => 'bg-cattle' };
-            $price    = $animal->price_full ?? $animal->cost ?? 0;
-            $setting  = $animal->shareSetting;
-
-            $maxShares = $setting ? $setting->total_shares : 1;
-            $usedShares = $setting ? $setting->sold_shares : ($animal->status === 'fully_allocated' ? 1 : 0);
-            $remainingShares = $setting ? $setting->remaining_shares : ($animal->status === 'available' ? 1 : 0);
-            $pct = $maxShares > 0 ? round(($usedShares / $maxShares) * 100) : 0;
-
-            $fillClass = match($animal->status) {
-                'available'           => 'fill-available',
-                'partially_allocated' => 'fill-partial',
-                'fully_allocated'     => 'fill-full',
-                'slaughtered'         => 'fill-slaughtered',
-                default               => 'fill-available'
-            };
-
-            $statusLabel = match($animal->status) {
-                'available'           => 'متاح',
-                'partially_allocated' => 'متاح جزئياً',
-                'fully_allocated'     => 'مكتمل',
-                'slaughtered'         => 'تم الذبح',
-                default               => $animal->status
-            };
-
-            $pricePerShare = $maxShares > 0 ? round($price / $maxShares) : $price;
-        @endphp
-        <div class="col-lg-4 col-md-6 mb-4 card-item"
-             data-category="{{ $catCode }}"
-             data-status="{{ $animal->status }}">
-            <div class="animal-card {{ $animal->status === 'slaughtered' ? 'status-slaughtered' : '' }}">
-
-                <div class="animal-emoji-placeholder {{ $bgClass }}">{{ $emoji }}</div>
-
-                <div class="animal-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="type-badge {{ $catCode }}">{{ $emoji }} {{ $catName }}</span>
-                        <span class="status-badge status-{{ $animal->status }}">{{ $statusLabel }}</span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-end mb-1">
-                        <div>
-                            <div class="price-tag">{{ number_format($price, 0) }} <small>ج.م</small></div>
-                            @if($animal->is_grouped)
-                            <div class="price-per-share">≈ {{ number_format($pricePerShare, 0) }} ج.م / حصة</div>
-                            @endif
-                        </div>
-                        @if($animal->weight)
-                        <div class="text-muted text-left" style="font-size:.85rem;">
-                            <i class="las la-weight-hanging"></i>
-                            {{ number_format($animal->weight, 0) }} كجم
-                        </div>
-                        @endif
-                    </div>
-
-                    @if($animal->is_grouped && $setting)
-                    <div class="shares-progress">
-                        <div class="label">
-                            <span>الحصص المشتركة</span>
-                            <span><strong>{{ $usedShares }}</strong> / {{ $maxShares }} حصة</span>
-                        </div>
-                        <div class="shares-track">
-                            <div class="shares-fill {{ $fillClass }}" style="width: {{ $pct }}%"></div>
-                        </div>
-                    </div>
-
-                    <div class="share-dots">
-                        @for($i = 1; $i <= $maxShares; $i++)
-                        <div class="share-dot {{ $i <= $usedShares ? 'dot-taken' : 'dot-free' }}"
-                             title="{{ $i <= $usedShares ? 'حصة مشغولة' : 'حصة متاحة' }}">
-                            {{ $i }}
-                        </div>
-                        @endfor
-                    </div>
-                    @endif
-
-                    @if(in_array($animal->status, ['available', 'partially_allocated']))
-                    <div class="remaining-badge {{ $remainingShares === 0 ? 'none' : '' }}">
-                        @if($remainingShares > 0)
-                            <i class="las la-check-circle mr-1"></i>
-                            متاح — {{ $remainingShares }} {{ $remainingShares === 1 ? 'حصة متبقية' : 'حصص متبقية' }}
-                        @else
-                            <i class="las la-times-circle mr-1"></i> لا توجد حصص متاحة
-                        @endif
-                    </div>
-                    @elseif($animal->status === 'fully_allocated')
-                    <div class="remaining-badge none">
-                        <i class="las la-lock mr-1"></i> مكتمل — لا تتوفر حصص
-                    </div>
-                    @elseif($animal->status === 'slaughtered')
-                    <div class="remaining-badge none">
-                        <i class="las la-calendar-check mr-1"></i> تم الذبح
-                    </div>
-                    @endif
-
-                    @if($animal->supplier)
-                    <div class="mt-2 text-muted" style="font-size:.8rem;">
-                        <i class="las la-truck mr-1"></i> المورد: {{ $animal->supplier->name }}
-                    </div>
-                    @endif
-
-                    <div class="mt-1 text-muted" style="font-size:.75rem;">
-                        <i class="las la-tag mr-1"></i> {{ $animal->code }}
-                    </div>
+                <div class="flex items-center gap-4">
+                    @auth
+                    <a href="{{ route('udhiya.dashboard') }}" class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition duration-300">
+                        لوحة التحكم <span class="ms-2">→</span>
+                    </a>
+                    @else
+                    <a href="{{ route('signin') }}" class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition shadow-lg shadow-slate-200 transform hover:-translate-y-0.5 duration-300">
+                        تسجيل الدخول
+                    </a>
+                    @endauth
                 </div>
             </div>
         </div>
-        @endforeach
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-bold mb-8 animate-fade-in-up">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                موسم الأضاحي متاح الآن
+            </div>
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6 leading-[1.1] max-w-4xl mx-auto">
+                اختر أضحيتك واستكمل <br class="hidden sm:block"> <span class="bg-clip-text text-transparent bg-gradient-to-l from-indigo-600 to-violet-500">مراسيم الأجر</span> بكل اطمئنان
+            </h1>
+            <p class="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+                تصفح الأضاحي المتوفرة وحصص الاشتراك المتاحة، وقم بتأكيد حجزك بكل سهولة قبل نفاد الكمية.
+            </p>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 mb-16">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {{-- Stat 1 --}}
+            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col items-center justify-center transform transition duration-500 hover:-translate-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-3xl mb-4">🐄</div>
+                <div class="text-3xl font-black text-slate-800 mb-1">{{ $stats['total'] }}</div>
+                <div class="text-sm font-bold text-slate-500">إجمالي الأضاحي</div>
+            </div>
+            {{-- Stat 2 --}}
+            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col items-center justify-center transform transition duration-500 hover:-translate-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4">✅</div>
+                <div class="text-3xl font-black text-slate-800 mb-1">{{ $stats['available'] }}</div>
+                <div class="text-sm font-bold text-slate-500">متاح للاشتراك</div>
+            </div>
+            {{-- Stat 3 --}}
+            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col items-center justify-center transform transition duration-500 hover:-translate-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center text-3xl mb-4">🎫</div>
+                <div class="text-3xl font-black text-slate-800 mb-1">{{ $stats['total_spots'] }}</div>
+                <div class="text-sm font-bold text-slate-500">حصة متبقية</div>
+            </div>
+            {{-- Stat 4 --}}
+            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col items-center justify-center transform transition duration-500 hover:-translate-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-3xl mb-4">🔪</div>
+                <div class="text-3xl font-black text-slate-800 mb-1">{{ $stats['slaughtered'] }}</div>
+                <div class="text-sm font-bold text-slate-500">تم ذبحها</div>
+            </div>
+        </div>
     </div>
-    @endif
 
-    <div class="alert alert-info text-center mt-2" style="border-radius:12px; font-size:.95rem;">
-        <i class="las la-info-circle tx-18 mr-1"></i>
-        لحجز حصتك أو الاستفسار، تواصل مع مسؤول المشروع مباشرةً
+    <!-- MAIN APP WRAPPER -->
+    <div x-data="{ 
+            filter: 'all', 
+            search: '',
+            get animalsList() {
+                let els = document.querySelectorAll('.animal-card-wrapper');
+                let count = 0;
+                els.forEach(el => {
+                    let cat = el.dataset.category;
+                    let status = el.dataset.status;
+                    let code = el.dataset.code.toLowerCase();
+                    
+                    let showCategory = (this.filter === 'all') || 
+                                       (this.filter === 'available' && (status === 'available' || status === 'partially_allocated')) ||
+                                       (this.filter === 'fully_allocated' && status === 'fully_allocated') ||
+                                       (cat === this.filter);
+                                       
+                    let showSearch = this.search === '' || code.includes(this.search.toLowerCase());
+                    
+                    if (showCategory && showSearch) {
+                        el.style.display = '';
+                        count++;
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
+                return count;
+            }
+         }" 
+         class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+
+        <div class="flex flex-col items-center text-center pb-10">
+            <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-4">قائمة الأضاحي المتوفرة</h2>
+            <p class="text-slate-500 font-medium text-lg max-w-xl">اختر الأضحية المناسبة وتواصل مع الإدارة عبر المعرف الخاص بها لإتمام الحجز.</p>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="bg-white p-4 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-4 mb-12 sticky top-24 z-40">
+            <div class="flex flex-wrap items-center gap-2 justify-center lg:justify-start w-full lg:w-auto">
+                <button @click="filter = 'all'" :class="filter === 'all' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300">
+                    الكل <span class="bg-white/20 px-2 py-0.5 rounded-full ms-1 text-xs">{{ $animals->count() }}</span>
+                </button>
+                @foreach($categories as $cat)
+                @php $catCount = $animals->filter(fn($a) => $a->product?->mainCategory?->id === $cat->id)->count(); @endphp
+                <button @click="filter = '{{ $cat->code }}'" :class="filter === '{{ $cat->code }}' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2">
+                    <span>{{ match($cat->code) { 'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾' } }}</span>
+                    {{ $cat->name }} <span class="bg-black/10 px-2 py-0.5 rounded-full text-xs">{{ $catCount }}</span>
+                </button>
+                @endforeach
+                <div class="w-px h-8 bg-slate-200 mx-2 hidden sm:block"></div>
+                <button @click="filter = 'available'" :class="filter === 'available' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300">
+                    ✅ متاح
+                </button>
+                <button @click="filter = 'fully_allocated'" :class="filter === 'fully_allocated' ? 'bg-amber-500 text-white shadow-md shadow-amber-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300">
+                    🔒 مكتمل
+                </button>
+            </div>
+            <div class="w-full lg:w-72 relative">
+                <div class="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input x-model="search" type="text" class="w-full bg-slate-50 border-0 rounded-full py-3 ps-12 pe-4 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 transition shadow-inner" placeholder="ابحث برقم المعرف...">
+            </div>
+        </div>
+
+        @if($animals->isEmpty())
+        <div class="bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm">
+            <div class="text-7xl mb-6">🐄</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">لا توجد أضاحي متوفرة</h3>
+            <p class="text-slate-500 font-medium">نعتذر، لم يتم إضافة أي أضاحي بعد في النظام.</p>
+        </div>
+        @else
+        <!-- Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8" x-effect="animalsList">
+            
+            @foreach($animals as $animal)
+            @php
+                $catCode  = $animal->product?->mainCategory?->code ?? 'BQR';
+                $catName  = $animal->product?->mainCategory?->name ?? 'حيوان';
+                $emoji    = match($catCode) { 'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾' };
+                $colorTheme = match($catCode) { 
+                    'BQR' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-700', 'ring' => 'ring-blue-500/20'],
+                    'GHN' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'ring' => 'ring-emerald-500/20'],
+                    'JDN' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-700', 'ring' => 'ring-orange-500/20'],
+                    'JML' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-800', 'ring' => 'ring-amber-500/20'],
+                    default => ['bg' => 'bg-slate-50', 'text' => 'text-slate-700', 'ring' => 'ring-slate-500/20']
+                };
+                
+                $price    = $animal->price_full ?? $animal->cost ?? 0;
+                $setting  = $animal->shareSetting;
+
+                $maxShares = $setting ? $setting->total_shares : 1;
+                $usedShares = $setting ? $setting->sold_shares : ($animal->status === 'fully_allocated' ? 1 : 0);
+                $remainingShares = $setting ? $setting->remaining_shares : ($animal->status === 'available' ? 1 : 0);
+                $pct = $maxShares > 0 ? round(($usedShares / $maxShares) * 100) : 0;
+
+                $statusDetails = match($animal->status) {
+                    'available'           => ['label' => 'متاح', 'bg' => 'bg-emerald-100', 'text' => 'text-emerald-800', 'bar' => 'bg-emerald-500'],
+                    'partially_allocated' => ['label' => 'متاح جزئياً', 'bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'bar' => 'bg-gradient-to-r from-orange-400 to-amber-500'],
+                    'fully_allocated'     => ['label' => 'مكتمل', 'bg' => 'bg-rose-100', 'text' => 'text-rose-800', 'bar' => 'bg-rose-500'],
+                    'slaughtered'         => ['label' => 'تم الذبح', 'bg' => 'bg-slate-200', 'text' => 'text-slate-600', 'bar' => 'bg-slate-400'],
+                    default               => ['label' => $animal->status, 'bg' => 'bg-slate-100', 'text' => 'text-slate-800', 'bar' => 'bg-slate-500']
+                };
+
+                $pricePerShare = $maxShares > 0 ? round($price / $maxShares) : $price;
+                $isSlaughtered = $animal->status === 'slaughtered';
+            @endphp
+            
+            <div class="animal-card-wrapper" data-category="{{ $catCode }}" data-status="{{ $animal->status }}" data-code="{{ $animal->code }}">
+                <div class="relative bg-white rounded-3xl p-2 shadow-lg shadow-slate-200/40 border border-slate-100 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-200/40 hover:-translate-y-2 group flex flex-col h-full {{ $isSlaughtered ? 'opacity-70 grayscale-[30%]' : '' }}">
+                    
+                    {{-- Header Emoji area --}}
+                    <div class="h-44 {{ $colorTheme['bg'] }} rounded-2xl flex items-center justify-center text-7xl relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-white/60"></div>
+                        <span class="relative z-10 transform group-hover:scale-110 group-hover:rotate-3 transition duration-500">{{ $emoji }}</span>
+                        <div class="absolute top-3 start-3">
+                            <span class="px-3 py-1 font-bold text-xs rounded-full {{ $statusDetails['bg'] }} {{ $statusDetails['text'] }} shadow-sm">
+                                {{ $statusDetails['label'] }}
+                            </span>
+                        </div>
+                        <div class="absolute top-3 end-3">
+                            <span class="px-2 py-1 font-bold text-xs bg-white text-slate-600 rounded-lg shadow-sm border border-slate-100">
+                                #{{ $animal->code }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Body --}}
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-black text-slate-800">{{ $catName }}</h3>
+                            @if($animal->weight)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                                {{ number_format($animal->weight, 0) }} كجم
+                            </span>
+                            @endif
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="text-2xl font-black text-indigo-600 mb-1 flex items-end gap-1">
+                                <span>{{ number_format($price, 0) }}</span> 
+                                <span class="text-sm font-bold text-slate-400 mb-1">ج.م</span>
+                            </div>
+                            @if($animal->is_grouped)
+                            <div class="text-sm font-bold text-slate-500">
+                                السهم: <span class="text-slate-700">{{ number_format($pricePerShare, 0) }} ج.م</span>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- Progress Area --}}
+                        <div class="mt-auto">
+                            @if($animal->is_grouped && $setting)
+                            <div class="mb-3">
+                                <div class="flex justify-between text-xs font-bold mb-2">
+                                    <span class="text-slate-500">الحصص ({{ $usedShares }}/{{ $maxShares }})</span>
+                                    @if($remainingShares > 0)
+                                        <span class="text-emerald-600">متبقي {{ $remainingShares }}</span>
+                                    @else
+                                        <span class="text-rose-500">مكتمل</span>
+                                    @endif
+                                </div>
+                                <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full {{ $statusDetails['bar'] }} rounded-full transition-all duration-1000 ease-out" style="width: {{ $pct }}%"></div>
+                                </div>
+                                <div class="flex flex-wrap gap-1 mt-3">
+                                    @for($i = 1; $i <= $maxShares; $i++)
+                                    <div class="h-1.5 flex-1 rounded-full {{ $i <= $usedShares ? $statusDetails['bar'] : 'bg-slate-200' }}"></div>
+                                    @endfor
+                                </div>
+                            </div>
+                            @else
+                                <div class="py-3 px-4 bg-slate-50 rounded-xl text-center text-sm font-bold text-slate-600 mt-2 mb-2 border border-slate-100">
+                                    أضحية كاملة (شخص واحد)
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <!-- No search results display (controlled via alpine) -->
+        <div x-show="animalsList === 0 && search !== ''" x-cloak class="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm mt-8">
+            <h3 class="text-xl font-bold text-slate-800">لا يوجد أضاحي متطابقة للبحث</h3>
+            <button @click="search = ''; filter = 'all'" class="mt-4 px-6 py-2 text-indigo-600 bg-indigo-50 rounded-xl font-bold hover:bg-indigo-100 transition">إلغاء البحث</button>
+        </div>
+        @endif
     </div>
 
-</div>
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-12 relative z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white text-xl">
+                    🐄
+                </div>
+                <span class="text-2xl font-black text-white">مشروع الأضاحي</span>
+            </div>
+            <p class="text-slate-400 font-medium text-sm text-center max-w-sm">
+                نظام سحابي متطور لتسهيل إدارة وبيع الأضاحي حصصاً أو كاملة بكل شفافية واحترافية.
+            </p>
+            <div class="w-full max-w-md h-px bg-slate-800 my-8"></div>
+            <p class="text-slate-500 text-sm font-bold">
+                جميع الحقوق محفوظة &copy; {{ date('Y') }}
+            </p>
+        </div>
+    </footer>
 
-<footer class="public-footer">
-    <p class="mb-0">مشروع الأضاحي &copy; {{ date('Y') }} — جميع الحقوق محفوظة</p>
-</footer>
-
-<script src="{{ URL::asset('assets/plugins/jquery/jquery.min.js') }}"></script>
-<script src="{{ URL::asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script>
-function filterCards(filter, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    document.querySelectorAll('.card-item').forEach(function(card) {
-        var cat    = card.dataset.category;
-        var status = card.dataset.status;
-        var show   = false;
-
-        if (filter === 'all')      show = true;
-        else if (filter === 'available') show = (status === 'available' || status === 'partially_allocated');
-        else if (filter === 'fully_allocated') show = (status === 'fully_allocated');
-        else show = (cat === filter);
-
-        card.style.display = show ? '' : 'none';
-    });
-}
-</script>
 </body>
 </html>

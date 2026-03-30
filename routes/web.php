@@ -145,6 +145,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::resource('groups', SlaughterGroupController::class)->only(['index', 'create', 'store', 'show']);
     Route::post('groups/{group}/members', [SlaughterGroupController::class, 'addMember'])->name('groups.members.add');
     Route::delete('groups/{group}/members/{member}', [SlaughterGroupController::class, 'removeMember'])->name('groups.members.remove');
+    Route::patch('groups/{group}/assign-animal', [SlaughterGroupController::class, 'assignAnimal'])->name('groups.assign-animal');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

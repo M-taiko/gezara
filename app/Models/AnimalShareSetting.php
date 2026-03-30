@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AnimalShareSetting extends Model
 {
     const SHARE_TYPE_LABELS = [
-        'seven'   => 'سبع (7 أنصبة)',
-        'five'    => 'خمس (5 أنصبة)',
+        'seven'   => 'سُبع (7 أنصبة)',
+        'six'     => 'سُدس (6 أنصبة)',
+        'five'    => 'خُمس (5 أنصبة)',
         'quarter' => 'ربع (4 أنصبة)',
+        'third'   => 'ثُلث (3 أنصبة)',
         'half'    => 'نصف (2 نصيب)',
     ];
 

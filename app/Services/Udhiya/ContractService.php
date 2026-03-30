@@ -7,15 +7,22 @@ use App\Models\AnimalShareSetting;
 use App\Models\Contract;
 use App\Models\ContractItem;
 use App\Models\SlaughterGroupMember;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ContractService
 {
-    public function __construct(private AccountingService $accounting) {}
+    public function __construct(
+        private AccountingService $accounting,
+        private PaymentService $payments,
+    ) {}
 
     public function store(array $data): Contract
     {
-        return DB::transaction(function () use ($data) {
+        $paymentAmount = isset($data['payment_amount']) ? (float) $data['payment_amount'] : 0;
+        $paymentMethod = $data['payment_method'] ?? 'cash';
+
+        $contract = DB::transaction(function () use ($data) {
             $total = 0;
 
             // Lock and validate all animals first (prevent race conditions)
@@ -43,10 +50,28 @@ class ContractService
 
                     $total += $totalPrice;
                 } else {
-                    $setting = AnimalShareSetting::where('animal_id', $item['animal_id'])
-                        ->lockForUpdate()->firstOrFail();
+                    $animal = Animal::lockForUpdate()->findOrFail($item['animal_id']);
 
-                    $animal = $setting->animal;
+                    $setting = AnimalShareSetting::where('animal_id', $animal->id)
+                        ->lockForUpdate()->first();
+
+                    if (!$setting) {
+                        $shareType   = $item['share_type'];
+                        $totalShares = Animal::SHARE_MAP[$shareType] ?? null;
+                        if (!$totalShares) {
+                            throw new \RuntimeException("نوع الحصة '{$shareType}' غير صالح.");
+                        }
+                        $setting = AnimalShareSetting::create([
+                            'animal_id'        => $animal->id,
+                            'share_type'       => $shareType,
+                            'total_shares'     => $totalShares,
+                            'sold_shares'      => 0,
+                            'remaining_shares' => $totalShares,
+                        ]);
+                        $animal->update(['is_grouped' => true]);
+                        $animal->refresh();
+                    }
+
                     $sharesCount = $item['shares_count'] ?? 1;
 
                     if ($setting->remaining_shares < $sharesCount) {
@@ -99,8 +124,7 @@ class ContractService
 
                 // Auto-assign to slaughter group if specified
                 if (!empty($itemData['group_id'])) {
-                    // Avoid duplicate if customer already in this group
-                    SlaughterGroupMember::firstOrCreate(
+                    SlaughterGroupMember::updateOrCreate(
                         [
                             'group_id'    => $itemData['group_id'],
                             'customer_id' => $data['customer_id'],
@@ -129,6 +153,19 @@ class ContractService
 
             return $contract;
         });
+
+        // Record initial payment outside the main transaction to avoid nesting
+        if ($paymentAmount > 0) {
+            $this->payments->store($contract, [
+                'amount'         => $paymentAmount,
+                'payment_method' => $paymentMethod,
+                'date'           => Carbon::today()->toDateString(),
+                'notes'          => 'دفعة عند إصدار الصك',
+            ]);
+            $contract->refresh();
+        }
+
+        return $contract;
     }
 
     public function cancel(Contract $contract): void

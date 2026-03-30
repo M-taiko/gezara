@@ -63,7 +63,11 @@ class ReportController extends Controller
 
     public function customer(Customer $customer)
     {
-        $customer->load('contracts.items.animal', 'contracts.payments');
+        $customer->load(
+            'contracts.items.animal.product.mainCategory',
+            'contracts.payments',
+            'groupMembers.group.animal.product.mainCategory'
+        );
         $totalAmount    = $customer->contracts->sum('total_amount');
         $paidAmount     = $customer->contracts->sum('paid_amount');
         $remainingAmount = $customer->contracts->sum('remaining_amount');

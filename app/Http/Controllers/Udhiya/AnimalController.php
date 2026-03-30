@@ -53,6 +53,14 @@ class AnimalController extends Controller
             'supplier_id'  => 'nullable|exists:suppliers,id',
             'weight'       => 'nullable|numeric|min:0',
             'cost'         => 'nullable|numeric|min:0',
+            'price_per_kg' => 'nullable|numeric|min:0',
+            'price_full'   => 'nullable|numeric|min:0',
+            'price_seven'  => 'nullable|numeric|min:0',
+            'price_six'    => 'nullable|numeric|min:0',
+            'price_five'   => 'nullable|numeric|min:0',
+            'price_quarter'=> 'nullable|numeric|min:0',
+            'price_third'  => 'nullable|numeric|min:0',
+            'price_half'   => 'nullable|numeric|min:0',
             'notes'        => 'nullable|string',
         ], [
             'code.required'         => 'كود الحيوان مطلوب.',
@@ -67,7 +75,15 @@ class AnimalController extends Controller
             'warehouse_id' => $request->warehouse_id,
             'supplier_id'  => $request->supplier_id ?: null,
             'weight'       => $request->weight ?: null,
+            'price_per_kg' => $request->price_per_kg ?: null,
             'cost'         => $request->cost ?? 0,
+            'price_full'   => $request->price_full ?: null,
+            'price_seven'  => $request->price_seven ?: null,
+            'price_six'    => $request->price_six ?: null,
+            'price_five'   => $request->price_five ?: null,
+            'price_quarter'=> $request->price_quarter ?: null,
+            'price_third'  => $request->price_third ?: null,
+            'price_half'   => $request->price_half ?: null,
             'notes'        => $request->notes,
             'status'       => 'available',
         ]);
@@ -95,7 +111,7 @@ class AnimalController extends Controller
     public function setGrouped(Request $request, Animal $animal)
     {
         $request->validate([
-            'share_type' => 'required|in:seven,five,quarter,half',
+            'share_type' => 'required|in:seven,six,five,quarter,third,half',
         ]);
 
         try {
@@ -129,14 +145,20 @@ class AnimalController extends Controller
     public function updatePrices(Request $request, Animal $animal)
     {
         $request->validate([
+            'price_per_kg'  => 'nullable|numeric|min:0',
             'price_full'    => 'nullable|numeric|min:0',
             'price_seven'   => 'nullable|numeric|min:0',
+            'price_six'     => 'nullable|numeric|min:0',
             'price_five'    => 'nullable|numeric|min:0',
             'price_quarter' => 'nullable|numeric|min:0',
+            'price_third'   => 'nullable|numeric|min:0',
             'price_half'    => 'nullable|numeric|min:0',
         ]);
 
-        $animal->update($request->only(['price_full', 'price_seven', 'price_five', 'price_quarter', 'price_half']));
+        $animal->update($request->only([
+            'price_per_kg', 'price_full', 'price_seven', 'price_six',
+            'price_five', 'price_quarter', 'price_third', 'price_half',
+        ]));
         return back()->with('toast_success', 'تم تحديث أسعار الحيوان.');
     }
 

@@ -12,6 +12,11 @@ class Customer extends Model
         return $this->hasMany(Contract::class);
     }
 
+    public function groupMembers(): HasMany
+    {
+        return $this->hasMany(SlaughterGroupMember::class);
+    }
+
     public function totalContracts(): int { return $this->contracts()->count(); }
     public function totalPaid(): float    { return (float) $this->contracts()->sum('paid_amount'); }
     public function totalDue(): float     { return (float) $this->contracts()->sum('remaining_amount'); }

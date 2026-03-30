@@ -46,7 +46,7 @@ class SlaughterGroupController extends Controller
     {
         $data = $request->validate([
             'name'          => 'required|string|max:255',
-            'animal_id'     => 'required|exists:animals,id',
+            'animal_id'     => 'nullable|exists:animals,id',
             'share_type'    => 'required|in:seven,five,quarter,half,full',
             'slaughter_day' => 'nullable|date',
             'notes'         => 'nullable|string',
@@ -64,40 +64,75 @@ class SlaughterGroupController extends Controller
             'animal.product.mainCategory',
             'animal.shareSetting',
             'members.customer',
-            'members.contractItem.contract',
+            'members.contractItem.contract.payments',
         ]);
 
-        $customers = Customer::orderBy('name')->get();
+        // Calculate price per share from the animal
+        $priceField    = 'price_' . $group->share_type;
+        $pricePerShare = $group->animal ? (float) ($group->animal->$priceField ?? 0) : 0;
 
-        return view('udhiya.groups.show', compact('group', 'customers'));
+        $customers = Customer::orderBy('name')->get();
+        $animals   = Animal::with('product.mainCategory')
+            ->whereIn('status', ['available', 'partially_allocated'])
+            ->orderBy('code')
+            ->get();
+
+        return view('udhiya.groups.show', compact('group', 'customers', 'animals', 'pricePerShare'));
+    }
+
+    public function assignAnimal(Request $request, SlaughterGroup $group)
+    {
+        $data = $request->validate([
+            'animal_id' => 'nullable|exists:animals,id',
+        ]);
+
+        $group->update(['animal_id' => $data['animal_id'] ?: null]);
+
+        return back()->with('toast_success', 'تم تعيين الحيوان للمجموعة');
     }
 
     public function addMember(Request $request, SlaughterGroup $group)
     {
+        // Quick-create customer if name provided and no existing customer selected
+        $customerId = $request->input('customer_id');
+
+        if (!$customerId && $request->filled('new_customer_name')) {
+            $request->validate([
+                'new_customer_name'  => 'required|string|max:255',
+                'new_customer_phone' => 'nullable|string|max:20',
+            ]);
+            $customer   = Customer::create([
+                'name'  => $request->input('new_customer_name'),
+                'phone' => $request->input('new_customer_phone'),
+            ]);
+            $customerId = $customer->id;
+        }
+
+        $group->load('members');
         $data = $request->validate([
-            'customer_id'  => 'required|exists:customers,id',
             'shares_count' => 'required|integer|min:1|max:' . $group->totalSlots(),
             'notes'        => 'nullable|string',
         ]);
 
-        // Check uniqueness manually to return a friendly error
+        if (!$customerId) {
+            return back()->with('toast_error', 'يرجى اختيار عميل أو إدخال اسم عميل جديد');
+        }
+
         $exists = SlaughterGroupMember::where('group_id', $group->id)
-            ->where('customer_id', $data['customer_id'])
+            ->where('customer_id', $customerId)
             ->exists();
 
         if ($exists) {
             return back()->with('toast_error', 'هذا العميل مضاف بالفعل في المجموعة');
         }
 
-        // Check remaining slots
-        $group->load('members');
         if ($group->remainingSlots() < $data['shares_count']) {
             return back()->with('toast_error', 'لا تتوفر أنصبة كافية في هذه المجموعة');
         }
 
         SlaughterGroupMember::create([
             'group_id'     => $group->id,
-            'customer_id'  => $data['customer_id'],
+            'customer_id'  => $customerId,
             'shares_count' => $data['shares_count'],
             'notes'        => $data['notes'] ?? null,
         ]);
