@@ -46,21 +46,26 @@
                 <h6 class="text-base font-black text-slate-800 m-0">📋 البيانات الأساسية</h6>
             </div>
             <div class="p-5 space-y-3 text-sm">
-                @php
-                    $rows = [
-                        'الكود'    => '<span class="font-black text-slate-800">' . e($animal->code) . '</span>',
-                        'النوع'    => e($animal->product?->name ?? '—'),
-                        'الفئة'    => '<span class="px-2 py-0.5 rounded-md bg-slate-100 text-xs font-bold">' . e($cat?->name ?? '—') . '</span>',
-                        'المخزن'   => e($animal->warehouse?->name ?? '—'),
-                        'المورد'   => e($animal->supplier?->name ?? '—'),
-                    ];
-                @endphp
-                @foreach($rows as $k => $v)
                 <div class="flex justify-between items-center">
-                    <span class="text-slate-400 font-semibold">{{ $k }}</span>
-                    <span class="font-bold text-slate-700 text-left">{!! $v !!}</span>
+                    <span class="text-slate-400 font-semibold">الكود</span>
+                    <span class="font-black text-slate-800">{{ $animal->code }}</span>
                 </div>
-                @endforeach
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-semibold">النوع</span>
+                    <span class="font-bold text-slate-700">{{ $animal->product?->name ?? '—' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-semibold">الفئة</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-100 text-xs font-bold">{{ $cat?->name ?? '—' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-semibold">المخزن</span>
+                    <span class="font-bold text-slate-700">{{ $animal->warehouse?->name ?? '—' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-semibold">المورد</span>
+                    <span class="font-bold text-slate-700">{{ $animal->supplier?->name ?? '—' }}</span>
+                </div>
 
                 @if($animal->weight)
                 <div class="flex justify-between items-center pt-2 border-t border-slate-100">
