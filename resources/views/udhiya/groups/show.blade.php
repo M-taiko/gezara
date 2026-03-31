@@ -12,7 +12,27 @@
             / {{ $group->name }}
         </p>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
+        {{-- Slaughter button --}}
+        @if($group->animal && $group->animal->status !== 'slaughtered')
+            @php $allContracted = $group->remainingSlots() === 0; @endphp
+            <form action="{{ route('udhiya.groups.slaughter', $group) }}" method="POST"
+                  onsubmit="return confirm('{{ $allContracted ? 'تأكيد ذبح الذبيحة ' . $group->animal->code . '؟' : 'لم تكتمل جميع الصكوك. هل تريد الذبح على أي حال؟' }}')">
+                @csrf
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl shadow-md transition-all
+                               {{ $allContracted
+                                  ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200/60'
+                                  : 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200/60' }}">
+                    🔪 {{ $allContracted ? 'ذبح الذبيحة' : 'ذبح على أي حال' }}
+                </button>
+            </form>
+        @elseif($group->animal && $group->animal->status === 'slaughtered')
+            <span class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-black rounded-xl bg-slate-100 text-slate-500 border border-slate-200">
+                ✅ تم الذبح {{ $group->animal->slaughtered_at?->format('d/m/Y') }}
+            </span>
+        @endif
+
         <button onclick="window.print()" class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold rounded-xl transition-all bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm no-print">
             🖨️ طباعة القائمة
         </button>
@@ -123,7 +143,15 @@
                 <h6 class="text-base font-black text-slate-800 m-0">➕ إضافة عضو للمجموعة</h6>
             </div>
             <div class="p-6">
-                @if($remaining > 0)
+                @php $isSlaughtered = $group->animal?->status === 'slaughtered'; @endphp
+                @if($remaining > 0 || $isSlaughtered)
+
+                @if($isSlaughtered && $remaining <= 0)
+                <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-2xl p-3 mb-4 text-xs font-bold text-indigo-700">
+                    ℹ️ تمت الصكوك — يمكن إضافة عميل مباشر بعد الذبح
+                </div>
+                @endif
+
                 <form action="{{ route('udhiya.groups.members.add', $group) }}" method="POST"
                       class="flex flex-col gap-4" id="addMemberForm">
                     @csrf
@@ -174,10 +202,12 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">
                             عدد الأنصبة
+                            @if(!$isSlaughtered)
                             <span class="text-slate-400 font-normal">(متاح: {{ $remaining }})</span>
+                            @endif
                         </label>
                         <input type="number" name="shares_count"
-                               value="1" min="1" max="{{ $remaining }}"
+                               value="1" min="1" @if(!$isSlaughtered) max="{{ $remaining }}" @endif
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-bold text-slate-800 text-center">
                     </div>
 
@@ -233,6 +263,9 @@
                             <th class="px-4 py-3 text-center">المتبقي</th>
                             @endif
                             <th class="px-4 py-3">الصك</th>
+                            @if($group->animal?->status === 'slaughtered')
+                            <th class="px-4 py-3 text-center">التسليم</th>
+                            @endif
                             <th class="px-4 py-3 no-print"></th>
                         </tr>
                     </thead>
@@ -255,9 +288,21 @@
                             </td>
                             <td class="px-4 py-3 text-slate-500 text-xs">{{ $member->customer?->phone ?? '—' }}</td>
                             <td class="px-4 py-3 text-center">
+                                @if($member->contractItem)
+                                @php $contractShares = $member->contractItem->shares_count; @endphp
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        ✅ {{ $contractShares }} نصيب
+                                    </span>
+                                    @if($contractShares != $member->shares_count)
+                                    <span class="text-xs text-slate-400">(مسجّل: {{ $member->shares_count }})</span>
+                                    @endif
+                                </div>
+                                @else
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
                                     {{ $member->shares_count }} نصيب
                                 </span>
+                                @endif
                             </td>
 
                             @if($pricePerShare > 0)
@@ -305,6 +350,30 @@
                                 </a>
                                 @endif
                             </td>
+                            {{-- Delivery --}}
+                            @if($group->animal?->status === 'slaughtered')
+                            <td class="px-4 py-3 text-center">
+                                @if($member->contractItem)
+                                    @if($member->contractItem->delivered_at)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                            ✅ {{ $member->contractItem->delivered_at->format('d/m') }}
+                                        </span>
+                                    @else
+                                        <form action="{{ route('udhiya.groups.members.deliver', [$group, $member]) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <button type="submit"
+                                                    onclick="return confirm('تأكيد تسليم {{ $member->customer?->name }}؟')"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm">
+                                                🤝 تم التسليم
+                                            </button>
+                                        </form>
+                                    @endif
+                                @else
+                                    <span class="text-slate-300 text-xs">—</span>
+                                @endif
+                            </td>
+                            @endif
+
                             {{-- Delete --}}
                             <td class="px-4 py-3 no-print">
                                 @if(!$member->contract_item_id)
@@ -341,7 +410,7 @@
                                 {{ number_format($group->members->sum(fn($m) => ($pricePerShare * $m->shares_count) - ($m->contractItem?->contract?->paid_amount ?? 0)), 0) }} ج.م
                             </td>
                             @endif
-                            <td colspan="2"></td>
+                            <td colspan="{{ $group->animal?->status === 'slaughtered' ? 3 : 2 }}"></td>
                         </tr>
                     </tfoot>
                 </table>

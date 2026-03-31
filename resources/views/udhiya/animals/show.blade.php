@@ -213,6 +213,33 @@
     {{-- ═══════════ LEFT MAIN ═══════════ --}}
     <div class="flex-1 min-w-0 flex flex-col gap-5">
 
+        {{-- Purchase Origin --}}
+        @if($animal->purchase)
+        <div class="bg-white rounded-3xl shadow-sm border border-indigo-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-indigo-100 bg-indigo-50/50 flex items-center justify-between">
+                <h6 class="text-base font-black text-slate-800 m-0">🛒 مصدر الشراء</h6>
+                <a href="{{ route('udhiya.purchases.show', $animal->purchase) }}"
+                   class="text-xs font-black text-indigo-600 hover:text-indigo-800 hover:underline">
+                    عرض فاتورة الشراء ←
+                </a>
+            </div>
+            <div class="px-6 py-4 grid grid-cols-3 gap-4 text-sm">
+                <div class="flex flex-col gap-1">
+                    <span class="text-xs text-slate-400 font-bold">المورد</span>
+                    <span class="font-black text-slate-800">{{ $animal->purchase->supplier->name }}</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-xs text-slate-400 font-bold">تاريخ الشراء</span>
+                    <span class="font-bold text-slate-700">{{ \Carbon\Carbon::parse($animal->purchase->date)->format('d/m/Y') }}</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-xs text-slate-400 font-bold">تكلفة الحيوان</span>
+                    <span class="font-black text-rose-600">{{ number_format($animal->cost, 0) }} ج.م</span>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Prices Card --}}
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-100 bg-emerald-50/50 flex items-center justify-between">
@@ -313,16 +340,34 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-sm">
                         @forelse($animal->contractItems as $item)
+                        @php
+                            $paid      = $item->contract->paid_amount ?? 0;
+                            $total     = $item->contract->total_amount ?? 0;
+                            $remaining = $total - $paid;
+                            $isPaid    = $remaining <= 0;
+                        @endphp
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-5 py-3 font-black text-slate-800">{{ $item->contract->contract_number }}</td>
-                            <td class="px-5 py-3 font-semibold text-slate-700">{{ $item->contract->customer->name }}</td>
+                            <td class="px-5 py-3">
+                                <div class="font-semibold text-slate-700">{{ $item->contract->customer->name }}</div>
+                                @if($item->contract->customer->phone)
+                                <div class="text-xs text-slate-400">{{ $item->contract->customer->phone }}</div>
+                                @endif
+                            </td>
                             <td class="px-5 py-3 text-center">
                                 <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
                                     {{ \App\Models\Animal::SHARE_LABELS[$item->share_type] ?? $item->share_type ?? 'كامل' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3 text-center font-bold text-slate-700">{{ $item->shares_count }}</td>
-                            <td class="px-5 py-3 text-center font-black text-emerald-700">{{ number_format($item->total_price, 0) }} ج.م</td>
+                            <td class="px-5 py-3 text-center">
+                                <div class="font-black text-emerald-700">{{ number_format($item->total_price, 0) }} ج.م</div>
+                                @if($isPaid)
+                                    <span class="text-xs font-bold text-emerald-600">✅ مسدد</span>
+                                @else
+                                    <span class="text-xs font-bold text-amber-600">متبقي {{ number_format($remaining, 0) }}</span>
+                                @endif
+                            </td>
                             <td class="px-5 py-3 text-center">
                                 <a href="{{ route('udhiya.contracts.show', $item->contract) }}"
                                    class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white flex items-center justify-center transition-colors mx-auto">
@@ -342,6 +387,109 @@
                 </table>
             </div>
         </div>
+
+        {{-- Expenses --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-orange-50/50 flex items-center justify-between">
+                <h6 class="text-base font-black text-slate-800 m-0">
+                    💸 المصاريف المرتبطة
+                    <span class="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-bold bg-orange-100 text-orange-700 mr-2">
+                        {{ $animal->expenses->count() }}
+                    </span>
+                </h6>
+                @php $totalExpenses = $animal->expenses->sum('amount'); @endphp
+                @if($totalExpenses > 0)
+                <span class="text-sm font-black text-orange-700">{{ number_format($totalExpenses, 0) }} ج.م</span>
+                @endif
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
+                            <th class="px-5 py-3">التاريخ</th>
+                            <th class="px-5 py-3">الفئة</th>
+                            <th class="px-5 py-3">الوصف</th>
+                            <th class="px-5 py-3 text-left">المبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        @forelse($animal->expenses->sortByDesc('date') as $expense)
+                        @php
+                            $cat = \App\Models\Expense::CATEGORIES[$expense->category] ?? ['label'=>$expense->category,'emoji'=>'📦'];
+                        @endphp
+                        <tr class="hover:bg-orange-50/30 transition-colors">
+                            <td class="px-5 py-3 text-xs text-slate-500 font-semibold">
+                                {{ \Carbon\Carbon::parse($expense->date)->format('d/m/Y') }}
+                            </td>
+                            <td class="px-5 py-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-50 text-orange-700 border border-orange-100">
+                                    {{ $cat['emoji'] }} {{ $cat['label'] }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3 font-semibold text-slate-700">{{ $expense->description }}</td>
+                            <td class="px-5 py-3 text-left font-black text-orange-700">
+                                {{ number_format($expense->amount, 0) }}
+                                <span class="text-xs text-orange-400 font-normal">ج.م</span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-8 text-slate-400 text-sm font-semibold">لا توجد مصاريف مرتبطة بهذا الحيوان</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if($totalExpenses > 0)
+                    <tfoot>
+                        <tr class="bg-orange-50/60 border-t border-orange-100">
+                            <td colspan="3" class="px-5 py-3 text-xs font-black text-slate-600">إجمالي المصاريف</td>
+                            <td class="px-5 py-3 text-left text-sm font-black text-orange-700">
+                                {{ number_format($totalExpenses, 0) }}
+                                <span class="text-xs text-orange-400 font-normal">ج.م</span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+
+        {{-- P&L Summary --}}
+        @php
+            $purchaseCost  = $animal->cost ?? 0;
+            $contractRevenue = $animal->contractItems->sum('total_price');
+            $netProfit     = $contractRevenue - $purchaseCost - $totalExpenses;
+        @endphp
+        @if($contractRevenue > 0 || $totalExpenses > 0)
+        <div class="bg-white rounded-3xl shadow-sm border {{ $netProfit >= 0 ? 'border-emerald-100' : 'border-rose-100' }} overflow-hidden">
+            <div class="px-6 py-5 border-b {{ $netProfit >= 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100' }}">
+                <h6 class="text-base font-black text-slate-800 m-0">📊 ملخص الأرباح والخسائر</h6>
+            </div>
+            <div class="px-6 py-5 space-y-3 text-sm">
+                <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span class="text-slate-500 font-semibold">تكلفة الشراء</span>
+                    <span class="font-black text-rose-600">{{ number_format($purchaseCost, 0) }} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span class="text-slate-500 font-semibold">المصاريف الإضافية</span>
+                    <span class="font-black text-orange-600">{{ number_format($totalExpenses, 0) }} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span class="text-slate-500 font-semibold">إجمالي التكلفة</span>
+                    <span class="font-black text-slate-800">{{ number_format($purchaseCost + $totalExpenses, 0) }} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span class="text-slate-500 font-semibold">الإيرادات (الصكوك)</span>
+                    <span class="font-black text-emerald-600">{{ number_format($contractRevenue, 0) }} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                    <span class="font-black text-slate-800">صافي الربح</span>
+                    <span class="text-lg font-black {{ $netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                        {{ $netProfit >= 0 ? '+' : '' }}{{ number_format($netProfit, 0) }} ج.م
+                    </span>
+                </div>
+            </div>
+        </div>
+        @endif
 
         {{-- Transfer History --}}
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">

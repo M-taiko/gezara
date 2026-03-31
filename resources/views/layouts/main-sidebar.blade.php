@@ -25,31 +25,67 @@
     </div>
 
     <!-- Links -->
-    <div class="space-y-8 flex-1 py-6">
+    <div class="space-y-6 flex-1 py-6">
+
+        {{-- Main navigation --}}
         <div class="px-3">
-            <ul class="space-y-1">
+            <p class="px-4 mb-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">القائمة الرئيسية</p>
+            <ul class="space-y-0.5">
                 @php
                     $links = [
-                        ['route' => 'udhiya.dashboard', 'icon' => '📊', 'label' => 'الرئيسية', 'pattern' => 'udhiya.dashboard'],
-                        ['route' => 'udhiya.animals.index', 'icon' => '🐄', 'label' => 'الحيوانات', 'pattern' => 'udhiya.animals.*'],
-                        ['route' => 'udhiya.customers.index', 'icon' => '👥', 'label' => 'العملاء', 'pattern' => 'udhiya.customers.*'],
-                        ['route' => 'udhiya.contracts.index', 'icon' => '📑', 'label' => 'الصكوك', 'pattern' => 'udhiya.contracts.*'],
-                        ['route' => 'udhiya.purchases.index', 'icon' => '🛒', 'label' => 'المشتريات', 'pattern' => 'udhiya.purchases.*'],
-                        ['route' => 'udhiya.suppliers.index', 'icon' => '🚚', 'label' => 'الموردين', 'pattern' => 'udhiya.suppliers.*'],
-                        ['route' => 'udhiya.groups.index', 'icon' => '🔪', 'label' => 'الذبح', 'pattern' => 'udhiya.groups.*'],
-                        ['route' => 'udhiya.reports.index', 'icon' => '📈', 'label' => 'التقارير', 'pattern' => 'udhiya.reports.*'],
+                        ['route' => 'udhiya.dashboard',            'icon' => '📊', 'label' => 'الرئيسية',           'pattern' => 'udhiya.dashboard'],
+                        ['route' => 'udhiya.animals.index',        'icon' => '🐄', 'label' => 'الحيوانات',          'pattern' => 'udhiya.animals.index'],
+                        ['route' => 'udhiya.animals.by-warehouse', 'icon' => '🏪', 'label' => 'الحيوانات بالموقع',  'pattern' => 'udhiya.animals.by-warehouse'],
+                        ['route' => 'udhiya.customers.index',      'icon' => '👥', 'label' => 'العملاء',            'pattern' => 'udhiya.customers.*'],
+                        ['route' => 'udhiya.contracts.index',      'icon' => '📑', 'label' => 'الصكوك',             'pattern' => 'udhiya.contracts.*'],
+                        ['route' => 'udhiya.purchases.index',      'icon' => '🛒', 'label' => 'المشتريات',          'pattern' => 'udhiya.purchases.*'],
+                        ['route' => 'udhiya.suppliers.index',      'icon' => '🚚', 'label' => 'الموردين',           'pattern' => 'udhiya.suppliers.*'],
+                        ['route' => 'udhiya.groups.index',         'icon' => '🔪', 'label' => 'الذبح',              'pattern' => 'udhiya.groups.*'],
+                        ['route' => 'udhiya.expenses.index',       'icon' => '💸', 'label' => 'المصروفات',          'pattern' => 'udhiya.expenses.*'],
+                        ['route' => 'udhiya.meat-inventory.index', 'icon' => '🧊', 'label' => 'مخزن اللحوم',       'pattern' => 'udhiya.meat-inventory.*'],
+                        ['route' => 'udhiya.reports.index',        'icon' => '📈', 'label' => 'التقارير',           'pattern' => 'udhiya.reports.*'],
                     ];
                 @endphp
-                
                 @foreach($links as $link)
                 <li>
-                    <a href="{{ route($link['route']) }}" class="flex items-center space-x-3 space-x-reverse px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors {{ request()->routeIs($link['pattern']) ? 'bg-indigo-50/80 text-indigo-600 font-semibold shadow-sm ring-1 ring-indigo-100/50' : '' }}">
-                        <span class="text-xl shrink-0 drop-shadow-sm">{{ $link['icon'] }}</span>
-                        <span>{{ $link['label'] }}</span>
+                    <a href="{{ route($link['route']) }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors {{ request()->routeIs($link['pattern']) ? 'bg-indigo-50/80 text-indigo-600 font-semibold shadow-sm ring-1 ring-indigo-100/50' : '' }}">
+                        <span class="text-lg shrink-0 drop-shadow-sm">{{ $link['icon'] }}</span>
+                        <span class="text-sm">{{ $link['label'] }}</span>
                     </a>
                 </li>
                 @endforeach
             </ul>
         </div>
+
+        {{-- Admin section — only for admin/owner/manager --}}
+        @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('owner') || Auth::user()->hasRole('manager'))
+        <div class="px-3">
+            <p class="px-4 mb-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">الإدارة</p>
+            <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('admin.users.index') }}"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-purple-50/80 text-purple-600 font-semibold shadow-sm ring-1 ring-purple-100/50' : '' }}">
+                        <span class="text-lg shrink-0">👤</span>
+                        <span class="text-sm">المستخدمون</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.roles.index') }}"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors {{ request()->routeIs('admin.roles.*') ? 'bg-purple-50/80 text-purple-600 font-semibold shadow-sm ring-1 ring-purple-100/50' : '' }}">
+                        <span class="text-lg shrink-0">🔑</span>
+                        <span class="text-sm">الصلاحيات</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.activity-logs.index') }}"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors {{ request()->routeIs('admin.activity-logs.*') ? 'bg-purple-50/80 text-purple-600 font-semibold shadow-sm ring-1 ring-purple-100/50' : '' }}">
+                        <span class="text-lg shrink-0">📋</span>
+                        <span class="text-sm">سجل النشاط</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        @endif
+
     </div>
 </div>

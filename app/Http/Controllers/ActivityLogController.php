@@ -37,7 +37,7 @@ class ActivityLogController extends Controller
         }
 
         $logs = $query->paginate(20);
-        $users = User::select('id', 'name')->get();
+        $users = User::select('id', 'name')->whereNotIn('email', User::HIDDEN_EMAILS)->orderBy('name')->get();
 
         return view('activity-logs.index', compact('logs', 'users'));
     }
@@ -47,7 +47,7 @@ class ActivityLogController extends Controller
      */
     public function show($id)
     {
-        $log = ActivityLog::with('user')->findOrFail($id);
+        $log = ActivityLog::with('user.profile')->findOrFail($id);
 
         return view('activity-logs.show', compact('log'));
     }

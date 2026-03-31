@@ -91,6 +91,28 @@ class AnimalController extends Controller
         return back()->with('toast_success', 'تم إضافة الحيوان بنجاح.');
     }
 
+    public function byWarehouse(Request $request)
+    {
+        $statusFilter = $request->input('status');
+
+        $warehouses = Warehouse::with([
+            'animals' => function ($q) use ($statusFilter) {
+                $q->with('product.mainCategory', 'shareSetting')
+                  ->when($statusFilter, fn($q2) => $q2->where('status', $statusFilter));
+            }
+        ])->get();
+
+        $summary = [
+            'total'      => Animal::count(),
+            'available'  => Animal::where('status', 'available')->count(),
+            'partially'  => Animal::where('status', 'partially_allocated')->count(),
+            'fully'      => Animal::where('status', 'fully_allocated')->count(),
+            'slaughtered'=> Animal::where('status', 'slaughtered')->count(),
+        ];
+
+        return view('udhiya.animals.by-warehouse', compact('warehouses', 'summary', 'statusFilter'));
+    }
+
     public function show(Animal $animal)
     {
         $animal->load(
@@ -100,9 +122,11 @@ class AnimalController extends Controller
             'warehouse',
             'shareSetting',
             'contractItems.contract.customer',
+            'contractItems.contract.payments',
             'transfers.fromWarehouse',
             'transfers.toWarehouse',
-            'transfers.transferredBy'
+            'transfers.transferredBy',
+            'expenses'
         );
         $warehouses = Warehouse::whereNot('id', $animal->warehouse_id)->get();
         return view('udhiya.animals.show', compact('animal', 'warehouses'));

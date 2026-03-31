@@ -52,7 +52,7 @@ class RoleController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return redirect()->route('roles.index')->with('success', 'Role created successfully!');
+        return redirect()->route('admin.roles.index')->with('toast_success', 'تم إنشاء الدور بنجاح.');
     }
 
     /**
@@ -102,7 +102,7 @@ class RoleController extends Controller
             ],
         ]);
 
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully!');
+        return redirect()->route('admin.roles.index')->with('toast_success', 'تم تحديث الدور بنجاح.');
     }
 
     /**
@@ -137,7 +137,7 @@ class RoleController extends Controller
 
         $role->delete();
 
-        return redirect()->route('roles.index')->with('success', 'Role deleted successfully!');
+        return redirect()->route('admin.roles.index')->with('toast_success', 'تم حذف الدور.');
     }
 
     /**

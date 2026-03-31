@@ -24,6 +24,9 @@ use App\Http\Controllers\Udhiya\PaymentController;
 use App\Http\Controllers\Udhiya\ReportController;
 use App\Http\Controllers\Udhiya\SlaughterGroupController;
 use App\Http\Controllers\Udhiya\ProductController;
+use App\Http\Controllers\Udhiya\ExpenseController;
+use App\Http\Controllers\Udhiya\MeatInventoryController;
+use App\Http\Controllers\Udhiya\MeatSaleController;
 use App\Http\Controllers\PublicController;
 
 // Auth Routes
@@ -117,6 +120,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
 
     // Animals
     Route::get('animals', [AnimalController::class, 'index'])->name('animals.index');
+    Route::get('animals-by-warehouse', [AnimalController::class, 'byWarehouse'])->name('animals.by-warehouse');
     Route::post('animals', [AnimalController::class, 'store'])->name('animals.store');
     Route::get('animals/{animal}', [AnimalController::class, 'show'])->name('animals.show');
     Route::post('animals/{animal}/set-grouped', [AnimalController::class, 'setGrouped'])->name('animals.set-grouped');
@@ -146,6 +150,22 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::post('groups/{group}/members', [SlaughterGroupController::class, 'addMember'])->name('groups.members.add');
     Route::delete('groups/{group}/members/{member}', [SlaughterGroupController::class, 'removeMember'])->name('groups.members.remove');
     Route::patch('groups/{group}/assign-animal', [SlaughterGroupController::class, 'assignAnimal'])->name('groups.assign-animal');
+    Route::post('groups/{group}/slaughter', [SlaughterGroupController::class, 'slaughter'])->name('groups.slaughter');
+    Route::patch('groups/{group}/members/{member}/deliver', [SlaughterGroupController::class, 'deliverMember'])->name('groups.members.deliver');
+
+    // Meat Inventory (ثلاجة)
+    Route::get('meat-inventory', [MeatInventoryController::class, 'index'])->name('meat-inventory.index');
+    Route::patch('meat-inventory/{item}/deliver', [MeatInventoryController::class, 'deliver'])->name('meat-inventory.deliver');
+    Route::delete('meat-inventory/{item}', [MeatInventoryController::class, 'destroy'])->name('meat-inventory.destroy');
+
+    // Meat Sales (بيع اللحوم)
+    Route::post('meat-sales', [MeatSaleController::class, 'store'])->name('meat-sales.store');
+    Route::delete('meat-sales/{sale}', [MeatSaleController::class, 'destroy'])->name('meat-sales.destroy');
+
+    // Expenses
+    Route::get('expenses',              [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::post('expenses',             [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

@@ -5,8 +5,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContractItem extends Model
 {
-    protected $fillable = ['contract_id', 'animal_id', 'group_id', 'share_type', 'shares_count', 'unit_price', 'total_price'];
-    protected $casts = ['shares_count' => 'integer', 'unit_price' => 'float', 'total_price' => 'float'];
+    protected $fillable = ['contract_id', 'animal_id', 'group_id', 'share_type', 'shares_count', 'unit_price', 'total_price', 'delivered_at'];
+    protected $casts = ['shares_count' => 'integer', 'unit_price' => 'float', 'total_price' => 'float', 'delivered_at' => 'datetime'];
 
     public function contract(): BelongsTo      { return $this->belongsTo(Contract::class); }
     public function animal(): BelongsTo        { return $this->belongsTo(Animal::class); }

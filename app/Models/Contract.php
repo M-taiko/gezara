@@ -24,7 +24,10 @@ class Contract extends Model
         static::creating(function (self $contract) {
             if (empty($contract->contract_number)) {
                 $year = date('Y');
-                $next = self::whereYear('created_at', $year)->count() + 1;
+                $last = self::where('contract_number', 'like', "CNT-{$year}-%")
+                    ->lockForUpdate()
+                    ->max('contract_number');
+                $next = $last ? ((int) substr($last, -4)) + 1 : 1;
                 $contract->contract_number = 'CNT-' . $year . '-' . str_pad($next, 4, '0', STR_PAD_LEFT);
             }
         });

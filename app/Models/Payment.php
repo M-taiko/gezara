@@ -15,7 +15,10 @@ class Payment extends Model
         static::creating(function (Payment $payment) {
             if (empty($payment->receipt_number)) {
                 $year = now()->year;
-                $next = (static::whereYear('created_at', $year)->max('id') ?? 0) + 1;
+                $last = static::where('receipt_number', 'like', "RCP-{$year}-%")
+                    ->lockForUpdate()
+                    ->max('receipt_number');
+                $next = $last ? ((int) substr($last, -4)) + 1 : 1;
                 $payment->receipt_number = 'RCP-' . $year . '-' . str_pad($next, 4, '0', STR_PAD_LEFT);
             }
         });

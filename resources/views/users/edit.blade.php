@@ -1,190 +1,187 @@
 @extends('layouts.master')
 
-@section('css')
-@endsection
-
 @section('page-header')
-	<!-- breadcrumb -->
-	<div class="breadcrumb-header justify-content-between">
-		<div class="my-auto">
-			<div class="d-flex">
-				<h4 class="content-title mb-0 my-auto">Users</h4><span class="text-muted mt-1 tx-13 mr-2 mb-0">/ Edit User</span>
-			</div>
-		</div>
-		<div class="d-flex my-xl-auto right-content">
-			<div class="pr-1 mb-3 mb-xl-0">
-				<a href="{{ route('admin.users.index') }}" class="btn btn-secondary ml-2"><i class="las la-arrow-left"></i> Back to Users</a>
-			</div>
-		</div>
-	</div>
-	<!-- breadcrumb -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 mt-2">
+    <div>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+            <span class="text-amber-500 text-4xl">✏️</span> تعديل مستخدم
+        </h1>
+        <p class="text-slate-500 font-medium text-sm mt-1">
+            <a href="{{ route('admin.users.index') }}" class="text-indigo-500 hover:text-indigo-700 hover:underline">المستخدمون</a>
+            / {{ $user->name }}
+        </p>
+    </div>
+    <a href="{{ route('admin.users.index') }}"
+       class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+        ← العودة
+    </a>
+</div>
 @endsection
 
 @section('content')
-	<!-- row -->
-	<div class="row row-sm">
-		<div class="col-lg-8 mx-auto">
-			<div class="card">
-				<div class="card-body">
-					<h5 class="card-title mb-4">Edit User: {{ $user->name }}</h5>
+<form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data"
+      class="flex flex-col lg:flex-row-reverse gap-6 pb-16">
+    @csrf
+    @method('PUT')
 
-					@if ($errors->any())
-						<div class="alert alert-danger">
-							<ul class="mb-0">
-								@foreach ($errors->all() as $error)
-									<li>{{ $error }}</li>
-								@endforeach
-							</ul>
-						</div>
-					@endif
+    {{-- RIGHT: Meta sidebar --}}
+    <div class="w-full lg:w-72 flex-shrink-0 flex flex-col gap-5">
 
-					@if (session('success'))
-						<div class="alert alert-success">
-							{{ session('success') }}
-						</div>
-					@endif
+        {{-- Avatar --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <h6 class="text-base font-black text-slate-800 m-0">📷 الصورة الشخصية</h6>
+            </div>
+            <div class="p-5 flex flex-col items-center gap-4">
+                <div id="avatarWrap" class="w-24 h-24 rounded-2xl bg-indigo-50 border-2 border-indigo-100 border-dashed flex items-center justify-center overflow-hidden">
+                    @if($user->profile?->avatar)
+                        <img id="avatarPreview" src="{{ asset($user->profile->avatar) }}" alt=""
+                             class="w-full h-full object-cover">
+                        <span id="avatarPlaceholder" class="text-4xl hidden">👤</span>
+                    @else
+                        <img id="avatarPreview" src="#" alt="" class="w-full h-full object-cover hidden">
+                        <span id="avatarPlaceholder" class="text-4xl">👤</span>
+                    @endif
+                </div>
+                <label for="avatarInput"
+                       class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition-all">
+                    📁 تغيير الصورة
+                </label>
+                <input type="file" name="avatar" id="avatarInput" accept="image/*" class="hidden">
+                <p class="text-xs text-slate-400 text-center">JPEG, PNG, JPG — بحد أقصى 2MB</p>
+                @error('avatar')
+                <p class="text-rose-500 text-xs font-bold">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
 
-					<form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
-						@csrf
-						@method('PUT')
+        {{-- Role + Status --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <h6 class="text-base font-black text-slate-800 m-0">🔑 الدور والحالة</h6>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1.5">الدور <span class="text-rose-500">*</span></label>
+                    <select name="role_id" required
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        <option value="">— اختر الدور —</option>
+                        @php
+                        $roleIcons = ['owner'=>'👑','accountant'=>'💼','seller'=>'🏪','admin'=>'🛡','manager'=>'⚙️','user'=>'👤'];
+                        $currentRoleId = $user->roles->first()?->id;
+                        @endphp
+                        @foreach($roles as $role)
+                        <option value="{{ $role->id }}" {{ (old('role_id', $currentRoleId) == $role->id) ? 'selected' : '' }}>
+                            {{ ($roleIcons[$role->name] ?? '👤') . ' ' . $role->display_name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('role_id')
+                    <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1.5">الحالة <span class="text-rose-500">*</span></label>
+                    <select name="status" required
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        <option value="active"   {{ old('status', $user->status) === 'active'   ? 'selected' : '' }}>✅ نشط</option>
+                        <option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>⏸ غير نشط</option>
+                        <option value="banned"   {{ old('status', $user->status) === 'banned'   ? 'selected' : '' }}>🚫 محظور</option>
+                    </select>
+                    @error('status')
+                    <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+        </div>
 
-						<!-- Avatar Upload Section -->
-						<div class="form-group mg-b-20">
-							<label>Profile Photo</label>
-							<div class="card mb-3">
-								<div class="card-body text-center">
-									@if($user->profile && $user->profile->avatar)
-										<img id="avatarPreview" src="{{ asset($user->profile->avatar) }}" alt="Avatar" style="max-height: 150px; max-width: 100%;" class="mb-3">
-									@else
-										<div id="avatarPlaceholder" class="p-5">
-											<i class="fas fa-user fa-5x text-muted"></i>
-											<p class="text-muted mt-3">No photo uploaded yet</p>
-										</div>
-										<img id="avatarPreview" src="#" alt="Avatar" style="max-height: 150px; max-width: 100%; display: none;" class="mb-3">
-									@endif
-								</div>
-							</div>
-							<input type="file" class="form-control @error('avatar') is-invalid @enderror"
-								name="avatar" id="avatarInput" accept="image/*">
-							<small class="form-text text-muted">Allowed formats: JPEG, PNG, JPG, GIF. Max size: 2MB</small>
-							@error('avatar')
-								<span class="invalid-feedback d-block">{{ $message }}</span>
-							@enderror
-						</div>
+        {{-- Submit --}}
+        <button type="submit"
+                class="w-full inline-flex justify-center items-center gap-2 px-5 py-3 text-sm font-black rounded-xl bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-200/60 transition-all">
+            💾 حفظ التعديلات
+        </button>
+    </div>
 
-						<!-- Personal Information Section -->
-						<h5 class="card-title mg-t-30 mg-b-20">Personal Information</h5>
+    {{-- LEFT: Main form --}}
+    <div class="flex-1 min-w-0 flex flex-col gap-5">
 
-						<div class="form-group mg-b-20">
-							<label>Full Name *</label>
-							<input type="text" class="form-control @error('name') is-invalid @enderror"
-								name="name" value="{{ old('name', $user->name) }}"
-								placeholder="Enter full name" required>
-							@error('name')
-								<span class="invalid-feedback d-block">{{ $message }}</span>
-							@enderror
-						</div>
+        {{-- Personal info --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <h6 class="text-base font-black text-slate-800 m-0">👤 البيانات الشخصية</h6>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1.5">الاسم الكامل <span class="text-rose-500">*</span></label>
+                    <input type="text" name="name" value="{{ old('name', $user->name) }}" required
+                           placeholder="اسم المستخدم"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    @error('name')
+                    <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1.5">البريد الإلكتروني <span class="text-rose-500">*</span></label>
+                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                           placeholder="email@example.com"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors"
+                           dir="ltr">
+                    @error('email')
+                    <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+        </div>
 
-						<div class="form-group mg-b-20">
-							<label>Email Address *</label>
-							<input type="email" class="form-control @error('email') is-invalid @enderror"
-								name="email" value="{{ old('email', $user->email) }}"
-								placeholder="Enter email address" required>
-							@error('email')
-								<span class="invalid-feedback d-block">{{ $message }}</span>
-							@enderror
-						</div>
+        {{-- Password (optional) --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex items-center justify-between">
+                    <h6 class="text-base font-black text-slate-800 m-0">🔒 تغيير كلمة المرور</h6>
+                    <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">اختياري</span>
+                </div>
+            </div>
+            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1.5">كلمة المرور الجديدة</label>
+                    <input type="password" name="password"
+                           placeholder="اتركه فارغاً للإبقاء على الحالي"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors"
+                           dir="ltr">
+                    @error('password')
+                    <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1.5">تأكيد كلمة المرور</label>
+                    <input type="password" name="password_confirmation"
+                           placeholder="أعد كتابة كلمة المرور الجديدة"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors"
+                           dir="ltr">
+                </div>
+            </div>
+            <div class="px-5 pb-4">
+                <p class="text-xs text-slate-400 font-semibold">اترك الحقلين فارغين إذا لم ترغب في تغيير كلمة المرور</p>
+            </div>
+        </div>
 
-						<!-- Password Section -->
-						<h5 class="card-title mg-t-30 mg-b-20">Login Credentials (Optional)</h5>
-
-						<div class="row mg-b-20">
-							<div class="col-md-6">
-								<div class="form-group">
-									<label>Password</label>
-									<input type="password" class="form-control @error('password') is-invalid @enderror"
-										name="password" placeholder="Leave blank to keep current password">
-									<small class="form-text text-muted">Leave blank to keep current password</small>
-									@error('password')
-										<span class="invalid-feedback d-block">{{ $message }}</span>
-									@enderror
-								</div>
-							</div>
-							<div class="col-md-6">
-								<div class="form-group">
-									<label>Confirm Password</label>
-									<input type="password" class="form-control"
-										name="password_confirmation" placeholder="Confirm password">
-								</div>
-							</div>
-						</div>
-
-						<!-- Role and Status Section -->
-						<h5 class="card-title mg-t-30 mg-b-20">Permissions & Status</h5>
-
-						<div class="row mg-b-20">
-							<div class="col-md-6">
-								<div class="form-group">
-									<label>Role *</label>
-									<select class="form-control @error('role_id') is-invalid @enderror" name="role_id" required>
-										<option value="">Select a role</option>
-										@foreach($roles as $role)
-											<option value="{{ $role->id }}" {{ $user->roles->contains($role->id) ? 'selected' : '' }}>
-												{{ $role->display_name }}
-											</option>
-										@endforeach
-									</select>
-									@error('role_id')
-										<span class="invalid-feedback d-block">{{ $message }}</span>
-									@enderror
-								</div>
-							</div>
-							<div class="col-md-6">
-								<div class="form-group">
-									<label>Status *</label>
-									<select class="form-control @error('status') is-invalid @enderror" name="status" required>
-										<option value="">Select status</option>
-										<option value="active" {{ old('status', $user->status) === 'active' ? 'selected' : '' }}>Active</option>
-										<option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
-										<option value="banned" {{ old('status', $user->status) === 'banned' ? 'selected' : '' }}>Banned</option>
-									</select>
-									@error('status')
-										<span class="invalid-feedback d-block">{{ $message }}</span>
-									@enderror
-								</div>
-							</div>
-						</div>
-
-						<!-- Action Buttons -->
-						<div class="form-group mg-t-30">
-							<button type="submit" class="btn btn-primary">Update User</button>
-							<a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancel</a>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- row closed -->
+    </div>
+</form>
 @endsection
 
-@section('js')
+@push('js')
 <script>
-	// Preview avatar on file select
-	document.getElementById('avatarInput').addEventListener('change', function(e) {
-		const file = e.target.files[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onload = function(event) {
-				document.getElementById('avatarPreview').src = event.target.result;
-				document.getElementById('avatarPreview').style.display = 'block';
-				const placeholder = document.getElementById('avatarPlaceholder');
-				if (placeholder) {
-					placeholder.style.display = 'none';
-				}
-			};
-			reader.readAsDataURL(file);
-		}
-	});
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const preview = document.getElementById('avatarPreview');
+        preview.src = ev.target.result;
+        preview.classList.remove('hidden');
+        document.getElementById('avatarPlaceholder').classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+});
 </script>
-@endsection
+@endpush

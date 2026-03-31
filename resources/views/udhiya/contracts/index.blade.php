@@ -71,6 +71,7 @@
                     <th class="px-5 py-3">رقم الصك</th>
                     <th class="px-5 py-3">العميل</th>
                     <th class="px-5 py-3 hidden sm:table-cell">يوم الذبح</th>
+                    <th class="px-5 py-3 text-center hidden sm:table-cell">الأنصبة</th>
                     <th class="px-5 py-3 text-left">الإجمالي</th>
                     <th class="px-5 py-3 text-left hidden md:table-cell">المحصّل</th>
                     <th class="px-5 py-3 text-left hidden md:table-cell">المتبقي</th>
@@ -144,6 +145,19 @@
                     {{-- Slaughter day --}}
                     <td class="px-5 py-4 text-sm text-slate-500 hidden sm:table-cell">
                         {{ $contract->slaughter_day ? \Carbon\Carbon::parse($contract->slaughter_day)->format('d/m/Y') : '—' }}
+                    </td>
+                    {{-- Shares --}}
+                    <td class="px-5 py-4 text-center hidden sm:table-cell">
+                        @php $totalShares = $contract->items->sum('shares_count'); @endphp
+                        @foreach($contract->items as $item)
+                        <div class="text-xs font-bold text-slate-600">
+                            <span class="text-slate-400">{{ $item->animal->code }}</span>
+                            — <span class="text-indigo-700">{{ $shareLabels[$item->share_type] ?? $item->share_type }}</span>
+                            @if($item->share_type !== 'full')
+                            <span class="font-black text-slate-800">×{{ $item->shares_count }}</span>
+                            @endif
+                        </div>
+                        @endforeach
                     </td>
                     {{-- Total --}}
                     <td class="px-5 py-4 text-left text-sm font-black text-slate-800">

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Udhiya;
 
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
+use App\Models\ContractItem;
 use App\Models\Customer;
+use App\Models\MeatInventory;
 use App\Models\SlaughterGroup;
 use App\Models\SlaughterGroupMember;
 use Illuminate\Http\Request;
@@ -63,6 +65,7 @@ class SlaughterGroupController extends Controller
         $group->load([
             'animal.product.mainCategory',
             'animal.shareSetting',
+            'animal.meatInventory',
             'members.customer',
             'members.contractItem.contract.payments',
         ]);
@@ -108,9 +111,11 @@ class SlaughterGroupController extends Controller
             $customerId = $customer->id;
         }
 
-        $group->load('members');
+        $group->load('members', 'animal');
+        $isSlaughtered = $group->animal?->status === 'slaughtered';
+
         $data = $request->validate([
-            'shares_count' => 'required|integer|min:1|max:' . $group->totalSlots(),
+            'shares_count' => 'required|integer|min:1',
             'notes'        => 'nullable|string',
         ]);
 
@@ -126,7 +131,7 @@ class SlaughterGroupController extends Controller
             return back()->with('toast_error', 'هذا العميل مضاف بالفعل في المجموعة');
         }
 
-        if ($group->remainingSlots() < $data['shares_count']) {
+        if (!$isSlaughtered && $group->remainingSlots() < $data['shares_count']) {
             return back()->with('toast_error', 'لا تتوفر أنصبة كافية في هذه المجموعة');
         }
 
@@ -138,6 +143,58 @@ class SlaughterGroupController extends Controller
         ]);
 
         return back()->with('toast_success', 'تم إضافة العضو للمجموعة');
+    }
+
+    public function slaughter(SlaughterGroup $group)
+    {
+        $animal = $group->animal;
+
+        if (!$animal) {
+            return back()->with('toast_error', 'لا يوجد حيوان مرتبط بهذه المجموعة');
+        }
+
+        if ($animal->status === 'slaughtered') {
+            return back()->with('toast_error', 'تم ذبح هذا الحيوان من قبل');
+        }
+
+        // If weight is known and shares not fully contracted → store remaining weight in inventory
+        $setting = $animal->shareSetting;
+        if ($animal->weight && $setting && $setting->remaining_shares > 0) {
+            $remainingKg = round(
+                ($setting->remaining_shares / $setting->total_shares) * $animal->weight,
+                2
+            );
+            MeatInventory::create([
+                'animal_id' => $animal->id,
+                'weight_kg' => $remainingKg,
+                'status'    => 'available',
+                'notes'     => "أنصبة غير مبيعة من الذبيحة {$animal->code} ({$setting->remaining_shares}/{$setting->total_shares} نصيب)",
+            ]);
+        }
+
+        $animal->update([
+            'status'         => 'slaughtered',
+            'slaughtered_at' => now(),
+        ]);
+
+        return back()->with('toast_success', "✅ تم ذبح الذبيحة {$animal->code} بنجاح");
+    }
+
+    public function deliverMember(SlaughterGroup $group, SlaughterGroupMember $member)
+    {
+        $item = $member->contractItem;
+
+        if (!$item) {
+            return back()->with('toast_error', 'لا يوجد صك مرتبط بهذا العضو');
+        }
+
+        if ($item->delivered_at) {
+            return back()->with('toast_warning', 'تم تسليم هذا العضو مسبقاً');
+        }
+
+        $item->update(['delivered_at' => now()]);
+
+        return back()->with('toast_success', "✅ تم تسجيل تسليم {$member->customer?->name}");
     }
 
     public function removeMember(SlaughterGroup $group, SlaughterGroupMember $member)

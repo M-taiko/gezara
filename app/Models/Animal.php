@@ -35,13 +35,14 @@ class Animal extends Model
 
     protected $fillable = [
         'product_id', 'supplier_id', 'purchase_id', 'warehouse_id',
-        'code', 'weight', 'price_per_kg', 'cost', 'is_grouped', 'status',
+        'code', 'weight', 'price_per_kg', 'cost', 'is_grouped', 'status', 'slaughtered_at',
         'price_full', 'price_seven', 'price_six', 'price_five',
         'price_quarter', 'price_third', 'price_half', 'notes',
     ];
 
     protected $casts = [
         'weight' => 'float', 'price_per_kg' => 'float', 'cost' => 'float', 'is_grouped' => 'boolean',
+        'slaughtered_at' => 'datetime',
         'price_full' => 'float', 'price_seven' => 'float', 'price_six' => 'float',
         'price_five' => 'float', 'price_quarter' => 'float',
         'price_third' => 'float', 'price_half' => 'float',
@@ -75,6 +76,8 @@ class Animal extends Model
     public function shareSetting(): HasOne  { return $this->hasOne(AnimalShareSetting::class); }
     public function contractItems(): HasMany { return $this->hasMany(ContractItem::class); }
     public function transfers(): HasMany    { return $this->hasMany(AnimalWarehouseTransfer::class); }
+    public function expenses(): HasMany        { return $this->hasMany(Expense::class); }
+    public function meatInventory(): HasMany   { return $this->hasMany(MeatInventory::class); }
 
     // ─── Business Logic ──────────────────────────────────────────────────────
     public function canSellFull(): bool
