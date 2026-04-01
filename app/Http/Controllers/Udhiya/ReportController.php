@@ -137,7 +137,11 @@ class ReportController extends Controller
 
     public function supplier(Supplier $supplier)
     {
-        $supplier->load('purchases.items.product');
+        $supplier->load([
+            'purchases.items.product',
+            'payments' => fn($q) => $q->orderBy('paid_at')->orderBy('id'),
+            'payments.purchase',
+        ]);
         $totalPurchases = $supplier->purchases->sum('total');
         $totalPaid      = $supplier->purchases->sum('paid');
         $balance        = $supplier->balance;

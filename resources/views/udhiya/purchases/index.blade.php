@@ -67,6 +67,8 @@
                         <td class="text-center">
                             <a href="{{ route('udhiya.purchases.show', $purchase) }}"
                                class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-sky-500 text-white hover:bg-sky-600 ring-sky-500 focus:ring-offset-2 focus:ring-2 border border-transparent shadow-sm btn-action" title="عرض">👁️</a>
+                            <a href="{{ route('udhiya.purchases.edit', $purchase) }}"
+                               class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-orange-500 text-white hover:bg-orange-600 border border-transparent shadow-sm btn-action ms-1" title="تعديل">✏️</a>
                         </td>
                     </tr>
                     @empty

@@ -29,6 +29,24 @@
 
 @section('content')
 
+{{-- Print-only header --}}
+<div class="print-header hidden border-b-2 border-slate-800 pb-4 mb-6" style="direction:rtl">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 style="font-size:20px;font-weight:900;margin:0">كشف حساب مورد</h1>
+            <p style="font-size:13px;margin:4px 0 0;color:#475569">{{ $supplier->name }}{{ $supplier->phone ? ' — ' . $supplier->phone : '' }}{{ $supplier->address ? ' — ' . $supplier->address : '' }}</p>
+        </div>
+        <div style="text-align:left">
+            <p style="font-size:11px;color:#94a3b8;margin:0">تاريخ الطباعة: {{ now()->format('Y/m/d') }}</p>
+        </div>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:12px;font-size:12px;font-weight:700">
+        <span>إجمالي المشتريات: <strong>{{ number_format($totalPurchases, 0) }} ج.م</strong></span>
+        <span>المدفوع: <strong style="color:#16a34a">{{ number_format($totalPaid, 0) }} ج.م</strong></span>
+        <span>المتبقي: <strong style="{{ $balance > 0 ? 'color:#dc2626' : 'color:#16a34a' }}">{{ number_format($balance, 0) }} ج.م</strong></span>
+    </div>
+</div>
+
 {{-- ===== Supplier Info + Stats ===== --}}
 <div class="flex flex-col lg:flex-row gap-6 mb-8">
 
@@ -226,6 +244,64 @@
     @endif
 </div>
 
+{{-- ===== Payments History ===== --}}
+@if($supplier->payments->count())
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow duration-300 mt-8">
+    <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <h6 class="text-base font-black text-slate-800 m-0">
+            سجل الدفعات
+            <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 mr-2">
+                {{ $supplier->payments->count() }}
+            </span>
+        </h6>
+        <span class="text-sm font-black text-emerald-700">إجمالي المدفوع: {{ number_format($supplier->payments->sum('amount'), 0) }} ج.م</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-right border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
+                    <th class="px-5 py-4">#</th>
+                    <th class="px-5 py-4">تاريخ الدفع</th>
+                    <th class="px-5 py-4">الفاتورة</th>
+                    <th class="px-5 py-4 text-center">المبلغ</th>
+                    <th class="px-5 py-4">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                @foreach($supplier->payments as $i => $payment)
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-5 py-4 text-slate-400 font-bold text-xs">{{ $i + 1 }}</td>
+                    <td class="px-5 py-4 font-bold text-slate-800 whitespace-nowrap">
+                        {{ $payment->paid_at->format('Y/m/d') }}
+                    </td>
+                    <td class="px-5 py-4 text-xs">
+                        <a href="{{ route('udhiya.purchases.show', $payment->purchase_id) }}"
+                           class="font-bold text-indigo-600 hover:underline">
+                            فاتورة #{{ $payment->purchase_id }}
+                            @if($payment->purchase?->date)
+                            <span class="text-slate-400 font-normal"> — {{ \Carbon\Carbon::parse($payment->purchase->date)->format('Y/m/d') }}</span>
+                            @endif
+                        </a>
+                    </td>
+                    <td class="px-5 py-4 text-center font-black text-emerald-600 whitespace-nowrap">
+                        {{ number_format($payment->amount, 0) }} ج.م
+                    </td>
+                    <td class="px-5 py-4 text-slate-500 text-xs">{{ $payment->notes ?? '—' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot class="bg-slate-50 border-t-2 border-slate-200 text-sm font-black">
+                <tr>
+                    <td colspan="3" class="px-5 py-4 text-slate-600">الإجمالي</td>
+                    <td class="px-5 py-4 text-center text-emerald-700">{{ number_format($supplier->payments->sum('amount'), 0) }} ج.م</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+@endif
+
 {{-- ===== Pay Modal ===== --}}
 @if($balance > 0)
 @php $unpaidPurchases = $supplier->purchases->filter(fn($p) => $p->total > $p->paid); @endphp
@@ -266,6 +342,11 @@
                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner" dir="ltr">
             </div>
             <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">تاريخ الدفع</label>
+                <input type="date" name="paid_at" value="{{ date('Y-m-d') }}"
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner">
+            </div>
+            <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
                 <input type="text" name="notes" placeholder="اختياري..."
                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-400 py-3 px-4 text-sm font-semibold text-slate-800 shadow-inner">
@@ -286,6 +367,52 @@
 <style>
 @media print {
     .no-print { display: none !important; }
+    body { background: white !important; font-family: 'Cairo', sans-serif; }
+    /* hide sidebar, header, footer */
+    nav, aside, header, [class*="sidebar"], [class*="main-header"], [class*="main-footer"] { display: none !important; }
+    /* reset layout */
+    .flex.h-screen { display: block !important; }
+    main, .overflow-y-auto { overflow: visible !important; height: auto !important; }
+    /* cards */
+    .rounded-3xl, .rounded-2xl { border-radius: 0 !important; }
+    .shadow-sm, .shadow-md { box-shadow: none !important; }
+
+    /* Print header */
+    body::before {
+        content: '';
+        display: block;
+    }
+    .print-header { display: block !important; }
+
+    /* tables */
+    table { width: 100% !important; border-collapse: collapse !important; font-size: 11px !important; }
+    th, td { border: 1px solid #e2e8f0 !important; padding: 6px 10px !important; }
+    thead { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* page breaks */
+    .bg-white { break-inside: avoid; }
+    .mt-8 { margin-top: 16px !important; }
 }
 </style>
+@push('js')
+<script>
+function updatePayMax(sel) {
+    var opt = sel.options[sel.selectedIndex];
+    var rem = parseFloat(opt.dataset.remaining || 0);
+    var amountInput = document.getElementById('payAmount');
+    var hint = document.getElementById('payMaxHint');
+    var maxVal = document.getElementById('payMaxVal');
+    if (rem > 0) {
+        amountInput.max = rem;
+        amountInput.value = rem;
+        maxVal.textContent = rem.toLocaleString('ar-EG');
+        hint.classList.remove('hidden');
+    } else {
+        amountInput.removeAttribute('max');
+        amountInput.value = '';
+        hint.classList.add('hidden');
+    }
+}
+</script>
+@endpush
 @endsection

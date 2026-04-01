@@ -18,6 +18,11 @@ class Supplier extends Model
         return $this->hasMany(Animal::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SupplierPayment::class);
+    }
+
     /** إجمالي قيمة المشتريات */
     public function totalPurchases(): float
     {

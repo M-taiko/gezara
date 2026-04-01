@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Udhiya\StoreSupplierRequest;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Models\SupplierPayment;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -35,6 +36,7 @@ class SupplierController extends Controller
         $data = $request->validate([
             'purchase_id' => 'required|exists:purchases,id',
             'amount'      => 'required|numeric|min:0.01',
+            'paid_at'     => 'nullable|date',
             'notes'       => 'nullable|string|max:255',
         ]);
 
@@ -59,7 +61,16 @@ class SupplierController extends Controller
 
         $purchase->increment('paid', $amount);
 
-        // تحديث حقل balance في المورد
+        // سجل الدفعة
+        SupplierPayment::create([
+            'supplier_id' => $supplier->id,
+            'purchase_id' => $purchase->id,
+            'amount'      => $amount,
+            'paid_at'     => $data['paid_at'] ?? today(),
+            'notes'       => $data['notes'] ?? null,
+        ]);
+
+        // تحديث رصيد المورد
         $newBalance = $supplier->purchases()->selectRaw('SUM(total) - SUM(paid) as bal')->value('bal') ?? 0;
         $supplier->update(['balance' => $newBalance]);
 

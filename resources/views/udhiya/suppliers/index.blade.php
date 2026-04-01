@@ -246,7 +246,7 @@ $suppliersWithPurchases = $suppliers->map(function($s) {
 @endphp
 
 <div x-data="{
-        open: false, sId: '', sName: '', sBalance: '', purchases: [],
+        open: false, sId: '', sName: '', sBalance: '', purchases: [], selectedRemaining: null,
         suppliersData: {{ json_encode($suppliersWithPurchases) }},
         init(e) {
             this.sId = e.detail.id;
@@ -254,7 +254,13 @@ $suppliersWithPurchases = $suppliers->map(function($s) {
             this.sBalance = e.detail.balance;
             var sd = this.suppliersData[e.detail.id];
             this.purchases = sd ? sd.purchases : [];
+            this.selectedRemaining = this.purchases.length === 1 ? this.purchases[0].remaining : null;
             this.open = true;
+        },
+        onPurchaseChange(e) {
+            var opt = e.target.options[e.target.selectedIndex];
+            var rem = opt.dataset.remaining ? parseFloat(opt.dataset.remaining) : null;
+            this.selectedRemaining = rem || null;
         }
      }"
      @open-pay-supplier-modal.window="init($event)"
@@ -277,21 +283,34 @@ $suppliersWithPurchases = $suppliers->map(function($s) {
                 {{-- Purchase selector --}}
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">الفاتورة <span class="text-rose-500">*</span></label>
-                    <select name="purchase_id" required
+                    <select name="purchase_id" required @change="onPurchaseChange($event)"
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800">
                         <option value="">— اختر الفاتورة —</option>
                         <template x-for="p in purchases" :key="p.id">
-                            <option :value="p.id" x-text="p.label"></option>
+                            <option :value="p.id" :data-remaining="p.remaining" x-text="p.label"></option>
                         </template>
                     </select>
                     <p x-show="purchases.length === 0" class="text-xs text-amber-600 font-bold mt-1">لا توجد فواتير بها رصيد متبقي</p>
                 </div>
                 {{-- Amount --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">المبلغ المدفوع (ج.م) <span class="text-rose-500">*</span></label>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        المبلغ المدفوع (ج.م) <span class="text-rose-500">*</span>
+                        <template x-if="selectedRemaining">
+                            <span class="text-slate-400 font-normal text-xs">— الحد الأقصى: <span x-text="selectedRemaining"></span> ج.م</span>
+                        </template>
+                    </label>
                     <input type="number" name="amount" min="1" step="0.01" required
                            placeholder="0.00"
+                           :max="selectedRemaining || ''"
+                           :value="selectedRemaining || ''"
                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner" dir="ltr">
+                </div>
+                {{-- Date --}}
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">تاريخ الدفع</label>
+                    <input type="date" name="paid_at" value="{{ date('Y-m-d') }}"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner">
                 </div>
                 {{-- Notes --}}
                 <div>

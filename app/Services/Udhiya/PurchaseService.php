@@ -6,6 +6,7 @@ use App\Models\Animal;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
+use App\Models\SupplierPayment;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 
@@ -53,6 +54,17 @@ class PurchaseService
                         'status'       => 'available',
                     ]);
                 }
+            }
+
+            // سجّل الدفعة الأولى إن وجدت
+            if (!empty($data['paid']) && $data['paid'] > 0) {
+                SupplierPayment::create([
+                    'supplier_id' => $purchase->supplier_id,
+                    'purchase_id' => $purchase->id,
+                    'amount'      => $data['paid'],
+                    'paid_at'     => $data['date'],
+                    'notes'       => 'دفعة عند الشراء',
+                ]);
             }
 
             // Update supplier balance (amount owed)
