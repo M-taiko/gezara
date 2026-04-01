@@ -16,6 +16,30 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <style>
+        /* Select2 RTL + Tailwind integration */
+        .select2-container { width: 100% !important; }
+        .select2-container--default .select2-selection--single {
+            height: 46px; border-radius: 0.75rem; border-color: #e2e8f0;
+            background-color: #f8fafc; display: flex; align-items: center; padding: 0 16px;
+            font-family: 'Cairo', sans-serif; font-size: 0.875rem; font-weight: 600; color: #1e293b;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            padding: 0; line-height: normal; color: #1e293b; font-weight: 600;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px; left: 8px; right: auto;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); background: #fff;
+        }
+        .select2-dropdown { border-radius: 1rem; border-color: #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,.12); font-family: 'Cairo', sans-serif; }
+        .select2-container--default .select2-results__option--highlighted { background-color: #eef2ff; color: #4338ca; }
+        .select2-search--dropdown .select2-search__field { border-radius: 0.5rem; border-color: #e2e8f0; font-family: 'Cairo', sans-serif; padding: 6px 10px; }
+        .select2-container--default .select2-selection--single .select2-selection__placeholder { color: #94a3b8; }
+    </style>
     @stack('css')
 </head>
 <body class="bg-[#F8FAFC] text-slate-800 antialiased" x-data="{ sidebarOpen: false }">
@@ -37,6 +61,8 @@
             </main>
         </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @stack('js')
 
     {{-- Toast Notifications --}}

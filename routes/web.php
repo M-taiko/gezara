@@ -114,6 +114,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
 
     // Suppliers (Modal CRUD)
     Route::resource('suppliers', SupplierController::class)->except(['show', 'create', 'edit']);
+    Route::post('suppliers/{supplier}/pay', [SupplierController::class, 'pay'])->name('suppliers.pay');
 
     // Purchases
     Route::resource('purchases', PurchaseController::class)->only(['index', 'create', 'store', 'show']);

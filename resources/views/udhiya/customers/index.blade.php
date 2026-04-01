@@ -25,10 +25,33 @@
 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-12 hover:shadow-md transition-shadow duration-300">
     <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 class="text-lg font-black text-slate-800">قائمة العملاء</h3>
-        <span class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold bg-white text-indigo-700 shadow-sm border border-slate-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            إجمالي {{ $customers->total() }} عميل
-        </span>
+        <div class="flex items-center gap-3 flex-wrap">
+            {{-- Search --}}
+            <form method="GET" action="{{ route('udhiya.customers.index') }}" class="flex items-center gap-2">
+                <div class="relative">
+                    <input type="text" name="search" value="{{ $search ?? '' }}"
+                           placeholder="ابحث بالاسم أو الهاتف..."
+                           class="w-56 rounded-xl border border-slate-200 bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 pr-9 pl-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <svg class="w-4 h-4 text-slate-400 absolute top-2.5 right-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center px-3 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                    بحث
+                </button>
+                @if($search)
+                <a href="{{ route('udhiya.customers.index') }}"
+                   class="inline-flex items-center px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+                    ✕ مسح
+                </a>
+                @endif
+            </form>
+            <span class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold bg-white text-indigo-700 shadow-sm border border-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                {{ $customers->total() }} عميل
+            </span>
+        </div>
     </div>
 
     <div class="overflow-x-auto">

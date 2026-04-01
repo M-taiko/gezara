@@ -35,7 +35,6 @@ class SlaughterGroupController extends Controller
     public function create()
     {
         $animals = Animal::with('product.mainCategory')
-            ->whereIn('status', ['available', 'partially_allocated'])
             ->orderBy('code')
             ->get();
 
@@ -49,7 +48,7 @@ class SlaughterGroupController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:255',
             'animal_id'     => 'nullable|exists:animals,id',
-            'share_type'    => 'required|in:seven,five,quarter,half,full',
+            'share_type'    => 'required|in:' . implode(',', array_keys(\App\Models\SlaughterGroup::SHARE_MAP)),
             'slaughter_day' => 'nullable|date',
             'notes'         => 'nullable|string',
         ]);
@@ -76,7 +75,6 @@ class SlaughterGroupController extends Controller
 
         $customers = Customer::orderBy('name')->get();
         $animals   = Animal::with('product.mainCategory')
-            ->whereIn('status', ['available', 'partially_allocated'])
             ->orderBy('code')
             ->get();
 
@@ -96,6 +94,11 @@ class SlaughterGroupController extends Controller
 
     public function addMember(Request $request, SlaughterGroup $group)
     {
+        // Block adding members after slaughter
+        if ($group->animal?->status === 'slaughtered') {
+            return back()->with('toast_error', 'لا يمكن إضافة أعضاء بعد الذبح');
+        }
+
         // Quick-create customer if name provided and no existing customer selected
         $customerId = $request->input('customer_id');
 
@@ -115,8 +118,9 @@ class SlaughterGroupController extends Controller
         $isSlaughtered = $group->animal?->status === 'slaughtered';
 
         $data = $request->validate([
-            'shares_count' => 'required|integer|min:1',
-            'notes'        => 'nullable|string',
+            'shares_count'    => 'required|integer|min:1',
+            'notes'           => 'nullable|string',
+            'contract_number' => 'nullable|string|max:50',
         ]);
 
         if (!$customerId) {
@@ -135,14 +139,48 @@ class SlaughterGroupController extends Controller
             return back()->with('toast_error', 'لا تتوفر أنصبة كافية في هذه المجموعة');
         }
 
-        SlaughterGroupMember::create([
+        $member = SlaughterGroupMember::create([
             'group_id'     => $group->id,
             'customer_id'  => $customerId,
             'shares_count' => $data['shares_count'],
             'notes'        => $data['notes'] ?? null,
         ]);
 
-        return back()->with('toast_success', 'تم إضافة العضو للمجموعة');
+        // If manual contract number provided → create contract + item immediately
+        if (!empty($data['contract_number']) && $group->animal) {
+            $priceField    = 'price_' . $group->share_type;
+            $pricePerShare = (float) ($group->animal->{$priceField} ?? 0);
+            $totalPrice    = $pricePerShare * $data['shares_count'];
+
+            // Check contract_number uniqueness
+            $numExists = \App\Models\Contract::where('contract_number', $data['contract_number'])->exists();
+            if ($numExists) {
+                $member->delete();
+                return back()->with('toast_error', 'رقم الصك ' . $data['contract_number'] . ' مستخدم من قبل');
+            }
+
+            $contract = \App\Models\Contract::create([
+                'customer_id'      => $customerId,
+                'contract_number'  => $data['contract_number'],
+                'total_amount'     => $totalPrice,
+                'paid_amount'      => 0,
+                'remaining_amount' => $totalPrice,
+                'status'           => 'active',
+                'slaughter_day'    => $group->slaughter_day,
+            ]);
+
+            $contractItem = ContractItem::create([
+                'contract_id'  => $contract->id,
+                'animal_id'    => $group->animal_id,
+                'shares_count' => $data['shares_count'],
+                'total_price'  => $totalPrice,
+                'group_id'     => $group->id,
+            ]);
+
+            $member->update(['contract_item_id' => $contractItem->id]);
+        }
+
+        return back()->with('toast_success', 'تم إضافة العضو للمجموعة' . (!empty($data['contract_number']) ? ' وإنشاء الصك' : ''));
     }
 
     public function slaughter(SlaughterGroup $group)

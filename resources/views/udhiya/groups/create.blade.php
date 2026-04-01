@@ -71,13 +71,19 @@
                             الحيوان
                             <span class="text-slate-400 font-normal text-xs">(اختياري — يمكن تحديده لاحقاً)</span>
                         </label>
-                        <select name="animal_id"
-                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors py-3 px-4 text-sm font-semibold text-slate-800 shadow-inner">
-                            <option value="">-- اختر الحيوان --</option>
-                            @foreach($animals as $animal)
-                            <option value="{{ $animal->id }}" {{ old('animal_id') == $animal->id ? 'selected' : '' }}>
-                                {{ $animal->code }} — {{ $animal->product?->name }}
-                                ({{ $animal->product?->mainCategory?->name }})
+                        <select name="animal_id" id="animalSelect"
+                                class="w-full @error('animal_id') border-rose-400 @enderror">
+                            <option value="">— بدون حيوان —</option>
+                            @foreach($animals as $a)
+                            @php
+                                $aCat  = $a->product?->mainCategory?->name ?? '';
+                                $aType = $a->product?->name ?? '';
+                                $aEm   = match($a->product?->mainCategory?->code ?? '') {
+                                    'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾'
+                                };
+                            @endphp
+                            <option value="{{ $a->id }}" {{ old('animal_id') == $a->id ? 'selected' : '' }}>
+                                {{ $aEm }} {{ $a->code }}{{ $aCat ? ' — ' . $aCat : '' }}{{ $aType ? ' / ' . $aType : '' }}{{ $a->status === 'slaughtered' ? ' (مذبوح)' : '' }}
                             </option>
                             @endforeach
                         </select>
@@ -144,3 +150,17 @@
     </div>
 </form>
 @endsection
+
+@push('js')
+<script>
+$(function () {
+    $('#animalSelect').select2({
+        dir: 'rtl',
+        placeholder: 'ابحث بالكود أو الفئة أو النوع...',
+        allowClear: true,
+        width: '100%',
+        language: { noResults: function() { return 'لا توجد نتائج'; } },
+    });
+});
+</script>
+@endpush

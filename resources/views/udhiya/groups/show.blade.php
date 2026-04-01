@@ -120,15 +120,34 @@
             <div class="p-6">
                 <form action="{{ route('udhiya.groups.assign-animal', $group) }}" method="POST" class="flex flex-col gap-3">
                     @csrf @method('PATCH')
-                    <select name="animal_id"
-                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors py-2.5 px-3 text-sm font-semibold text-slate-800">
+
+                    {{-- Current animal info --}}
+                    @if($group->animal)
+                    <div class="flex items-center gap-2 p-3 bg-indigo-50 rounded-xl border border-indigo-100 text-xs font-bold text-indigo-700">
+                        <span class="text-base">{{ $emoji }}</span>
+                        <div>
+                            <div class="font-black">{{ $group->animal->code }}</div>
+                            <div class="font-semibold text-indigo-500">{{ $group->animal->product?->mainCategory?->name }} — {{ $group->animal->product?->name }}</div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <select name="animal_id" id="animalSelect">
                         <option value="">— بدون حيوان —</option>
-                        @foreach($animals as $animal)
-                        <option value="{{ $animal->id }}" {{ $group->animal_id == $animal->id ? 'selected' : '' }}>
-                            {{ $animal->code }} — {{ $animal->product?->name }}
+                        @foreach($animals as $a)
+                        @php
+                            $aCat   = $a->product?->mainCategory?->name ?? '';
+                            $aType  = $a->product?->name ?? '';
+                            $aEmoji = match($a->product?->mainCategory?->code ?? '') {
+                                'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾'
+                            };
+                        @endphp
+                        <option value="{{ $a->id }}" {{ $group->animal_id == $a->id ? 'selected' : '' }}>
+                            {{ $aEmoji }} {{ $a->code }}{{ $aCat ? ' — ' . $aCat : '' }}{{ $aType ? ' / ' . $aType : '' }}{{ $a->status === 'slaughtered' ? ' (مذبوح)' : '' }}
                         </option>
                         @endforeach
                     </select>
+
                     <button type="submit"
                             class="w-full inline-flex justify-center items-center px-4 py-2.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm">
                         حفظ التعيين
@@ -144,13 +163,11 @@
             </div>
             <div class="p-6">
                 @php $isSlaughtered = $group->animal?->status === 'slaughtered'; @endphp
-                @if($remaining > 0 || $isSlaughtered)
-
-                @if($isSlaughtered && $remaining <= 0)
-                <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-2xl p-3 mb-4 text-xs font-bold text-indigo-700">
-                    ℹ️ تمت الصكوك — يمكن إضافة عميل مباشر بعد الذبح
+                @if($isSlaughtered)
+                <div class="flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl p-4 text-sm font-bold text-rose-700">
+                    🔒 تم الذبح — لا يمكن إضافة أعضاء جدد
                 </div>
-                @endif
+                @elseif($remaining > 0)
 
                 <form action="{{ route('udhiya.groups.members.add', $group) }}" method="POST"
                       class="flex flex-col gap-4" id="addMemberForm">
@@ -173,11 +190,12 @@
                     {{-- Existing customer --}}
                     <div id="sectionExisting">
                         <label class="block text-xs font-bold text-slate-600 mb-1">اختر العميل</label>
-                        <select name="customer_id" id="customerSelect"
-                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800">
-                            <option value="">-- اختر --</option>
+                        <select name="customer_id" id="customerSelect">
+                            <option value="">— اختر عميلاً —</option>
                             @foreach($customers as $c)
-                            <option value="{{ $c->id }}">{{ $c->name }}{{ $c->phone ? ' — '.$c->phone : '' }}</option>
+                            <option value="{{ $c->id }}" data-search="{{ strtolower($c->name . ' ' . $c->phone) }}">
+                                {{ $c->name }}{{ $c->phone ? ' — ' . $c->phone : '' }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
@@ -209,6 +227,19 @@
                         <input type="number" name="shares_count"
                                value="1" min="1" @if(!$isSlaughtered) max="{{ $remaining }}" @endif
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-bold text-slate-800 text-center">
+                    </div>
+
+                    {{-- Contract number (manual) --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">
+                            رقم الصك
+                            <span class="text-slate-400 font-normal">(يدوي — اختياري)</span>
+                        </label>
+                        <input type="text" name="contract_number"
+                               placeholder="مثال: 1001 أو CNT-2026-0050"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors"
+                               dir="ltr">
+                        <p class="text-xs text-slate-400 mt-1">إذا أدخلت رقماً سيُنشأ الصك فوراً</p>
                     </div>
 
                     {{-- Notes --}}
@@ -436,31 +467,40 @@
 
 @push('js')
 <script>
-function toggleMode(mode) {
-    const secExisting = document.getElementById('sectionExisting');
-    const secNew      = document.getElementById('sectionNew');
-    const btnE        = document.getElementById('btnExisting');
-    const btnN        = document.getElementById('btnNew');
-    const sel         = document.getElementById('customerSelect');
+$(function () {
+    var s2opts = {
+        dir: 'rtl',
+        allowClear: true,
+        width: '100%',
+        language: { noResults: function() { return 'لا توجد نتائج'; } },
+    };
 
-    if (mode === 'existing') {
-        secExisting.style.display = 'block';
-        secNew.style.display      = 'none';
-        btnE.style.background     = '#4f46e5';
-        btnE.style.color          = '#fff';
-        btnN.style.background     = '#f1f5f9';
-        btnN.style.color          = '#475569';
-        sel.name = 'customer_id';
-    } else {
-        secExisting.style.display = 'none';
-        secNew.style.display      = 'flex';
-        btnN.style.background     = '#4f46e5';
-        btnN.style.color          = '#fff';
-        btnE.style.background     = '#f1f5f9';
-        btnE.style.color          = '#475569';
-        sel.name  = '_customer_id_disabled';
-        sel.value = '';
-    }
-}
+    $('#animalSelect').select2($.extend({}, s2opts, {
+        placeholder: 'ابحث بالكود أو النوع...',
+    }));
+
+    $('#customerSelect').select2($.extend({}, s2opts, {
+        placeholder: 'ابحث بالاسم أو الهاتف...',
+    }));
+
+    // ── Toggle existing / new customer ────────────────────
+    window.toggleMode = function (mode) {
+        var secE = document.getElementById('sectionExisting');
+        var secN = document.getElementById('sectionNew');
+        var btnE = document.getElementById('btnExisting');
+        var btnN = document.getElementById('btnNew');
+
+        if (mode === 'existing') {
+            secE.style.display = 'block'; secN.style.display = 'none';
+            btnE.className = 'flex-1 py-2 bg-indigo-600 text-white transition-colors';
+            btnN.className = 'flex-1 py-2 bg-slate-100 text-slate-600 transition-colors';
+        } else {
+            secE.style.display = 'none'; secN.style.display = 'flex';
+            btnN.className = 'flex-1 py-2 bg-indigo-600 text-white transition-colors';
+            btnE.className = 'flex-1 py-2 bg-slate-100 text-slate-600 transition-colors';
+            $('#customerSelect').val(null).trigger('change');
+        }
+    };
+});
 </script>
 @endpush

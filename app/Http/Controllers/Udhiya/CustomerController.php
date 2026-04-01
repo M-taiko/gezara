@@ -8,12 +8,19 @@ use App\Models\Customer;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
+        $search = $request->input('search');
+
         $customers = Customer::withCount('contracts')
             ->with(['groupMembers.group'])
-            ->latest()->paginate(20);
-        return view('udhiya.customers.index', compact('customers'));
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            })
+            ->latest()->paginate(20)->withQueryString();
+
+        return view('udhiya.customers.index', compact('customers', 'search'));
     }
 
     public function store(StoreCustomerRequest $request)

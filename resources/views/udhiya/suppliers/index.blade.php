@@ -74,6 +74,18 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-left">
                         <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {{-- Pay button — only if has balance --}}
+                            @if($supplier->balance > 0)
+                            <button type="button"
+                                    @click="$dispatch('open-pay-supplier-modal', {
+                                        id: '{{ $supplier->id }}',
+                                        name: '{{ addslashes($supplier->name) }}',
+                                        balance: '{{ number_format($supplier->balance, 0) }}'
+                                    })"
+                                    class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-colors" title="تسجيل دفعة">
+                                💰
+                            </button>
+                            @endif
                             <button type="button" @click="$dispatch('open-edit-supplier-modal', { id: '{{ $supplier->id }}', name: '{{ addslashes($supplier->name) }}', phone: '{{ addslashes($supplier->phone ?? '') }}', address: '{{ addslashes($supplier->address ?? '') }}', notes: '{{ addslashes(str_replace(array("\r", "\n"), ' ', $supplier->notes)) }}' })"
                                     class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white flex items-center justify-center transition-colors" title="تعديل بيانات المورد">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -216,6 +228,89 @@
     </div>
 </div>
 @endsection
+
+{{-- ===================== PAY SUPPLIER MODAL ===================== --}}
+@php
+$suppliersWithPurchases = $suppliers->map(function($s) {
+    return [
+        'id' => $s->id,
+        'purchases' => $s->purchases->where('paid', '<', $s->purchases->max('total'))
+            ->filter(fn($p) => $p->total > $p->paid)
+            ->map(fn($p) => [
+                'id'        => $p->id,
+                'label'     => '#' . $p->id . ' — ' . \Carbon\Carbon::parse($p->date)->format('Y/m/d') . ' — متبقي: ' . number_format($p->total - $p->paid, 0) . ' ج.م',
+                'remaining' => round($p->total - $p->paid, 2),
+            ])->values(),
+    ];
+})->keyBy('id');
+@endphp
+
+<div x-data="{
+        open: false, sId: '', sName: '', sBalance: '', purchases: [],
+        suppliersData: {{ json_encode($suppliersWithPurchases) }},
+        init(e) {
+            this.sId = e.detail.id;
+            this.sName = e.detail.name;
+            this.sBalance = e.detail.balance;
+            var sd = this.suppliersData[e.detail.id];
+            this.purchases = sd ? sd.purchases : [];
+            this.open = true;
+        }
+     }"
+     @open-pay-supplier-modal.window="init($event)"
+     @close-modals.window="open = false"
+     class="relative z-50">
+    <div x-show="open" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"></div>
+    <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" @click.self="open = false">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-emerald-50/50">
+                <div>
+                    <h3 class="text-xl font-black text-slate-800">💰 تسجيل دفعة للمورد</h3>
+                    <p class="text-sm font-semibold text-slate-500 mt-0.5" x-text="sName + ' — متبقي: ' + sBalance + ' ج.م'"></p>
+                </div>
+                <button type="button" @click="open = false" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 rounded-xl p-2">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form :action="'{{ url('udhiya/suppliers') }}/' + sId + '/pay'" method="POST" class="p-8 flex flex-col gap-5">
+                @csrf
+                {{-- Purchase selector --}}
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">الفاتورة <span class="text-rose-500">*</span></label>
+                    <select name="purchase_id" required
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800">
+                        <option value="">— اختر الفاتورة —</option>
+                        <template x-for="p in purchases" :key="p.id">
+                            <option :value="p.id" x-text="p.label"></option>
+                        </template>
+                    </select>
+                    <p x-show="purchases.length === 0" class="text-xs text-amber-600 font-bold mt-1">لا توجد فواتير بها رصيد متبقي</p>
+                </div>
+                {{-- Amount --}}
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">المبلغ المدفوع (ج.م) <span class="text-rose-500">*</span></label>
+                    <input type="number" name="amount" min="1" step="0.01" required
+                           placeholder="0.00"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner" dir="ltr">
+                </div>
+                {{-- Notes --}}
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+                    <input type="text" name="notes" placeholder="اختياري..."
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-400 py-3 px-4 text-sm font-semibold text-slate-800 shadow-inner">
+                </div>
+                <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                    <button type="button" @click="open = false"
+                            class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50">إلغاء</button>
+                    <button type="submit" :disabled="purchases.length === 0"
+                            class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        ✅ تسجيل الدفعة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @push('js')
 @if($errors->any())
