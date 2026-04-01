@@ -22,6 +22,44 @@
 
 @section('content')
 
+{{-- Print-only header --}}
+<div class="print-only" style="display:none; direction:rtl;">
+    <table style="width:100%; border:none; margin-bottom:14px;">
+        <tr>
+            <td style="border:none; padding:0; vertical-align:top;">
+                <div style="font-size:20px; font-weight:900; color:#1e293b; margin:0 0 3px;">كشف حساب عميل</div>
+                <div style="font-size:14px; font-weight:700; color:#334155;">{{ $customer->name }}</div>
+                @if($customer->phone)
+                <div style="font-size:11px; color:#64748b; direction:ltr; text-align:right;">{{ $customer->phone }}</div>
+                @endif
+                @if($customer->address)
+                <div style="font-size:11px; color:#64748b;">{{ $customer->address }}</div>
+                @endif
+            </td>
+            <td style="border:none; padding:0; vertical-align:top; text-align:left; white-space:nowrap; font-size:11px; color:#64748b;">
+                تاريخ الطباعة: {{ now()->format('Y/m/d') }}
+            </td>
+        </tr>
+    </table>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:16px; background:#f8fafc;">
+        <tr>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                إجمالي الصكوك<br><strong style="font-size:15px; color:#1e293b;">{{ number_format($totalAmount, 2) }} ج.م</strong>
+            </td>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                المدفوع<br><strong style="font-size:15px; color:#16a34a;">{{ number_format($paidAmount, 2) }} ج.م</strong>
+            </td>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                المتبقي<br><strong style="font-size:15px; color:{{ $remainingAmount > 0 ? '#dc2626' : '#16a34a' }};">{{ number_format($remainingAmount, 2) }} ج.م</strong>
+            </td>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                عدد الصكوك<br><strong style="font-size:15px; color:#4f46e5;">{{ $customer->contracts->count() }}</strong>
+            </td>
+        </tr>
+    </table>
+    <hr style="border:0; border-top:2px solid #1e293b; margin-bottom:16px;">
+</div>
+
 {{-- Stat Cards --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 text-center hover:shadow-md transition-shadow">
@@ -281,7 +319,125 @@
 
 <style>
 @media print {
-    .no-print { display: none !important; }
+    /* ─── Hide chrome ─── */
+    #sidebar,
+    header,
+    .no-print,
+    #toast-container { display: none !important; }
+
+    /* ─── Page setup ─── */
+    @page { margin: 1.5cm; size: A4 portrait; }
+
+    body {
+        background: #fff !important;
+        font-family: 'Cairo', sans-serif !important;
+        font-size: 12px !important;
+        color: #1e293b !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* ─── Break the shell layout ─── */
+    body > div:first-child {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    body > div:first-child > div:last-child {
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+        position: static !important;
+    }
+    main {
+        display: block !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    main > div {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* ─── Show print header ─── */
+    .print-only { display: block !important; }
+
+    /* ─── Stat cards: 4 per row ─── */
+    .grid { display: grid !important; }
+    .grid-cols-2 { grid-template-columns: repeat(4, 1fr) !important; }
+    .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+    .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; }
+    .gap-4 { gap: 6px !important; }
+    .gap-6 { gap: 10px !important; }
+    .gap-8 { gap: 12px !important; }
+    .mb-8 { margin-bottom: 10px !important; }
+    .pb-16 { padding-bottom: 0 !important; }
+
+    /* ─── Flex overrides ─── */
+    .lg\:flex-row { flex-direction: row !important; }
+    .sm\:flex-row { flex-direction: row !important; }
+    .flex-1 { flex: 1 !important; }
+
+    /* ─── Cards & decoration ─── */
+    .rounded-3xl, .rounded-2xl, .rounded-xl { border-radius: 4px !important; }
+    .shadow-sm, .shadow-md { box-shadow: none !important; }
+    .bg-white { background: #fff !important; }
+    .bg-slate-50\/50 { background: #f8fafc !important; }
+    .bg-slate-50 { background: #f8fafc !important; }
+    .p-5, .p-6 { padding: 8px !important; }
+    .px-6 { padding-left: 8px !important; padding-right: 8px !important; }
+    .py-4, .py-5 { padding-top: 6px !important; padding-bottom: 6px !important; }
+
+    /* ─── Tables ─── */
+    .overflow-x-auto { overflow: visible !important; }
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+    }
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
+    th, td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 5px 8px !important;
+        text-align: right !important;
+    }
+    thead tr {
+        background-color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    tfoot tr {
+        background-color: #f1f5f9 !important;
+        font-weight: 900 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* ─── Status colors ─── */
+    .text-emerald-600 { color: #16a34a !important; }
+    .text-rose-600 { color: #dc2626 !important; }
+    .text-indigo-600, .text-indigo-700 { color: #4f46e5 !important; }
+    .text-slate-400, .text-slate-500 { color: #64748b !important; }
+    .text-purple-800 { color: #581c87 !important; }
+
+    /* ─── Badges → plain ─── */
+    span[class*="bg-amber"], span[class*="bg-emerald"], span[class*="bg-rose"] {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        font-weight: 700 !important;
+    }
+
+    /* ─── Links ─── */
+    a { color: #1e293b !important; text-decoration: none !important; }
+
+    /* ─── Contract cards page breaks ─── */
+    .flex-1.flex.flex-col.gap-6 > div { break-inside: avoid; margin-bottom: 12px !important; }
+
+    /* ─── Balance summary box ─── */
+    .bg-slate-50.rounded-xl { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
 }
 </style>
 @endsection

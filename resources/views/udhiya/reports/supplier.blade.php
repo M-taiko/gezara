@@ -30,21 +30,41 @@
 @section('content')
 
 {{-- Print-only header --}}
-<div class="print-header hidden border-b-2 border-slate-800 pb-4 mb-6" style="direction:rtl">
-    <div class="flex justify-between items-start">
-        <div>
-            <h1 style="font-size:20px;font-weight:900;margin:0">كشف حساب مورد</h1>
-            <p style="font-size:13px;margin:4px 0 0;color:#475569">{{ $supplier->name }}{{ $supplier->phone ? ' — ' . $supplier->phone : '' }}{{ $supplier->address ? ' — ' . $supplier->address : '' }}</p>
-        </div>
-        <div style="text-align:left">
-            <p style="font-size:11px;color:#94a3b8;margin:0">تاريخ الطباعة: {{ now()->format('Y/m/d') }}</p>
-        </div>
-    </div>
-    <div style="display:flex;gap:32px;margin-top:12px;font-size:12px;font-weight:700">
-        <span>إجمالي المشتريات: <strong>{{ number_format($totalPurchases, 0) }} ج.م</strong></span>
-        <span>المدفوع: <strong style="color:#16a34a">{{ number_format($totalPaid, 0) }} ج.م</strong></span>
-        <span>المتبقي: <strong style="{{ $balance > 0 ? 'color:#dc2626' : 'color:#16a34a' }}">{{ number_format($balance, 0) }} ج.م</strong></span>
-    </div>
+<div class="print-only" style="display:none; direction:rtl;">
+    <table style="width:100%; border:none; margin-bottom:14px;">
+        <tr>
+            <td style="border:none; padding:0; vertical-align:top;">
+                <div style="font-size:20px; font-weight:900; color:#1e293b; margin:0 0 3px;">كشف حساب مورد</div>
+                <div style="font-size:14px; font-weight:700; color:#334155;">{{ $supplier->name }}</div>
+                @if($supplier->phone)
+                <div style="font-size:11px; color:#64748b; direction:ltr; text-align:right;">{{ $supplier->phone }}</div>
+                @endif
+                @if($supplier->address)
+                <div style="font-size:11px; color:#64748b;">{{ $supplier->address }}</div>
+                @endif
+            </td>
+            <td style="border:none; padding:0; vertical-align:top; text-align:left; white-space:nowrap; font-size:11px; color:#64748b;">
+                تاريخ الطباعة: {{ now()->format('Y/m/d') }}
+            </td>
+        </tr>
+    </table>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:16px; background:#f8fafc;">
+        <tr>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                إجمالي المشتريات<br><strong style="font-size:15px; color:#1e293b;">{{ number_format($totalPurchases, 0) }} ج.م</strong>
+            </td>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                المدفوع<br><strong style="font-size:15px; color:#16a34a;">{{ number_format($totalPaid, 0) }} ج.م</strong>
+            </td>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                المتبقي<br><strong style="font-size:15px; color:{{ $balance > 0 ? '#dc2626' : '#16a34a' }};">{{ number_format($balance, 0) }} ج.م</strong>
+            </td>
+            <td style="border:1px solid #e2e8f0; padding:8px 12px; font-size:12px; font-weight:700; text-align:center;">
+                عدد الفواتير<br><strong style="font-size:15px; color:#4f46e5;">{{ $supplier->purchases->count() }}</strong>
+            </td>
+        </tr>
+    </table>
+    <hr style="border:0; border-top:2px solid #1e293b; margin-bottom:16px;">
 </div>
 
 {{-- ===== Supplier Info + Stats ===== --}}
@@ -366,32 +386,112 @@
 
 <style>
 @media print {
-    .no-print { display: none !important; }
-    body { background: white !important; font-family: 'Cairo', sans-serif; }
-    /* hide sidebar, header, footer */
-    nav, aside, header, [class*="sidebar"], [class*="main-header"], [class*="main-footer"] { display: none !important; }
-    /* reset layout */
-    .flex.h-screen { display: block !important; }
-    main, .overflow-y-auto { overflow: visible !important; height: auto !important; }
-    /* cards */
-    .rounded-3xl, .rounded-2xl { border-radius: 0 !important; }
-    .shadow-sm, .shadow-md { box-shadow: none !important; }
+    /* ─── Hide chrome ─── */
+    #sidebar,
+    header,
+    .no-print,
+    #toast-container { display: none !important; }
 
-    /* Print header */
-    body::before {
-        content: '';
-        display: block;
+    /* ─── Page setup ─── */
+    @page { margin: 1.5cm; size: A4 portrait; }
+
+    body {
+        background: #fff !important;
+        font-family: 'Cairo', sans-serif !important;
+        font-size: 12px !important;
+        color: #1e293b !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    .print-header { display: block !important; }
 
-    /* tables */
-    table { width: 100% !important; border-collapse: collapse !important; font-size: 11px !important; }
-    th, td { border: 1px solid #e2e8f0 !important; padding: 6px 10px !important; }
-    thead { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* ─── Break the shell layout ─── */
+    body > div:first-child {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    body > div:first-child > div:last-child {
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+        position: static !important;
+    }
+    main {
+        display: block !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    main > div {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
 
-    /* page breaks */
+    /* ─── Show print header ─── */
+    .print-only { display: block !important; }
+
+    /* ─── Hide screen-only sections ─── */
+    .flex.flex-col.lg\:flex-row.gap-6.mb-8 > .w-full.lg\:w-80 { display: none !important; }
+
+    /* ─── Stat cards grid ─── */
+    .grid { display: grid !important; }
+    .grid-cols-2 { grid-template-columns: repeat(4, 1fr) !important; }
+    .lg\:grid-cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+    .gap-4 { gap: 6px !important; }
+    .gap-6 { gap: 10px !important; }
+    .mb-8 { margin-bottom: 10px !important; }
+    .mt-8 { margin-top: 10px !important; }
+    .p-6 { padding: 8px !important; }
+    .px-6 { padding-left: 8px !important; padding-right: 8px !important; }
+    .py-5 { padding-top: 6px !important; padding-bottom: 6px !important; }
+
+    /* ─── Cards & decoration ─── */
+    .rounded-3xl, .rounded-2xl, .rounded-xl { border-radius: 4px !important; }
+    .shadow-sm, .shadow-md { box-shadow: none !important; }
+    .bg-white { background: #fff !important; }
+    .bg-slate-50\/50, .bg-indigo-50\/60 { background: #f8fafc !important; }
+
+    /* ─── Tables ─── */
+    .overflow-x-auto { overflow: visible !important; }
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+    }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+    tr { page-break-inside: avoid; }
+    th, td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 5px 8px !important;
+        text-align: right !important;
+    }
+    thead tr {
+        background-color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    tfoot tr {
+        background-color: #f1f5f9 !important;
+        font-weight: 900 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* ─── Status colors ─── */
+    .text-emerald-600, .text-emerald-700 { color: #16a34a !important; }
+    .text-rose-600, .text-rose-700 { color: #dc2626 !important; }
+    .text-indigo-600, .text-indigo-700 { color: #4f46e5 !important; }
+    .text-slate-400, .text-slate-500 { color: #64748b !important; }
+
+    /* ─── Links ─── */
+    a { color: #1e293b !important; text-decoration: none !important; }
+
+    /* ─── Inline badges → plain text ─── */
+    .inline-flex.items-center.px-2\.5 { background: none !important; border: none !important; padding: 0 !important; }
+
+    /* ─── Page breaks ─── */
     .bg-white { break-inside: avoid; }
-    .mt-8 { margin-top: 16px !important; }
 }
 </style>
 @push('js')
