@@ -27,6 +27,7 @@ use App\Http\Controllers\Udhiya\ProductController;
 use App\Http\Controllers\Udhiya\ExpenseController;
 use App\Http\Controllers\Udhiya\MeatInventoryController;
 use App\Http\Controllers\Udhiya\MeatSaleController;
+use App\Http\Controllers\Udhiya\WalletController;
 use App\Http\Controllers\PublicController;
 
 // Auth Routes
@@ -111,6 +112,10 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Wallets
+    Route::resource('wallets', WalletController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('wallets/transfer', [WalletController::class, 'transfer'])->name('wallets.transfer');
 
     // Suppliers (Modal CRUD)
     Route::resource('suppliers', SupplierController::class)->except(['show', 'create', 'edit']);

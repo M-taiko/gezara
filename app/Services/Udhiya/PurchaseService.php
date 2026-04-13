@@ -32,19 +32,29 @@ class PurchaseService
             $defaultWarehouse = Warehouse::first();
 
             foreach ($data['items'] as $item) {
-                $purchaseItem = PurchaseItem::create([
+                $itemData = [
                     'purchase_id'   => $purchase->id,
                     'product_id'    => $item['product_id'],
-                    'quantity'      => $item['quantity'],
+                    'quantity'      => $item['quantity'] ?? 1,
                     'weight'        => $item['weight'] ?? null,
                     'cost_per_unit' => $item['cost_per_unit'],
                     'total'         => $item['total'],
-                ]);
+                ];
 
-                // Auto-create animals
+                // Add share prices if provided
+                foreach (['price_full', 'price_half', 'price_third', 'price_quarter', 'price_five', 'price_six', 'price_seven'] as $priceField) {
+                    if (isset($item[$priceField])) {
+                        $itemData[$priceField] = $item[$priceField];
+                    }
+                }
+
+                $purchaseItem = PurchaseItem::create($itemData);
+
+                // Auto-create animals with share prices
                 $costPerAnimal = $item['cost_per_unit'];
-                for ($i = 0; $i < $item['quantity']; $i++) {
-                    Animal::create([
+                $qty = $item['quantity'] ?? 1;
+                for ($i = 0; $i < $qty; $i++) {
+                    $animalData = [
                         'product_id'   => $item['product_id'],
                         'supplier_id'  => $data['supplier_id'],
                         'purchase_id'  => $purchase->id,
@@ -52,7 +62,16 @@ class PurchaseService
                         'cost'         => $costPerAnimal,
                         'weight'       => $item['weight'] ?? null,
                         'status'       => 'available',
-                    ]);
+                    ];
+
+                    // Copy share prices from purchase item to animal
+                    foreach (['price_full', 'price_half', 'price_third', 'price_quarter', 'price_five', 'price_six', 'price_seven'] as $priceField) {
+                        if (isset($item[$priceField])) {
+                            $animalData[$priceField] = $item[$priceField];
+                        }
+                    }
+
+                    Animal::create($animalData);
                 }
             }
 

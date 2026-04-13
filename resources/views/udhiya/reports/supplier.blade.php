@@ -362,6 +362,16 @@
                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner" dir="ltr">
             </div>
             <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">الخزينة</label>
+                <select name="wallet_id"
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-semibold text-slate-800">
+                    <option value="">— بدون خزينة —</option>
+                    @foreach(\App\Models\Wallet::where('is_active', true)->orderBy('name')->get() as $wallet)
+                    <option value="{{ $wallet->id }}">{{ $wallet->getTypeLabel() }} {{ $wallet->name }} ({{ number_format($wallet->balance, 2) }} ج.م)</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">تاريخ الدفع</label>
                 <input type="date" name="paid_at" value="{{ date('Y-m-d') }}"
                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-3 px-4 text-sm font-bold text-slate-800 shadow-inner">

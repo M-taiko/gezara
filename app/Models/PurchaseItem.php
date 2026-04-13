@@ -6,8 +6,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseItem extends Model
 {
-    protected $fillable = ['purchase_id', 'product_id', 'quantity', 'weight', 'cost_per_unit', 'total'];
-    protected $casts = ['quantity' => 'integer', 'weight' => 'float', 'cost_per_unit' => 'float', 'total' => 'float'];
+    protected $fillable = [
+        'purchase_id', 'product_id', 'quantity', 'weight', 'cost_per_unit', 'total',
+        'price_full', 'price_half', 'price_third', 'price_quarter', 'price_five', 'price_six', 'price_seven'
+    ];
+    protected $casts = [
+        'quantity' => 'integer',
+        'weight' => 'float',
+        'cost_per_unit' => 'float',
+        'total' => 'float',
+        'price_full' => 'float',
+        'price_half' => 'float',
+        'price_third' => 'float',
+        'price_quarter' => 'float',
+        'price_five' => 'float',
+        'price_six' => 'float',
+        'price_seven' => 'float',
+    ];
 
     public function purchase(): BelongsTo
     {

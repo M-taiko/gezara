@@ -177,6 +177,16 @@
                         </select>
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">الخزينة</label>
+                        <select name="wallet_id"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800">
+                            <option value="">— بدون خزينة —</option>
+                            @foreach(\App\Models\Wallet::where('is_active', true)->orderBy('name')->get() as $wallet)
+                            <option value="{{ $wallet->id }}">{{ $wallet->getTypeLabel() }} {{ $wallet->name }} ({{ number_format($wallet->balance, 2) }} ج.م)</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">التاريخ <span class="text-rose-500">*</span></label>
                         <input type="date" name="date" required value="{{ date('Y-m-d') }}"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800">

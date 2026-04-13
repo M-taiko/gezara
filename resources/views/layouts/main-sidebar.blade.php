@@ -39,6 +39,7 @@
                         ['route' => 'udhiya.customers.index',      'icon' => '👥', 'label' => 'العملاء',            'pattern' => 'udhiya.customers.*'],
                         ['route' => 'udhiya.contracts.index',      'icon' => '📑', 'label' => 'الصكوك',             'pattern' => 'udhiya.contracts.*'],
                         ['route' => 'udhiya.purchases.index',      'icon' => '🛒', 'label' => 'المشتريات',          'pattern' => 'udhiya.purchases.*'],
+                        ['route' => 'udhiya.wallets.index',        'icon' => '💰', 'label' => 'الخزائن',            'pattern' => 'udhiya.wallets.*'],
                         ['route' => 'udhiya.suppliers.index',      'icon' => '🚚', 'label' => 'الموردين',           'pattern' => 'udhiya.suppliers.*'],
                         ['route' => 'udhiya.groups.index',         'icon' => '🔪', 'label' => 'الذبح',              'pattern' => 'udhiya.groups.*'],
                         ['route' => 'udhiya.expenses.index',       'icon' => '💸', 'label' => 'المصروفات',          'pattern' => 'udhiya.expenses.*'],

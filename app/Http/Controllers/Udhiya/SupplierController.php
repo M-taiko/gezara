@@ -7,10 +7,14 @@ use App\Http\Requests\Udhiya\StoreSupplierRequest;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
+use App\Models\Wallet;
+use App\Services\Udhiya\WalletService;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
+    public function __construct(private WalletService $walletService) {}
+
     public function index()
     {
         $suppliers = Supplier::withCount('purchases')->with('purchases')->latest()->paginate(15);
@@ -38,6 +42,7 @@ class SupplierController extends Controller
             'amount'      => 'required|numeric|min:0.01',
             'paid_at'     => 'nullable|date',
             'notes'       => 'nullable|string|max:255',
+            'wallet_id'   => 'nullable|exists:wallets,id',
         ]);
 
         $purchase = Purchase::findOrFail($data['purchase_id']);
@@ -61,6 +66,19 @@ class SupplierController extends Controller
 
         $purchase->increment('paid', $amount);
 
+        // Register payment in wallet if provided
+        if ($data['wallet_id'] ?? null) {
+            $wallet = Wallet::findOrFail($data['wallet_id']);
+            $this->walletService->debit(
+                $wallet,
+                $amount,
+                $data['paid_at'] ?? today()->toDateString(),
+                SupplierPayment::class,
+                null,
+                'دفعة لـ ' . $supplier->name . ' — فاتورة #' . $purchase->id
+            );
+        }
+
         // سجل الدفعة
         SupplierPayment::create([
             'supplier_id' => $supplier->id,
@@ -68,6 +86,7 @@ class SupplierController extends Controller
             'amount'      => $amount,
             'paid_at'     => $data['paid_at'] ?? today(),
             'notes'       => $data['notes'] ?? null,
+            'wallet_id'   => $data['wallet_id'] ?? null,
         ]);
 
         // تحديث رصيد المورد

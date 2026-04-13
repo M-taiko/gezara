@@ -7,7 +7,7 @@ class Payment extends Model
 {
     const METHOD_LABELS = ['cash' => 'نقدي', 'bank' => 'بنك', 'transfer' => 'تحويل'];
 
-    protected $fillable = ['contract_id', 'amount', 'payment_method', 'receipt_number', 'date', 'notes'];
+    protected $fillable = ['contract_id', 'amount', 'payment_method', 'receipt_number', 'date', 'notes', 'wallet_id'];
     protected $casts = ['amount' => 'float', 'date' => 'date'];
 
     protected static function booted(): void
@@ -25,6 +25,8 @@ class Payment extends Model
     }
 
     public function contract(): BelongsTo { return $this->belongsTo(Contract::class); }
+
+    public function wallet(): BelongsTo { return $this->belongsTo(Wallet::class); }
 
     public function methodLabel(): string
     {

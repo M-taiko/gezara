@@ -60,6 +60,13 @@ class PurchaseController extends Controller
             'items.*.weight'        => 'nullable|numeric|min:0',
             'items.*.cost_per_unit' => 'required|numeric|min:0',
             'items.*.total'         => 'required|numeric|min:0',
+            'items.*.price_full'    => 'nullable|numeric|min:0',
+            'items.*.price_half'    => 'nullable|numeric|min:0',
+            'items.*.price_third'   => 'nullable|numeric|min:0',
+            'items.*.price_quarter' => 'nullable|numeric|min:0',
+            'items.*.price_five'    => 'nullable|numeric|min:0',
+            'items.*.price_six'     => 'nullable|numeric|min:0',
+            'items.*.price_seven'   => 'nullable|numeric|min:0',
         ]);
 
         $newTotal = collect($data['items'])->sum('total');
@@ -84,23 +91,26 @@ class PurchaseController extends Controller
         $updatedIds  = [];
 
         foreach ($data['items'] as $item) {
+            $itemData = [
+                'product_id'    => $item['product_id'],
+                'quantity'      => $item['quantity'],
+                'weight'        => $item['weight'] ?? null,
+                'cost_per_unit' => $item['cost_per_unit'],
+                'total'         => $item['total'],
+            ];
+
+            // Add share prices if provided
+            foreach (['price_full', 'price_half', 'price_third', 'price_quarter', 'price_five', 'price_six', 'price_seven'] as $priceField) {
+                if (isset($item[$priceField])) {
+                    $itemData[$priceField] = $item[$priceField];
+                }
+            }
+
             if (!empty($item['id'])) {
-                $purchase->items()->where('id', $item['id'])->update([
-                    'product_id'    => $item['product_id'],
-                    'quantity'      => $item['quantity'],
-                    'weight'        => $item['weight'] ?? null,
-                    'cost_per_unit' => $item['cost_per_unit'],
-                    'total'         => $item['total'],
-                ]);
+                $purchase->items()->where('id', $item['id'])->update($itemData);
                 $updatedIds[] = $item['id'];
             } else {
-                $new = $purchase->items()->create([
-                    'product_id'    => $item['product_id'],
-                    'quantity'      => $item['quantity'],
-                    'weight'        => $item['weight'] ?? null,
-                    'cost_per_unit' => $item['cost_per_unit'],
-                    'total'         => $item['total'],
-                ]);
+                $new = $purchase->items()->create($itemData);
                 $updatedIds[] = $new->id;
             }
         }
