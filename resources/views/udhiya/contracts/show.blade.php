@@ -18,7 +18,8 @@ if (strlen($rawPhone) === 11 && str_starts_with($rawPhone, '0')) {
 
 $animalLines = $contract->items->map(function ($item) use ($shareLabels) {
     $label = $shareLabels[$item->share_type] ?? $item->share_type;
-    return '🐄 ' . $item->animal->code . ' — ' . ($item->animal->product->name ?? '') . ' (' . $label . ')';
+    $animalInfo = $item->animal ? ($item->animal->code . ' — ' . ($item->animal->product->name ?? '')) : '(لم يتم تخصيص حيوان)';
+    return '🐄 ' . $animalInfo . ' (' . $label . ')';
 })->implode("\n");
 
 $isFullyPaid = $contract->remaining_amount <= 0;
@@ -261,10 +262,14 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                         @foreach($contract->items as $item)
                         <tr class="hover:bg-slate-50/40 transition-colors">
                             <td class="px-5 py-4">
+                                @if($item->animal)
                                 <a href="{{ route('udhiya.animals.show', $item->animal) }}"
                                    class="font-black text-indigo-600 hover:text-indigo-800 hover:underline text-sm">
                                     {{ $item->animal->code }}
                                 </a>
+                                @else
+                                <span class="text-sm font-semibold text-slate-400">—</span>
+                                @endif
                             </td>
                             <td class="px-5 py-4 text-sm font-semibold text-slate-700">
                                 {{ $item->animal->product->name ?? '—' }}

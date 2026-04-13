@@ -95,10 +95,11 @@
 
                     if ($waPhone) {
                         // Load items relation if not loaded
-                        $animalLines = $contract->items->map(fn($item) =>
-                            '🐄 ' . $item->animal->code . ' — ' . ($item->animal->product->name ?? '') .
-                            ' (' . ($shareLabels[$item->share_type] ?? $item->share_type) . ')'
-                        )->implode("\n");
+                        $animalLines = $contract->items->map(function($item) use ($shareLabels) {
+                            $label = $shareLabels[$item->share_type] ?? $item->share_type;
+                            $animalInfo = $item->animal ? ($item->animal->code . ' — ' . ($item->animal->product->name ?? '')) : '(بدون حيوان)';
+                            return '🐄 ' . $animalInfo . ' (' . $label . ')';
+                        })->implode("\n");
 
                         if ($isFullyPaid) {
                             $waMsg =
@@ -151,7 +152,7 @@
                         @php $totalShares = $contract->items->sum('shares_count'); @endphp
                         @foreach($contract->items as $item)
                         <div class="text-xs font-bold text-slate-600">
-                            <span class="text-slate-400">{{ $item->animal->code }}</span>
+                            <span class="text-slate-400">{{ $item->animal ? $item->animal->code : '—' }}</span>
                             — <span class="text-indigo-700">{{ $shareLabels[$item->share_type] ?? $item->share_type }}</span>
                             @if($item->share_type !== 'full')
                             <span class="font-black text-slate-800">×{{ $item->shares_count }}</span>

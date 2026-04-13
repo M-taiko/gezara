@@ -147,6 +147,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     // Contracts
     Route::resource('contracts', ContractController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::get('contracts/{contract}/print', [ContractController::class, 'printView'])->name('contracts.print');
+    Route::patch('contract-items/{item}/assign-animal', [ContractController::class, 'assignAnimal'])->name('contract-items.assign-animal');
 
     // Payments
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
