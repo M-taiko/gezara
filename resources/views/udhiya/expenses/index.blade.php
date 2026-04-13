@@ -15,7 +15,7 @@
         📈 تقرير الأرباح
     </a>
 </div>
-@endsection
+@endsection 
 
 @section('content')
 <div class="flex flex-col lg:flex-row gap-6 pb-16">

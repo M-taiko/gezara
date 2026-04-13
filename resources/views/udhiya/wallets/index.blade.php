@@ -346,7 +346,7 @@
         </form>
     </div>
 </div>
-
+@endsection
 @push('js')
 <script>
 function editWallet(wallet) {
