@@ -221,8 +221,7 @@
                                 {{-- Animal --}}
                                 <td class="px-4 py-3">
                                     <select name="items[0][animal_id]"
-                                            class="animal-select w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm font-bold text-slate-800 transition-colors"
-                                            required>
+                                            class="animal-select w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm font-bold text-slate-800 transition-colors">
                                         <option value="">-- اختر الحيوان --</option>
                                         @foreach($animals as $animal)
                                         <option value="{{ $animal->id }}"
@@ -277,8 +276,8 @@
                                 {{-- Unit price --}}
                                 <td class="px-4 py-3 text-center">
                                     <input type="number" name="items[0][unit_price]"
-                                           class="item-price w-full border-0 bg-transparent py-1 text-sm font-black text-slate-400 text-center"
-                                           step="0.01" readonly placeholder="—">
+                                            class="item-price w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-2 text-sm font-black text-slate-800 text-center transition-colors"
+                                            step="0.01" placeholder="0.00" required>
                                 </td>
                                 {{-- Total --}}
                                 <td class="px-4 py-3 text-center">
@@ -391,15 +390,20 @@ function updateRow(row) {
     const opt       = animalSel.selectedOptions[0];
     const shareType = _getShareType(row);
     const sharesIn  = row.querySelector('.shares-count');
+    const priceIn   = row.querySelector('.item-price');
+    const totalIn   = row.querySelector('.item-total');
 
-    if (!opt || !opt.value) return;
+    let unitPrice = 0;
+    if (opt && opt.value) {
+        const priceKey  = { full:'priceFull', seven:'priceSeven', six:'priceSix', five:'priceFive', quarter:'priceQuarter', third:'priceThird', half:'priceHalf' };
+        unitPrice = parseFloat(opt.dataset[priceKey[shareType]]) || 0;
+        priceIn.value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
+    } else {
+        unitPrice = parseFloat(priceIn.value) || 0;
+    }
 
-    const priceKey  = { full:'priceFull', seven:'priceSeven', six:'priceSix', five:'priceFive', quarter:'priceQuarter', third:'priceThird', half:'priceHalf' };
-    const unitPrice = parseFloat(opt.dataset[priceKey[shareType]]) || 0;
-    const count     = parseInt(sharesIn.value) || 1;
-
-    row.querySelector('.item-price').value = unitPrice.toFixed(2);
-    row.querySelector('.item-total').value = (unitPrice * count).toFixed(2);
+    const count = parseInt(sharesIn.value) || 1;
+    totalIn.value = (unitPrice * count).toFixed(2);
 
     if (!sharesIn.readOnly) {
         const typeMax = SHARE_MAX[shareType] || 7;
@@ -645,9 +649,11 @@ document.getElementById('itemsBody').addEventListener('change', function (e) {
 
 document.getElementById('itemsBody').addEventListener('input', function (e) {
     const row = e.target.closest('.item-row');
-    if (row && e.target.classList.contains('shares-count')) {
-        const max = parseInt(e.target.max) || 7;
-        if (parseInt(e.target.value) > max) e.target.value = max;
+    if (row && (e.target.classList.contains('shares-count') || e.target.classList.contains('item-price'))) {
+        if (e.target.classList.contains('shares-count')) {
+            const max = parseInt(e.target.max) || 7;
+            if (parseInt(e.target.value) > max) e.target.value = max;
+        }
         updateRow(row);
     }
 });

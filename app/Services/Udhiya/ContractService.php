@@ -28,6 +28,25 @@ class ContractService
             // Lock and validate all animals first (prevent race conditions)
             $itemsData = [];
             foreach ($data['items'] as $item) {
+                if (empty($item['animal_id'])) {
+                    $sharesCount = $item['shares_count'] ?? 1;
+                    $unitPrice   = (float) $item['unit_price'];
+                    $totalPrice  = $unitPrice * $sharesCount;
+
+                    $itemsData[] = [
+                        'animal'       => null,
+                        'share_type'   => $item['share_type'],
+                        'shares_count' => $sharesCount,
+                        'unit_price'   => $unitPrice,
+                        'total_price'  => $totalPrice,
+                        'setting'      => null,
+                        'group_id'     => $item['group_id'] ?? null,
+                    ];
+
+                    $total += $totalPrice;
+                    continue;
+                }
+
                 if ($item['share_type'] === 'full') {
                     $animal = Animal::lockForUpdate()->findOrFail($item['animal_id']);
 
@@ -114,7 +133,7 @@ class ContractService
             foreach ($itemsData as $itemData) {
                 $contractItem = ContractItem::create([
                     'contract_id'  => $contract->id,
-                    'animal_id'    => $itemData['animal']->id,
+                    'animal_id'    => $itemData['animal']?->id,
                     'group_id'     => $itemData['group_id'] ?? null,
                     'share_type'   => $itemData['share_type'],
                     'shares_count' => $itemData['shares_count'],
@@ -136,16 +155,18 @@ class ContractService
                     );
                 }
 
-                if ($itemData['share_type'] === 'full') {
-                    $itemData['animal']->update(['status' => 'fully_allocated']);
-                } else {
-                    $setting = $itemData['setting'];
-                    $setting->increment('sold_shares', $itemData['shares_count']);
-                    $setting->decrement('remaining_shares', $itemData['shares_count']);
-                    $setting->refresh();
+                if ($itemData['animal']) {
+                    if ($itemData['share_type'] === 'full') {
+                        $itemData['animal']->update(['status' => 'fully_allocated']);
+                    } else {
+                        $setting = $itemData['setting'];
+                        $setting->increment('sold_shares', $itemData['shares_count']);
+                        $setting->decrement('remaining_shares', $itemData['shares_count']);
+                        $setting->refresh();
 
-                    $newStatus = $setting->remaining_shares === 0 ? 'fully_allocated' : 'partially_allocated';
-                    $itemData['animal']->update(['status' => $newStatus]);
+                        $newStatus = $setting->remaining_shares === 0 ? 'fully_allocated' : 'partially_allocated';
+                        $itemData['animal']->update(['status' => $newStatus]);
+                    }
                 }
             }
 
@@ -181,6 +202,7 @@ class ContractService
             // Restore animal statuses
             foreach ($contract->items as $item) {
                 $animal = $item->animal;
+                if (!$animal) continue;
                 if ($item->share_type === 'full') {
                     $animal->update(['status' => 'available']);
                 } else {
