@@ -1,13 +1,13 @@
 
 <!-- Sidebar backdrop (mobile only) -->
-<div class="fixed inset-0 bg-slate-900 bg-opacity-30 z-40 lg:hidden lg:z-auto transition-opacity duration-200" 
-     :class="sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'" 
+<div class="fixed inset-0 bg-slate-900 bg-opacity-30 z-20 lg:hidden lg:z-auto transition-opacity duration-200"
+     :class="sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'"
      aria-hidden="true" x-cloak></div>
 
 <!-- Sidebar -->
-<div id="sidebar" class="flex flex-col absolute z-40 start-0 top-0 lg:static lg:start-auto lg:top-auto lg:translate-x-0 h-screen overflow-y-scroll lg:overflow-y-auto no-scrollbar w-64 lg:w-72 bg-white border-e border-slate-200 transition-all duration-200 ease-in-out shadow-sm" 
-     :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'" 
-     @click.outside="sidebarOpen = false" 
+<div id="sidebar" class="flex flex-col fixed lg:static z-30 start-0 top-16 lg:top-auto lg:start-auto lg:translate-x-0 h-[calc(100vh-64px)] lg:h-screen overflow-y-scroll lg:overflow-y-auto no-scrollbar w-64 lg:w-72 bg-white border-e border-slate-200 transition-all duration-200 ease-in-out shadow-sm"
+     :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'"
+     @click.outside="sidebarOpen = false"
      @keydown.escape.window="sidebarOpen = false">
 
     <!-- Sidebar header -->
