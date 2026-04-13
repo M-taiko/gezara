@@ -161,22 +161,22 @@
 
 {{-- Pending Contract Requests Section --}}
 @if($pendingRequests->count() > 0)
-<div class="mb-12 bg-blue-50 border border-blue-200 rounded-2xl p-6">
+<div class="mb-12 bg-red-50 border-2 border-red-200 rounded-2xl p-6 shadow-sm">
     <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-blue-900 flex items-center gap-2">
-            <span>📋</span> طلبات الاشتراك المعلقة
+        <h2 class="text-lg font-bold text-red-900 flex items-center gap-2">
+            <span>🔴</span> طلبات الاشتراك المعلقة ({{ $pendingRequests->count() }})
         </h2>
-        <a href="{{ route('udhiya.contract-requests.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">عرض الكل →</a>
+        <a href="{{ route('udhiya.contract-requests.index') }}" class="text-red-600 hover:text-red-700 text-sm font-semibold bg-red-100 px-4 py-2 rounded-lg hover:bg-red-200">عرض الكل →</a>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         @foreach($pendingRequests->take(6) as $req)
-        <div class="bg-white rounded-lg p-4 border border-blue-100">
+        <div class="bg-white rounded-lg p-4 border-2 border-red-200 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start mb-3">
                 <div>
                     <div class="font-semibold text-slate-800">{{ $req->customer_name }}</div>
                     <div class="text-xs text-slate-500">{{ $req->customer_phone }}</div>
                 </div>
-                <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">{{ $req->animal->code }}</span>
+                <span class="text-xs font-medium bg-red-100 text-red-800 px-2 py-1 rounded">{{ $req->animal->code }}</span>
             </div>
             <div class="text-sm text-slate-600 mb-2">
                 <strong>النصيب:</strong> {{ $req->share_type }}
