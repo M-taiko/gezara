@@ -101,6 +101,100 @@
 </div>
 @endif
 
+{{-- Available Animals Section --}}
+<div class="mb-12">
+    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <span>🐄</span> الحيوانات المتاحة
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @forelse($availableAnimals as $animal)
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <div class="text-sm font-semibold text-slate-500 uppercase">{{ $animal->product->name ?? 'غير محدد' }}</div>
+                    <div class="text-lg font-bold text-slate-800 mt-1">{{ $animal->code }}</div>
+                </div>
+                @if($animal->is_grouped)
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-800">🔗 مجمع</span>
+                @else
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-green-100 text-green-800">✅ مستقل</span>
+                @endif
+            </div>
+
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">السعر الكامل:</span>
+                    <span class="font-semibold text-slate-800">{{ number_format($animal->price_full ?? 0) }} ج.م</span>
+                </div>
+                @if($animal->is_grouped && $animal->shareSetting)
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">نوع النصيب:</span>
+                    <span class="font-semibold text-indigo-600">{{ $animal->shareSetting->share_type }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">الأنصبة المتبقية:</span>
+                    <span class="font-semibold text-orange-600">{{ $animal->shareSetting->remaining_shares ?? 0 }}</span>
+                </div>
+                @endif
+            </div>
+
+            @if($animal->is_grouped && $animal->shareSetting && $animal->shareSetting->remaining_shares > 0)
+            <button class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-all" onclick="showRequestModal({{ $animal->id }}, '{{ $animal->code }}', '{{ $animal->shareSetting->share_type }}')">
+                🎯 تقديم على نصيب
+            </button>
+            @else
+                <button disabled class="w-full bg-slate-300 text-slate-500 py-2 rounded-lg font-semibold text-sm cursor-not-allowed">
+                    ❌ غير متاح
+                </button>
+            @endif
+        </div>
+        @empty
+        <div class="col-span-full text-center py-12">
+            <div class="flex flex-col items-center justify-center text-slate-400">
+                <span class="text-4xl mb-3">📭</span>
+                <p class="text-lg font-medium">لا توجد حيوانات متاحة حالياً</p>
+            </div>
+        </div>
+        @endforelse
+    </div>
+</div>
+
+{{-- Pending Contract Requests Section --}}
+@if($pendingRequests->count() > 0)
+<div class="mb-12 bg-blue-50 border border-blue-200 rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-blue-900 flex items-center gap-2">
+            <span>📋</span> طلبات الاشتراك المعلقة
+        </h2>
+        <a href="{{ route('udhiya.contract-requests.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">عرض الكل →</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach($pendingRequests->take(6) as $req)
+        <div class="bg-white rounded-lg p-4 border border-blue-100">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <div class="font-semibold text-slate-800">{{ $req->customer_name }}</div>
+                    <div class="text-xs text-slate-500">{{ $req->customer_phone }}</div>
+                </div>
+                <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">{{ $req->animal->code }}</span>
+            </div>
+            <div class="text-sm text-slate-600 mb-2">
+                <strong>النصيب:</strong> {{ $req->share_type }}
+            </div>
+            @if($req->share_price)
+            <div class="text-sm font-semibold text-indigo-600 mb-2">
+                {{ number_format($req->share_price) }} ج.م
+            </div>
+            @endif
+            <div class="text-xs text-slate-500">
+                {{ $req->created_at->diffForHumans() }}
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- Recent Tables --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-12">
     <div class="col-span-1 lg:col-span-6">
@@ -168,5 +262,82 @@
         </div>
     </div>
 </div>
+
+{{-- Modal: Contract Request --}}
+<div id="requestModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" onclick="if(event.target===this) closeRequestModal()">
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-slate-200 px-8 py-6 flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-slate-800">📝 تقديم على نصيب</h2>
+            <button onclick="closeRequestModal()" class="text-slate-500 hover:text-slate-700 text-2xl">×</button>
+        </div>
+
+        <form id="requestForm" method="POST" action="{{ route('udhiya.contract-requests.store') }}" class="p-8 space-y-6">
+            @csrf
+            <input type="hidden" id="animalId" name="animal_id">
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">🐄 الحيوان</label>
+                <input type="text" id="animalCode" disabled class="w-full px-4 py-2 rounded-lg bg-slate-100 text-slate-600 font-semibold">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">📍 نوع النصيب</label>
+                <input type="text" id="shareType" disabled class="w-full px-4 py-2 rounded-lg bg-slate-100 text-slate-600 font-semibold">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">👤 اسم العميل *</label>
+                    <input type="text" name="customer_name" required class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">📱 رقم الهاتف *</label>
+                    <input type="tel" name="customer_phone" required class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">📧 البريد الإلكتروني</label>
+                <input type="email" name="customer_email" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">💰 السعر المتوقع (اختياري)</label>
+                <input type="number" name="share_price" min="0" step="0.01" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition" placeholder="اترك فارغاً للتحديد لاحقاً">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">📝 ملاحظات (اختياري)</label>
+                <textarea name="notes" rows="3" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition resize-none" placeholder="أي معلومات إضافية تود إضافتها"></textarea>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+                    ✅ إرسال الطلب
+                </button>
+                <button type="button" onclick="closeRequestModal()" class="flex-1 bg-slate-100 text-slate-700 py-3 rounded-lg font-semibold hover:bg-slate-200 transition-all">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showRequestModal(animalId, animalCode, shareType) {
+    document.getElementById('animalId').value = animalId;
+    document.getElementById('animalCode').value = animalCode;
+    document.getElementById('shareType').value = shareType;
+    document.getElementById('requestModal').classList.remove('hidden');
+    document.getElementById('requestModal').classList.add('flex');
+}
+
+function closeRequestModal() {
+    document.getElementById('requestModal').classList.add('hidden');
+    document.getElementById('requestModal').classList.remove('flex');
+    document.getElementById('requestForm').reset();
+}
+</script>
 
 @endsection

@@ -38,6 +38,7 @@
                         ['route' => 'udhiya.animals.by-warehouse', 'icon' => '🏪', 'label' => 'الحيوانات بالموقع',  'pattern' => 'udhiya.animals.by-warehouse'],
                         ['route' => 'udhiya.customers.index',      'icon' => '👥', 'label' => 'العملاء',            'pattern' => 'udhiya.customers.*'],
                         ['route' => 'udhiya.contracts.index',      'icon' => '📑', 'label' => 'الصكوك',             'pattern' => 'udhiya.contracts.*'],
+                        ['route' => 'udhiya.contract-requests.index', 'icon' => '📋', 'label' => 'طلبات الاشتراك',  'pattern' => 'udhiya.contract-requests.*'],
                         ['route' => 'udhiya.purchases.index',      'icon' => '🛒', 'label' => 'المشتريات',          'pattern' => 'udhiya.purchases.*'],
                         ['route' => 'udhiya.wallets.index',        'icon' => '💰', 'label' => 'الخزائن',            'pattern' => 'udhiya.wallets.*'],
                         ['route' => 'udhiya.suppliers.index',      'icon' => '🚚', 'label' => 'الموردين',           'pattern' => 'udhiya.suppliers.*'],

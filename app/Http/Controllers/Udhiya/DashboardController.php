@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Udhiya;
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\Contract;
+use App\Models\ContractRequest;
 use App\Models\Customer;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Treasury;
+use App\Models\Wallet;
 
 class DashboardController extends Controller
 {
@@ -26,7 +28,7 @@ class DashboardController extends Controller
             'revenue_total'     => Contract::sum('total_amount'),
             'collected_total'   => Contract::sum('paid_amount'),
             'remaining_total'   => Contract::sum('remaining_amount'),
-            'treasury_balance'  => Treasury::where('type', 'in')->sum('amount') - Treasury::where('type', 'out')->sum('amount'),
+            'treasury_balance'  => Wallet::sum('balance') ?: (Treasury::where('type', 'in')->sum('amount') - Treasury::where('type', 'out')->sum('amount')),
         ];
 
         $recentContracts = Contract::with('customer')
@@ -39,6 +41,20 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('udhiya.dashboard.index', compact('stats', 'recentContracts', 'recentPurchases'));
+        // الحيوانات المتاحة (مجمعة وغير مجمعة)
+        $availableAnimals = Animal::where('status', 'available')
+            ->with(['product', 'shareSetting'])
+            ->get();
+
+        // طلبات الاشتراك المعلقة
+        $pendingRequests = ContractRequest::where('status', 'pending')
+            ->with('animal.product')
+            ->latest()
+            ->get();
+
+        return view('udhiya.dashboard.index', compact(
+            'stats', 'recentContracts', 'recentPurchases',
+            'availableAnimals', 'pendingRequests'
+        ));
     }
 }

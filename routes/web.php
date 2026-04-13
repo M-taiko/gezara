@@ -28,6 +28,7 @@ use App\Http\Controllers\Udhiya\ExpenseController;
 use App\Http\Controllers\Udhiya\MeatInventoryController;
 use App\Http\Controllers\Udhiya\MeatSaleController;
 use App\Http\Controllers\Udhiya\WalletController;
+use App\Http\Controllers\Udhiya\ContractRequestController;
 use App\Http\Controllers\PublicController;
 
 // Auth Routes
@@ -172,6 +173,12 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('expenses',              [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('expenses',             [ExpenseController::class, 'store'])->name('expenses.store');
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+    // Contract Requests
+    Route::get('contract-requests', [ContractRequestController::class, 'index'])->name('contract-requests.index');
+    Route::post('contract-requests', [ContractRequestController::class, 'store'])->name('contract-requests.store');
+    Route::patch('contract-requests/{contractRequest}/status', [ContractRequestController::class, 'updateStatus'])->name('contract-requests.update-status');
+    Route::post('contract-requests/{contractRequest}/convert', [ContractRequestController::class, 'convertToContract'])->name('contract-requests.convert');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
