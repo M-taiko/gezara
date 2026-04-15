@@ -50,6 +50,37 @@ class AccountingService
         );
     }
 
+    public function updateContract(Contract $contract): void
+    {
+        $entry = JournalEntry::where('reference_type', Contract::class)
+            ->where('reference_id', $contract->id)
+            ->first();
+
+        if ($entry) {
+            foreach ($entry->items as $item) {
+                // Reverse the balance update
+                $account = $item->account;
+                if ($item->type === 'debit') {
+                    if (in_array($account->type, ['asset', 'expense'])) {
+                        $account->decrement('balance', $item->amount);
+                    } else {
+                        $account->increment('balance', $item->amount);
+                    }
+                } else {
+                    if (in_array($account->type, ['liability', 'revenue', 'equity'])) {
+                        $account->decrement('balance', $item->amount);
+                    } else {
+                        $account->increment('balance', $item->amount);
+                    }
+                }
+            }
+            $entry->items()->delete();
+            $entry->delete();
+        }
+
+        $this->recordContract($contract);
+    }
+
     public function recordCustomerPayment(Payment $payment): JournalEntry
     {
         $items = [

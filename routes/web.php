@@ -145,7 +145,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::resource('customers', CustomerController::class)->except(['show', 'create', 'edit']);
 
     // Contracts
-    Route::resource('contracts', ContractController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::resource('contracts', ContractController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::get('contracts/{contract}/print', [ContractController::class, 'printView'])->name('contracts.print');
     Route::patch('contract-items/{item}/assign-animal', [ContractController::class, 'assignAnimal'])->name('contract-items.assign-animal');
 
@@ -155,6 +155,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
 
     // Slaughter Groups
     Route::resource('groups', SlaughterGroupController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('groups/from-contracts', [SlaughterGroupController::class, 'storeFromContracts'])->name('groups.store-from-contracts');
     Route::post('groups/{group}/members', [SlaughterGroupController::class, 'addMember'])->name('groups.members.add');
     Route::delete('groups/{group}/members/{member}', [SlaughterGroupController::class, 'removeMember'])->name('groups.members.remove');
     Route::patch('groups/{group}/assign-animal', [SlaughterGroupController::class, 'assignAnimal'])->name('groups.assign-animal');

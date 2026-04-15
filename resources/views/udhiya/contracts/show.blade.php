@@ -88,6 +88,10 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
             🖨️ طباعة الصك
         </a>
         @if($contract->status !== 'cancelled')
+        <a href="{{ route('udhiya.contracts.edit', $contract) }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 transition-all">
+            ✏️ تعديل صك
+        </a>
         <form action="{{ route('udhiya.contracts.destroy', $contract) }}" method="POST"
               onsubmit="return confirm('هل تريد إلغاء هذا الصك؟')">
             @csrf @method('DELETE')
@@ -377,4 +381,5 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
 
     </div>
 </div>
-@endsection
+
+

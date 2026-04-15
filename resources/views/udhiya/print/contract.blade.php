@@ -51,8 +51,8 @@
         @foreach($contract->items as $i => $item)
         <tr>
             <td class="px-6 py-4 whitespace-nowrap">{{ $i + 1 }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">{{ $item->animal->code }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">{{ $item->animal->product->name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $item->animal?->code ?? '—' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{ $item->animal?->product?->name ?? '—' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ $item->share_type === 'full' ? 'كامل' : ($item->share_type ?? '—') }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ $item->shares_count }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ number_format($item->unit_price, 2) }} ج.م</td>

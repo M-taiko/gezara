@@ -32,11 +32,22 @@
                    placeholder="ابحث باسم العميل أو رقم هاتفه..."
                    class="w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 pr-9 pl-4 text-sm font-semibold text-slate-800 transition-colors shadow-sm">
         </div>
+        <select name="filter_type" class="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-sm font-semibold text-slate-800 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 shadow-sm transition-colors">
+            <option value="">جميع الصكوك</option>
+            <option value="standalone" {{ request('filter_type') === 'standalone' ? 'selected' : '' }}>صكوك منفردة (بلا مجموعة)</option>
+            <option value="grouped" {{ request('filter_type') === 'grouped' ? 'selected' : '' }}>صكوك في مجموعات</option>
+        </select>
+        <select name="filter_share" class="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-sm font-semibold text-slate-800 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 shadow-sm transition-colors w-32">
+            <option value="">جميع الأنصبة</option>
+            @foreach(['full'=>'كامل', 'seven'=>'سُبع', 'six'=>'سُدس', 'five'=>'خُمس', 'quarter'=>'ربع', 'third'=>'ثُلث', 'half'=>'نصف'] as $val => $label)
+                <option value="{{ $val }}" {{ request('filter_share') === $val ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
         <button type="submit"
                 class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm">
-            بحث
+            تصفية
         </button>
-        @if($search)
+        @if($search || request('filter_type') || request('filter_share'))
         <a href="{{ route('udhiya.contracts.index') }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
             ✕ مسح
@@ -49,6 +60,42 @@
     </p>
     @endif
 </form>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.contract-checkbox');
+    const createBtn = document.getElementById('createGroupBtn');
+    
+    function toggleBtn() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        if (anyChecked) {
+            createBtn.classList.remove('hidden');
+            createBtn.classList.add('inline-flex');
+        } else {
+            createBtn.classList.add('hidden');
+            createBtn.classList.remove('inline-flex');
+        }
+    }
+    
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            toggleBtn();
+        });
+    }
+    
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', toggleBtn);
+    });
+    
+    if (createBtn) {
+        createBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('createGroupModal').classList.remove('hidden');
+        });
+    }
+});
+</script>
 
 {{-- Table card --}}
 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -58,16 +105,24 @@
         <h6 class="text-base font-black text-slate-800 m-0 flex items-center gap-2">
             🧾 قائمة الصكوك
         </h6>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-100">
+        <div class="flex gap-3">
+            <button type="button" id="createGroupBtn" class="hidden items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-sm">
+                👥 تجميع في مجموعة
+            </button>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-100">
             {{ $contracts->total() }} صك
         </span>
+        </div>
     </div>
 
     {{-- Table --}}
-    <div class="overflow-x-auto">
+    <form action="{{ route('udhiya.groups.store-from-contracts') }}" method="POST" id="groupContractsForm">
+        @csrf
+        <div class="overflow-x-auto">
         <table class="w-full text-right">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
+                    <th class="px-5 py-3 w-10"><input type="checkbox" id="selectAll" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"></th>
                     <th class="px-5 py-3">رقم الصك</th>
                     <th class="px-5 py-3">العميل</th>
                     <th class="px-5 py-3 hidden sm:table-cell">يوم الذبح</th>
@@ -129,12 +184,39 @@
                     }
                 @endphp
                 <tr class="hover:bg-slate-50/40 transition-colors">
+                    {{-- Checkbox --}}
+                    @php
+                        $canGroup = $contract->items->count() === 1 && !$contract->items->first()->group_id && $contract->items->first()->share_type !== 'full';
+                        $contractGroups = $contract->items->map->group->filter()->unique('id');
+                        $isGrouped = $contractGroups->isNotEmpty();
+                    @endphp
+                    <td class="px-5 py-4">
+                        @if($canGroup)
+                        <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" class="contract-checkbox rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                        @endif
+                    </td>
                     {{-- Contract number --}}
                     <td class="px-5 py-4">
-                        <a href="{{ route('udhiya.contracts.show', $contract) }}"
-                           class="font-black text-indigo-600 hover:text-indigo-800 hover:underline text-sm">
-                            {{ $contract->contract_number }}
-                        </a>
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('udhiya.contracts.show', $contract) }}"
+                                   class="font-black text-indigo-600 hover:text-indigo-800 hover:underline text-sm">
+                                    {{ $contract->contract_number }}
+                                </a>
+                                @if(!$isGrouped)
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-500" title="منفرد">👤</span>
+                                @endif
+                            </div>
+                            @if($isGrouped)
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($contractGroups as $group)
+                                <a href="{{ route('udhiya.groups.show', $group->id) }}" class="inline-flex items-center px-1.5 py-0.5 rounded md:rounded-md text-[10px] md:text-xs font-black bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors">
+                                    👥 {{ $group->name }}
+                                </a>
+                                @endforeach
+                            </div>
+                            @endif
+                        </div>
                     </td>
                     {{-- Customer --}}
                     <td class="px-5 py-4">
@@ -243,6 +325,63 @@
             </tbody>
         </table>
     </div>
+    
+    {{-- Group Modal --}}
+    <div id="createGroupModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/50 backdrop-blur-sm" onclick="this.parentElement.parentElement.classList.add('hidden')"></div>
+            <div class="relative inline-block w-full max-w-sm p-6 overflow-hidden text-right align-middle transition-all transform bg-white shadow-xl rounded-3xl">
+                <h3 class="text-xl font-black text-slate-800 mb-4">👥 إنشاء مجموعة صكوك</h3>
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">اسم المجموعة <span class="text-rose-500">*</span></label>
+                    <input type="text" name="group_name" placeholder="مثال: مجموعة بقر 1" required
+                           class="w-full px-4 py-3 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-100 focus:border-purple-400">
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-5 py-3 text-sm font-black text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-all">إنشاء وربط</button>
+                    <button type="button" onclick="document.getElementById('createGroupModal').classList.add('hidden')" class="px-5 py-3 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    </form>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.contract-checkbox');
+    const createBtn = document.getElementById('createGroupBtn');
+    
+    function toggleBtn() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        if (anyChecked) {
+            createBtn.classList.remove('hidden');
+            createBtn.classList.add('inline-flex');
+        } else {
+            createBtn.classList.add('hidden');
+            createBtn.classList.remove('inline-flex');
+        }
+    }
+    
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            toggleBtn();
+        });
+    }
+    
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', toggleBtn);
+    });
+    
+    if (createBtn) {
+        createBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('createGroupModal').classList.remove('hidden');
+        });
+    }
+});
+</script>
 
     {{-- Pagination --}}
     @if($contracts->hasPages())

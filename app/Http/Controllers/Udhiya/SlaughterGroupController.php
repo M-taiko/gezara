@@ -59,6 +59,68 @@ class SlaughterGroupController extends Controller
             ->with('toast_success', 'تم إنشاء المجموعة بنجاح');
     }
 
+    public function storeFromContracts(Request $request)
+    {
+        $request->validate([
+            'contract_ids' => 'required|array|min:1',
+            'contract_ids.*' => 'exists:contracts,id',
+            'group_name' => 'required|string|max:255',
+        ]);
+
+        $contracts = \App\Models\Contract::with('items')->whereIn('id', $request->contract_ids)->get();
+
+        $shareType = null;
+        $totalSharesNeeded = 0;
+
+        foreach ($contracts as $contract) {
+            if ($contract->items->count() > 1) {
+                return back()->with('toast_error', "الصك #" . $contract->contract_number . " يحتوي على أكثر من حيوان ولا يمكن إضافته لمجموعة.");
+            }
+            $item = $contract->items->first();
+            if ($item->group_id) {
+                return back()->with('toast_error', "الصك #" . $contract->contract_number . " مرتبط بمجموعة بالفعل.");
+            }
+            if ($item->animal_id) {
+                return back()->with('toast_error', "الصك #" . $contract->contract_number . " مخصص له حيوان. يرجى إزالة الحيوان من الصك أولاً قبل إضافته للمجموعة.");
+            }
+            if (!$shareType) {
+                $shareType = $item->share_type;
+            } elseif ($shareType !== $item->share_type) {
+                return back()->with('toast_error', "يجب أن تكون جميع الصكوك المختارة من نفس نوع الحصة.");
+            }
+            if ($item->share_type === 'full') {
+                return back()->with('toast_error', "الصك #" . $contract->contract_number . " من نوع كامل، ولا يمكن إضافته למجموعة تشاركية.");
+            }
+            $totalSharesNeeded += $item->shares_count;
+        }
+
+        // Validate max shares
+        $maxShares = \App\Models\Animal::SHARE_MAP[$shareType] ?? null;
+        if ($maxShares && $totalSharesNeeded > $maxShares) {
+            return back()->with('toast_error', "عدد الأنصبة المختارة ($totalSharesNeeded) يتجاوز الحد الأقصى للمجموعة ($maxShares).");
+        }
+
+        $group = SlaughterGroup::create([
+            'name' => $request->group_name,
+            'share_type' => $shareType,
+        ]);
+
+        foreach ($contracts as $contract) {
+            $item = $contract->items->first();
+            $item->update(['group_id' => $group->id]);
+
+            SlaughterGroupMember::create([
+                'group_id' => $group->id,
+                'customer_id' => $contract->customer_id,
+                'contract_item_id' => $item->id,
+                'shares_count' => $item->shares_count,
+            ]);
+        }
+
+        return redirect()->route('udhiya.groups.show', $group)
+            ->with('toast_success', 'تم إنشاء المجموعة وربط الصكوك بنجاح.');
+    }
+
     public function show(SlaughterGroup $group)
     {
         $group->load([
