@@ -20,9 +20,9 @@ class SlaughterGroup extends Model
         'full'    => 'كامل',
     ];
 
-    protected $fillable = ['name', 'animal_id', 'share_type', 'slaughter_day', 'notes'];
+    protected $fillable = ['name', 'animal_id', 'share_type', 'slaughter_day', 'notes', 'updated_by_user_id', 'edit_history'];
 
-    protected $casts = ['slaughter_day' => 'date'];
+    protected $casts = ['slaughter_day' => 'date', 'edit_history' => 'array'];
 
     public function animal(): BelongsTo
     {
@@ -32,6 +32,11 @@ class SlaughterGroup extends Model
     public function members(): HasMany
     {
         return $this->hasMany(SlaughterGroupMember::class, 'group_id');
+    }
+
+    public function updatedByUser(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'updated_by_user_id');
     }
 
     public function totalSlots(): int
@@ -52,5 +57,26 @@ class SlaughterGroup extends Model
     public function shareLabel(): string
     {
         return self::SHARE_LABELS[$this->share_type] ?? $this->share_type;
+    }
+
+    public function addEditHistory(string $action, ?string $details = null): void
+    {
+        $history = $this->edit_history ?? [];
+        $history[] = [
+            'action' => $action,
+            'details' => $details,
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()->name ?? 'Unknown',
+            'timestamp' => now()->toDateTimeString(),
+        ];
+        $this->update([
+            'edit_history' => $history,
+            'updated_by_user_id' => auth()->id(),
+        ]);
+    }
+
+    public function isSlaughtered(): bool
+    {
+        return $this->animal?->status === 'slaughtered';
     }
 }

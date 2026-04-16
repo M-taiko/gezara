@@ -160,7 +160,8 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('payments/{payment}/print', [PaymentController::class, 'printView'])->name('payments.print');
 
     // Slaughter Groups
-    Route::resource('groups', SlaughterGroupController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('groups', SlaughterGroupController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+    Route::get('groups/{group}/print', [SlaughterGroupController::class, 'printView'])->name('groups.print');
     Route::post('groups/from-contracts', [SlaughterGroupController::class, 'storeFromContracts'])->name('groups.store-from-contracts');
     Route::post('groups/{group}/members', [SlaughterGroupController::class, 'addMember'])->name('groups.members.add');
     Route::delete('groups/{group}/members/{member}', [SlaughterGroupController::class, 'removeMember'])->name('groups.members.remove');

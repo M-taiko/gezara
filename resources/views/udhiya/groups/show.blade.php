@@ -33,9 +33,31 @@
             </span>
         @endif
 
-        <button onclick="window.print()" class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold rounded-xl transition-all bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm no-print">
+        {{-- Edit button (always available, but limited options if slaughtered) --}}
+        <a href="{{ route('udhiya.groups.edit', $group) }}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl shadow-md transition-all
+                  bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200/60">
+            ✏️ تعديل
+        </a>
+
+        {{-- Delete button (only if not slaughtered) --}}
+        @if(!$group->isSlaughtered())
+            <form action="{{ route('udhiya.groups.destroy', $group) }}" method="POST" style="display: inline;"
+                  onsubmit="return confirm('هل أنت متأكد من حذف هذه المجموعة؟')">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl shadow-md transition-all
+                               bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200/60">
+                    🗑️ حذف
+                </button>
+            </form>
+        @endif
+
+        <a href="{{ route('udhiya.groups.print', $group) }}"
+           class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold rounded-xl transition-all bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm">
             🖨️ طباعة القائمة
-        </button>
+        </a>
     </div>
 </div>
 @endsection
@@ -455,6 +477,39 @@
             @endif
         </div>
     </div>
+
+    {{-- Edit History Card --}}
+    @if($group->edit_history && count($group->edit_history) > 0)
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+            <h6 class="text-base font-black text-slate-800 m-0">📝 سجل التعديلات</h6>
+        </div>
+        <div class="p-6">
+            <div class="space-y-3 max-h-96 overflow-y-auto">
+                @foreach($group->edit_history as $edit)
+                <div class="flex gap-3 pb-3 border-b border-slate-100 last:border-b-0 text-xs">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">
+                            ✏️
+                        </div>
+                    </div>
+                    <div class="flex-grow">
+                        <p class="font-bold text-slate-800">{{ $edit['action'] }}</p>
+                        @if($edit['details'])
+                        <p class="text-slate-600 mt-0.5">{{ $edit['details'] }}</p>
+                        @endif
+                        <p class="text-slate-500 text-xs mt-1">
+                            بواسطة: <span class="font-bold">{{ $edit['user_name'] }}</span>
+                            <br>
+                            بتاريخ: <span class="font-bold" dir="ltr">{{ \Carbon\Carbon::parse($edit['timestamp'])->format('Y-m-d H:i') }}</span>
+                        </p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 
 </div>
 

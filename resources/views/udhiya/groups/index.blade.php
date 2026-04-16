@@ -19,6 +19,205 @@
 
 @section('content')
 
+@php
+    // حساب الإحصائيات
+    $allGroups = \App\Models\SlaughterGroup::with('animal.product.mainCategory', 'members')->get();
+    $allAnimals = \App\Models\Animal::with('product.mainCategory', 'product')->get();
+
+    // الذبائح المرتبطة بمجموعات
+    $groupedAnimals = $allGroups->pluck('animal')->filter();
+
+    // الذبائح بالمخزون (لم تذبح بعد)
+    $stockAnimals = $allAnimals->where('status', '!=', 'slaughtered')->where('status', '!=', 'sold');
+
+    // تجميع حسب الفئة الرئيسية ثم حسب المنتج
+    $animalsByCategory = $groupedAnimals->groupBy(function($a) {
+        return $a->product?->mainCategory?->code ?? 'unknown';
+    })->map(function($items) {
+        return $items->groupBy(function($a) {
+            return $a->product?->id ?? 'unknown';
+        });
+    });
+
+    $stockByCategory = $stockAnimals->groupBy(function($a) {
+        return $a->product?->mainCategory?->code ?? 'unknown';
+    })->map(function($items) {
+        return $items->groupBy(function($a) {
+            return $a->product?->id ?? 'unknown';
+        });
+    });
+
+    // معلومات المنتجات
+    $products = \App\Models\Product::with('mainCategory')->get();
+    $productMap = $products->keyBy('id');
+@endphp
+
+{{-- Statistics Cards --}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    {{-- إجمالي المجموعات --}}
+    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-indigo-600 font-bold text-sm">إجمالي المجموعات</p>
+                <h3 class="text-3xl font-black text-indigo-900 mt-2">{{ $allGroups->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-indigo-200 rounded-xl flex items-center justify-center text-2xl">👥</div>
+        </div>
+    </div>
+
+    {{-- الذبائح المرتبطة --}}
+    <div class="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-amber-600 font-bold text-sm">ذبائح مرتبطة</p>
+                <h3 class="text-3xl font-black text-amber-900 mt-2">{{ $groupedAnimals->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-amber-200 rounded-xl flex items-center justify-center text-2xl">🔗</div>
+        </div>
+    </div>
+
+    {{-- الذبائح في المخزون --}}
+    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-emerald-600 font-bold text-sm">في المخزون</p>
+                <h3 class="text-3xl font-black text-emerald-900 mt-2">{{ $stockAnimals->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-emerald-200 rounded-xl flex items-center justify-center text-2xl">📦</div>
+        </div>
+    </div>
+
+    {{-- المبيعة --}}
+    <div class="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-rose-600 font-bold text-sm">مبيعة/مذبوحة</p>
+                <h3 class="text-3xl font-black text-rose-900 mt-2">{{ $allAnimals->whereIn('status', ['slaughtered', 'sold'])->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-rose-200 rounded-xl flex items-center justify-center text-2xl">✅</div>
+        </div>
+    </div>
+
+    {{-- المجموعات المكتملة --}}
+    <div class="bg-gradient-to-br from-violet-50 to-violet-100 border border-violet-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-violet-600 font-bold text-sm">مجموعات مكتملة</p>
+                <h3 class="text-3xl font-black text-violet-900 mt-2">{{ $allGroups->filter(fn($g) => $g->remainingSlots() === 0)->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-violet-200 rounded-xl flex items-center justify-center text-2xl">🎯</div>
+        </div>
+    </div>
+</div>
+
+{{-- Animals by Product with Inventory Analysis --}}
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-8">
+    {{-- Grouped Animals --}}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 bg-indigo-50/50">
+            <h6 class="text-sm font-bold text-indigo-900 m-0 flex items-center gap-2">
+                <span>🔗</span> الذبائح المرتبطة
+            </h6>
+        </div>
+        <div class="p-4 max-h-72 overflow-y-auto">
+            @php
+                $categories = [
+                    'BQR' => ['اسم' => 'عجول', 'emoji' => '🐄'],
+                    'GHN' => ['اسم' => 'أغنام', 'emoji' => '🐑'],
+                    'JDN' => ['اسم' => 'ماعز', 'emoji' => '🐐'],
+                    'JML' => ['اسم' => 'جمال', 'emoji' => '🐪'],
+                ];
+                $hasAnyGrouped = false;
+            @endphp
+
+            @forelse($animalsByCategory as $catCode => $productGroups)
+            @php $hasAnyGrouped = true; @endphp
+            <div class="mb-4 pb-3 border-b border-slate-200 last:mb-0 last:pb-0 last:border-b-0">
+                <p class="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1.5">
+                    <span class="text-base">{{ $categories[$catCode]['emoji'] ?? '🐾' }}</span>
+                    {{ $categories[$catCode]['اسم'] ?? $catCode }}
+                </p>
+
+                @forelse($productGroups as $productId => $items)
+                @php
+                    $product = $productMap[$productId] ?? null;
+                    $productName = $product?->name ?? 'بدون اسم';
+                    $stockForProduct = $stockAnimals->where('product_id', $productId)->count();
+                    $deficit = max(0, $items->count() - $stockForProduct);
+                    $hasDeficit = $deficit > 0;
+                @endphp
+                <div class="flex items-center justify-between p-2 mb-1.5 rounded-md border {{ $hasDeficit ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-white' }} last:mb-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold {{ $hasDeficit ? 'text-rose-700' : 'text-slate-700' }} truncate">
+                            {{ $productName }}
+                        </p>
+                        @if($hasDeficit)
+                        <p class="text-xs text-rose-600 font-bold mt-0.5">⚠️ نقص {{ $deficit }}</p>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-1 ml-2">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold whitespace-nowrap {{ $hasDeficit ? 'bg-rose-200 text-rose-700' : 'bg-indigo-100 text-indigo-700' }}">
+                            {{ $items->count() }}
+                        </span>
+                        @if($hasDeficit)
+                        <button onclick="openPurchaseModal('{{ $catCode }}', '{{ $productName }}', {{ $deficit }}, '{{ $productId }}')"
+                                class="px-1 py-0.5 text-xs font-bold rounded bg-rose-600 text-white hover:bg-rose-700 transition-all whitespace-nowrap">
+                            طلب
+                        </button>
+                        @endif
+                    </div>
+                </div>
+                @empty
+                <p class="text-xs text-slate-400">لا توجد ذبائح</p>
+                @endforelse
+            </div>
+            @empty
+            <div class="flex items-center justify-center py-6 text-slate-400">
+                <p class="text-xs">لا توجد ذبائح مرتبطة</p>
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Stock Animals --}}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 bg-emerald-50/50">
+            <h6 class="text-sm font-bold text-emerald-900 m-0 flex items-center gap-2">
+                <span>📦</span> المخزون المتاح
+            </h6>
+        </div>
+        <div class="p-4 max-h-72 overflow-y-auto">
+            @forelse($stockByCategory as $catCode => $productGroups)
+            <div class="mb-4 pb-3 border-b border-slate-200 last:mb-0 last:pb-0 last:border-b-0">
+                <p class="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1.5">
+                    <span class="text-base">{{ $categories[$catCode]['emoji'] ?? '🐾' }}</span>
+                    {{ $categories[$catCode]['اسم'] ?? $catCode }}
+                </p>
+
+                @forelse($productGroups as $productId => $items)
+                @php
+                    $product = $productMap[$productId] ?? null;
+                    $productName = $product?->name ?? 'بدون اسم';
+                @endphp
+                <div class="flex items-center justify-between p-2 mb-1.5 rounded-md border border-slate-200 bg-white last:mb-0">
+                    <p class="text-xs font-bold text-slate-700 truncate flex-1">{{ $productName }}</p>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold whitespace-nowrap bg-emerald-100 text-emerald-700 ml-2">
+                        {{ $items->count() }}
+                    </span>
+                </div>
+                @empty
+                <p class="text-xs text-slate-400">لا توجد ذبائح</p>
+                @endforelse
+            </div>
+            @empty
+            <div class="flex items-center justify-center py-6 text-slate-400">
+                <p class="text-xs">لا توجد ذبائح في المخزون</p>
+            </div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
 {{-- Search --}}
 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 mb-8 overflow-hidden p-6 max-w-3xl">
     <form method="GET" action="{{ route('udhiya.groups.index') }}" class="flex gap-4">
@@ -157,4 +356,194 @@
     </div>
     @endforelse
 </div>
+
+{{-- Purchase Order Modal --}}
+<div id="purchaseModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div class="sticky top-0 px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="text-lg font-black text-slate-800">📦 طلب شراء ذبائح ناقصة من مورد</h3>
+        </div>
+
+        <form id="purchaseForm" method="POST" action="{{ route('udhiya.purchases.store') }}" class="p-6 space-y-4">
+            @csrf
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">نوع الذبيحة</label>
+                    <input type="text" id="animalType" disabled class="w-full rounded-xl border border-slate-200 bg-slate-100 py-2 px-3 text-sm font-semibold text-slate-600">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">العدد المطلوب <span class="text-rose-500">*</span></label>
+                    <input type="number" id="quantity" name="quantity" min="1" required
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">اختر المورد <span class="text-rose-500">*</span></label>
+                <select id="supplierId" name="supplier_id" required
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <option value="">-- اختر مورد --</option>
+                    @foreach(\App\Models\Supplier::orderBy('name')->get() as $supplier)
+                    <option value="{{ $supplier->id }}">{{ $supplier->name }} (رصيد: {{ number_format($supplier->balance, 0) }} ر.س)</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-slate-500 mt-1">اختيار المورد يسمح لك بتتبع الديون والمدفوعات</p>
+            </div>
+
+            {{-- Items Container --}}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h5 class="text-sm font-bold text-slate-700 mb-3">🔍 عناصر الطلب</h5>
+
+                <div id="itemsContainer" class="space-y-3">
+                    <div class="grid grid-cols-3 gap-3 item-row">
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">المنتج</label>
+                            <select name="items[0][product_id]" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                                <option value="">-- اختر --</option>
+                                @foreach(\App\Models\Product::where('is_active', true)->orderBy('name')->get() as $product)
+                                <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">الكمية</label>
+                            <input type="number" name="items[0][quantity]" min="1" value="1" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">سعر الوحدة</label>
+                            <input type="number" name="items[0][cost_per_unit]" step="0.01" min="0" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="addItem()" class="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-700">+ إضافة منتج آخر</button>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+                <textarea name="notes" rows="2" placeholder="مثل: ذبائح عالية الجودة أو متطلبات خاصة"
+                          class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 resize-none"></textarea>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                <p class="text-xs text-indigo-700"><strong>💡 ملاحظة مهمة:</strong> تأكد من تحديد التاريخ والسعر بشكل صحيح. سيتم ربط هذا الطلب بمجموعتك.</p>
+            </div>
+
+            {{-- Store category code --}}
+            <input type="hidden" id="categoryCode" name="category_code">
+            <input type="hidden" name="date" value="{{ now()->format('Y-m-d') }}">
+
+            <div class="flex gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closePurchaseModal()"
+                        class="flex-1 px-4 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+                    إلغاء
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all">
+                    ✅ إنشاء الطلب
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let itemCount = 0;
+
+function openPurchaseModal(categoryCode, productName, deficit, productId) {
+    itemCount = 0;
+    document.getElementById('animalType').value = productName;
+    document.getElementById('quantity').value = deficit;
+    document.getElementById('categoryCode').value = categoryCode;
+    document.getElementById('purchaseForm').reset();
+    resetItems(productId);
+    document.getElementById('purchaseModal').classList.remove('hidden');
+}
+
+function closePurchaseModal() {
+    document.getElementById('purchaseModal').classList.add('hidden');
+    document.getElementById('purchaseForm').reset();
+}
+
+function resetItems(productId = null) {
+    itemCount = 1;
+    const container = document.getElementById('itemsContainer');
+    const selectedProduct = productId ? 'selected' : '';
+    container.innerHTML = `
+        <div class="grid grid-cols-3 gap-3 item-row">
+            <div>
+                <label class="text-xs font-bold text-slate-600 block mb-1">المنتج</label>
+                <select name="items[0][product_id]" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <option value="">-- اختر --</option>
+                    @foreach(\App\Models\Product::where('is_active', true)->orderBy('name')->get() as $product)
+                    <option value="{{ $product->id }}" ${productId === {{ $product->id }} ? 'selected' : ''}>{{ $product->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-600 block mb-1">الكمية</label>
+                <input type="number" name="items[0][quantity]" min="1" value="1" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-600 block mb-1">سعر الوحدة</label>
+                <input type="number" name="items[0][cost_per_unit]" step="0.01" min="0" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" placeholder="0.00">
+            </div>
+        </div>
+    `;
+
+    // Set the selected product if provided
+    if (productId) {
+        const select = container.querySelector('select[name="items[0][product_id]"]');
+        if (select) {
+            select.value = productId;
+        }
+    }
+}
+
+function addItem() {
+    itemCount++;
+    const container = document.getElementById('itemsContainer');
+    const newItem = document.createElement('div');
+    newItem.className = 'grid grid-cols-3 gap-3 item-row';
+    newItem.innerHTML = `
+        <div>
+            <select name="items[${itemCount}][product_id]" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                <option value="">-- اختر --</option>
+                @foreach(\App\Models\Product::where('is_active', true)->orderBy('name')->get() as $product)
+                <option value="{{ $product->id }}">{{ $product->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <input type="number" name="items[${itemCount}][quantity]" min="1" value="1" required class="w-full rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+        </div>
+        <div class="flex gap-1 items-end">
+            <input type="number" name="items[${itemCount}][cost_per_unit]" step="0.01" min="0" required class="flex-1 rounded-lg border border-slate-300 bg-white py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" placeholder="0.00">
+            <button type="button" onclick="removeItem(this)" class="px-2 py-1.5 bg-rose-100 text-rose-600 rounded-lg font-bold text-xs hover:bg-rose-200">✕</button>
+        </div>
+    `;
+    container.appendChild(newItem);
+}
+
+function removeItem(btn) {
+    btn.closest('.item-row').remove();
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closePurchaseModal();
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('purchaseModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePurchaseModal();
+    }
+});
+</script>
+
 @endsection

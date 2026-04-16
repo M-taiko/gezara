@@ -307,4 +307,101 @@ class SlaughterGroupController extends Controller
 
         return back()->with('toast_success', 'تم حذف العضو من المجموعة');
     }
+
+    /**
+     * Edit a slaughter group
+     */
+    public function edit(SlaughterGroup $group)
+    {
+        $group->load([
+            'animal.product.mainCategory',
+            'members.customer',
+            'members.contractItem.contract.payments',
+        ]);
+
+        $animals = Animal::with('product.mainCategory')
+            ->orderBy('code')
+            ->get();
+
+        return view('udhiya.groups.edit', compact('group', 'animals'));
+    }
+
+    /**
+     * Update a slaughter group
+     */
+    public function update(Request $request, SlaughterGroup $group)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'animal_id' => 'nullable|exists:animals,id',
+            'slaughter_day' => 'nullable|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $changes = [];
+
+        // Track what changed
+        if ($group->name !== $data['name']) {
+            $changes[] = "تغيير اسم المجموعة من \"{$group->name}\" إلى \"{$data['name']}\"";
+        }
+        if ($group->animal_id !== $data['animal_id']) {
+            $oldAnimal = $group->animal?->code ?? 'بدون';
+            $newAnimal = Animal::find($data['animal_id'])?->code ?? 'بدون';
+            $changes[] = "تغيير الحيوان من \"{$oldAnimal}\" إلى \"{$newAnimal}\"";
+        }
+        if ($group->slaughter_day !== $request->input('slaughter_day')) {
+            $oldDate = $group->slaughter_day?->format('Y-m-d') ?? 'لم يحدد';
+            $newDate = $data['slaughter_day'] ?? 'لم يحدد';
+            $changes[] = "تغيير تاريخ الذبح من \"{$oldDate}\" إلى \"{$newDate}\"";
+        }
+
+        $group->update($data);
+
+        // Add to edit history
+        if (!empty($changes)) {
+            $group->addEditHistory('تعديل المجموعة', implode(', ', $changes));
+        }
+
+        return back()->with('toast_success', '✅ تم تحديث المجموعة بنجاح');
+    }
+
+    /**
+     * Delete a slaughter group
+     */
+    public function destroy(SlaughterGroup $group)
+    {
+        // Can only delete if not slaughtered
+        if ($group->isSlaughtered()) {
+            return back()->with('toast_error', '❌ لا يمكن حذف مجموعة تم ذبح حيوانها');
+        }
+
+        // Can only delete if has no members
+        if ($group->members()->count() > 0) {
+            return back()->with('toast_error', '❌ لا يمكن حذف مجموعة بها أعضاء — أزل الأعضاء أولاً');
+        }
+
+        $groupName = $group->name;
+        $group->delete();
+
+        return back()->with('toast_success', "✅ تم حذف المجموعة \"{$groupName}\" بنجاح");
+    }
+
+    /**
+     * Print view for slaughter group
+     */
+    public function printView(SlaughterGroup $group)
+    {
+        $group->load([
+            'animal.product.mainCategory',
+            'animal.shareSetting',
+            'members.customer',
+            'members.contractItem.contract.payments',
+        ]);
+
+        // Calculate price per share from the animal
+        $priceField    = 'price_' . $group->share_type;
+        $pricePerShare = $group->animal ? (float) ($group->animal->$priceField ?? 0) : 0;
+
+        return view('udhiya.print.group', compact('group', 'pricePerShare'));
+    }
 }
