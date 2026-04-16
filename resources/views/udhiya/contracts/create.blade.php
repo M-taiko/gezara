@@ -199,7 +199,7 @@
             <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                 <h6 class="text-lg font-black text-slate-800 m-0 flex items-center gap-3">
                     <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">3</div>
-                    الحيوانات والأنصبة
+                    الأضاحي والأنصبة
                 </h6>
             </div>
 

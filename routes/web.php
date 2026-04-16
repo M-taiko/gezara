@@ -29,7 +29,9 @@ use App\Http\Controllers\Udhiya\MeatInventoryController;
 use App\Http\Controllers\Udhiya\MeatSaleController;
 use App\Http\Controllers\Udhiya\WalletController;
 use App\Http\Controllers\Udhiya\ContractRequestController;
+use App\Http\Controllers\Udhiya\ContractItemController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\PublicAnimalController;
 
 // Auth Routes
 Route::middleware('guest')->group(function () {
@@ -149,6 +151,10 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('contracts/{contract}/print', [ContractController::class, 'printView'])->name('contracts.print');
     Route::patch('contract-items/{item}/assign-animal', [ContractController::class, 'assignAnimal'])->name('contract-items.assign-animal');
 
+    // Contract Items (edit/delete)
+    Route::patch('contract-items/{item}', [ContractItemController::class, 'update'])->name('contract-items.update');
+    Route::delete('contract-items/{item}', [ContractItemController::class, 'destroy'])->name('contract-items.destroy');
+
     // Payments
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::get('payments/{payment}/print', [PaymentController::class, 'printView'])->name('payments.print');
@@ -191,5 +197,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('reports/supplier/{supplier}', [ReportController::class, 'supplier'])->name('reports.supplier');
 });
 
-// Public livestock listing — no auth required
-Route::get('/', [PublicController::class, 'livestock'])->name('public.livestock');
+// Public Routes — no auth required
+Route::get('/', [PublicAnimalController::class, 'index'])->name('home');
+Route::get('/animals', [PublicAnimalController::class, 'index'])->name('public-animals.index');
+Route::post('/animals/request', [PublicAnimalController::class, 'submitRequest'])->name('public-animals.submit-request');

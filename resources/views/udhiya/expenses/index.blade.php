@@ -32,6 +32,27 @@
                 @csrf
                 <div class="px-6 py-5 space-y-4">
 
+                    {{-- Treasury (required) --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">
+                            الخزينة <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="treasury_id" required id="treasurySelect"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                            <option value="">— اختر الخزينة —</option>
+                            @foreach($treasuries as $treasury)
+                            <option value="{{ $treasury->id }}" data-balance="{{ $treasury->amount }}">
+                                💰 {{ $treasury->type }} — الرصيد: {{ number_format($treasury->amount, 0) }} ج.م
+                            </option>
+                            @endforeach
+                        </select>
+                        <div id="balanceDisplay" class="mt-2 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 hidden">
+                            <span class="text-xs font-bold text-emerald-700">الرصيد المتاح: </span>
+                            <span id="balanceAmount" class="text-sm font-black text-emerald-600">0</span>
+                            <span class="text-xs text-emerald-500 font-normal"> ج.م</span>
+                        </div>
+                    </div>
+
                     {{-- Animal (optional) --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">
@@ -164,6 +185,7 @@
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
                             <th class="px-5 py-3">التاريخ</th>
+                            <th class="px-5 py-3">الخزينة</th>
                             <th class="px-5 py-3">الحيوان</th>
                             <th class="px-5 py-3">النوع</th>
                             <th class="px-5 py-3">البيان</th>
@@ -177,6 +199,15 @@
                         <tr class="hover:bg-rose-50/20 transition-colors">
                             <td class="px-5 py-3 text-sm font-semibold text-slate-600 whitespace-nowrap">
                                 {{ $expense->date->format('d/m/Y') }}
+                            </td>
+                            <td class="px-5 py-3">
+                                @if($expense->treasury)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                    💰 {{ $expense->treasury->type }}
+                                </span>
+                                @else
+                                <span class="text-xs text-slate-400 font-semibold">—</span>
+                                @endif
                             </td>
                             <td class="px-5 py-3">
                                 @if($expense->animal)
@@ -217,7 +248,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="py-16 text-center">
                                     <div class="text-5xl mb-4">💸</div>
                                     <p class="text-slate-400 font-bold">لا توجد مصروفات مسجّلة</p>
@@ -237,3 +268,27 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const treasurySelect = document.getElementById('treasurySelect');
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    const balanceAmount = document.getElementById('balanceAmount');
+
+    if (treasurySelect) {
+        treasurySelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            const balance = selected.getAttribute('data-balance');
+
+            if (balance !== null) {
+                balanceAmount.textContent = new Intl.NumberFormat('ar-EG').format(balance);
+                balanceDisplay.classList.remove('hidden');
+            } else {
+                balanceDisplay.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
+@endpush

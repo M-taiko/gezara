@@ -34,8 +34,8 @@
                 @php
                     $links = [
                         ['route' => 'udhiya.dashboard',            'icon' => '📊', 'label' => 'الرئيسية',           'pattern' => 'udhiya.dashboard'],
-                        ['route' => 'udhiya.animals.index',        'icon' => '🐄', 'label' => 'الحيوانات',          'pattern' => 'udhiya.animals.index'],
-                        ['route' => 'udhiya.animals.by-warehouse', 'icon' => '🏪', 'label' => 'الحيوانات بالموقع',  'pattern' => 'udhiya.animals.by-warehouse'],
+                        ['route' => 'udhiya.animals.index',        'icon' => '🐑', 'label' => 'الأضاحي',            'pattern' => 'udhiya.animals.index'],
+                        ['route' => 'udhiya.animals.by-warehouse', 'icon' => '🏪', 'label' => 'الأضاحي بالموقع',    'pattern' => 'udhiya.animals.by-warehouse'],
                         ['route' => 'udhiya.customers.index',      'icon' => '👥', 'label' => 'العملاء',            'pattern' => 'udhiya.customers.*'],
                         ['route' => 'udhiya.contracts.index',      'icon' => '📑', 'label' => 'الصكوك',             'pattern' => 'udhiya.contracts.*'],
                         ['route' => 'udhiya.contract-requests.index', 'icon' => '📋', 'label' => 'طلبات الاشتراك',  'pattern' => 'udhiya.contract-requests.*'],

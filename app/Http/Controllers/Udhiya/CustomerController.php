@@ -33,8 +33,7 @@ class CustomerController extends Controller
     public function update(StoreCustomerRequest $request, Customer $customer)
     {
         $customer->update($request->validated());
-        return redirect()->route('udhiya.customers.index')
-            ->with('toast_success', 'تم تحديث بيانات العميل.');
+        return back()->with('toast_success', 'تم تحديث بيانات العميل.');
     }
 
     public function destroy(Customer $customer)

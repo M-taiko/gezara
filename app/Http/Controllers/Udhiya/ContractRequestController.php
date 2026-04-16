@@ -58,11 +58,53 @@ class ContractRequestController extends Controller
     /**
      * Convert contract request to actual contract
      */
-    public function convertToContract(ContractRequest $contractRequest)
+    public function convertToContract(Request $request, ContractRequest $contractRequest)
     {
-        // سيتم تنفيذ التحويل لاحقاً
-        $contractRequest->update(['status' => 'converted']);
+        $validated = $request->validate([
+            'animal_id' => 'required|exists:animals,id',
+            'group_id' => 'nullable|exists:slaughter_groups,id',
+        ]);
 
-        return back()->with('toast_success', '✅ تم تحويل الطلب إلى صك');
+        try {
+            // Create or get customer
+            $customer = \App\Models\Customer::firstOrCreate(
+                ['phone' => $contractRequest->customer_phone],
+                [
+                    'name' => $contractRequest->customer_name,
+                    'email' => $contractRequest->customer_email ?? null,
+                    'address' => '',
+                ]
+            );
+
+            // Create contract using ContractService
+            $contractService = app(\App\Services\Udhiya\ContractService::class);
+
+            $contractData = [
+                'customer_id' => $customer->id,
+                'items' => [
+                    [
+                        'animal_id' => $validated['animal_id'],
+                        'share_type' => $contractRequest->share_type,
+                        'shares_count' => 1,
+                        'unit_price' => $contractRequest->share_price ?? 0,
+                        'group_id' => $validated['group_id'] ?? null,
+                    ]
+                ],
+                'payment_amount' => 0,
+                'payment_method' => 'cash',
+            ];
+
+            $contract = $contractService->store($contractData);
+
+            // Update request status
+            $contractRequest->update([
+                'status' => 'converted',
+                'animal_id' => $validated['animal_id'],
+            ]);
+
+            return back()->with('toast_success', '✅ تم تحويل الطلب إلى صك بنجاح - #' . $contract->code);
+        } catch (\Exception $e) {
+            return back()->with('toast_error', '❌ خطأ: ' . $e->getMessage());
+        }
     }
 }

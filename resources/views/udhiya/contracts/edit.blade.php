@@ -30,20 +30,27 @@
                     <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-black text-sm flex-shrink-0">1</div>
                     <h6 class="text-base font-black text-purple-900 m-0">اختر المجموعة</h6>
                 </div>
-                <select id="groupFilter"
-                        class="w-full rounded-xl border border-purple-200 bg-white focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
-                    <option value="">— اختر مجموعة —</option>
-                    @foreach(json_decode(json_encode($groupsJson), false) as $g)
-                    <option value="{{ $g->id }}"
-                            data-animal="{{ $g->animal_id }}"
-                            data-share="{{ $g->share_type }}"
-                            data-price="{{ $g->price_per_share }}">
-                        {{ $g->name }}
-                        @if($g->animal_id) — {{ $g->animal_code }} @else — (بدون حيوان) @endif
-                        ({{ $g->remaining }} متبقي)
-                    </option>
-                    @endforeach
-                </select>
+                <div class="flex gap-2 mb-3">
+                    <select id="groupFilter"
+                            class="flex-1 rounded-xl border border-purple-200 bg-white focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        <option value="">— اختر مجموعة —</option>
+                        @foreach(json_decode(json_encode($groupsJson), false) as $g)
+                        <option value="{{ $g->id }}"
+                                data-animal="{{ $g->animal_id }}"
+                                data-share="{{ $g->share_type }}"
+                                data-price="{{ $g->price_per_share }}">
+                            {{ $g->name }}
+                            @if($g->animal_id) — {{ $g->animal_code }} @else — (بدون حيوان) @endif
+                            ({{ $g->remaining }} متبقي)
+                        </option>
+                        @endforeach
+                    </select>
+                    <a href="{{ route('udhiya.groups.create') }}" target="_blank"
+                       class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 flex items-center justify-center transition-colors flex-shrink-0"
+                       title="إنشاء مجموعة جديدة">
+                        ➕
+                    </a>
+                </div>
 
                 {{-- Members panel --}}
                 <div id="groupMembersPanel" style="display:none;" class="mt-3 bg-white rounded-xl border border-purple-100 overflow-hidden shadow-sm">
@@ -79,13 +86,20 @@
                 </div>
                 {{-- Hidden input carries customer_id when select is disabled --}}
                 <input type="hidden" id="customerIdHidden" name="customer_id" value="">
-                <select id="customerSelect" disabled
-                        class="w-full rounded-xl border border-slate-200 bg-slate-100 py-2.5 px-3 text-sm font-semibold text-slate-400 appearance-none cursor-not-allowed opacity-60 transition-all">
-                    <option value="">— اختر مجموعة أولاً —</option>
-                    @foreach($customers as $c)
-                    <option value="{{ $c->id }}" data-phone="{{ $c->phone }}">{{ $c->name }}{{ $c->phone ? ' ('.$c->phone.')' : '' }}</option>
-                    @endforeach
-                </select>
+                <div class="flex gap-2 mb-3">
+                    <select id="customerSelect" disabled
+                            class="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 px-3 text-sm font-semibold text-slate-400 appearance-none cursor-not-allowed opacity-60 transition-all">
+                        <option value="">— اختر مجموعة أولاً —</option>
+                        @foreach($customers as $c)
+                        <option value="{{ $c->id }}" data-phone="{{ $c->phone }}" data-customer-id="{{ $c->id }}">{{ $c->name }}{{ $c->phone ? ' ('.$c->phone.')' : '' }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" id="editCustomerBtn" onclick="openEditCustomerModal()" disabled
+                            class="w-10 h-10 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center transition-colors cursor-not-allowed disabled:opacity-50"
+                            title="تعديل بيانات العميل">
+                        ✏️
+                    </button>
+                </div>
             </div>
 
             {{-- Step 3: Details --}}
@@ -149,7 +163,7 @@
             <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                 <h6 class="text-lg font-black text-slate-800 m-0 flex items-center gap-3">
                     <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">3</div>
-                    الحيوانات والأنصبة
+                    الأضاحي والأنصبة
                 </h6>
             </div>
 
@@ -716,7 +730,146 @@ document.getElementById('contractForm').addEventListener('submit', function () {
         calcGrand();
     }, 100);
 })();
+
+/* ══════════════════════════════════
+   EDIT CUSTOMER MODAL
+══════════════════════════════════ */
+let currentEditCustomerId = null;
+
+function openEditCustomerModal() {
+    const sel = document.getElementById('customerSelect');
+    const customerId = sel.value;
+
+    if (!customerId) {
+        alert('اختر عميلاً أولاً');
+        return;
+    }
+
+    currentEditCustomerId = customerId;
+    const selectedOption = sel.options[sel.selectedIndex];
+    const fullText = selectedOption.textContent;
+    const customerName = fullText.split('(')[0].trim();
+    const customerPhone = selectedOption.getAttribute('data-phone') || '';
+
+    // Open modal with customer data
+    const modal = document.getElementById('editCustomerModal');
+    if (modal) {
+        document.getElementById('editCustomerName').value = customerName;
+        document.getElementById('editCustomerPhone').value = customerPhone;
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeEditCustomerModal() {
+    const modal = document.getElementById('editCustomerModal');
+    if (modal) modal.classList.add('hidden');
+    currentEditCustomerId = null;
+}
+
+// Enable edit button when customer is selected
+document.getElementById('customerSelect').addEventListener('change', function() {
+    const btn = document.getElementById('editCustomerBtn');
+    if (this.value) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.classList.add('bg-indigo-100', 'text-indigo-600', 'hover:bg-indigo-200');
+    } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.classList.remove('bg-indigo-100', 'text-indigo-600', 'hover:bg-indigo-200');
+    }
+});
 </script>
+
+{{-- Edit Customer Modal --}}
+<div id="editCustomerModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-lg max-w-md w-full overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-indigo-50 to-white">
+            <h6 class="text-lg font-black text-indigo-900 m-0">تعديل بيانات العميل</h6>
+        </div>
+        <form id="editCustomerFormInline" method="POST" class="p-6 space-y-4">
+            @csrf
+            @method('PATCH')
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">اسم العميل <span class="text-rose-500">*</span></label>
+                <input type="text" id="editCustomerName" name="name" required
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">الهاتف <span class="text-rose-500">*</span></label>
+                <input type="tel" id="editCustomerPhone" name="phone" required
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
+
+            <div class="flex gap-3 pt-3">
+                <button type="submit" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200/60 transition-all">
+                    ✅ حفظ
+                </button>
+                <button type="button" onclick="closeEditCustomerModal()" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">
+                    ✕ إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Handle edit customer form submission
+document.getElementById('editCustomerFormInline').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!currentEditCustomerId) {
+        alert('حدث خطأ: لم يتم تحديد العميل');
+        return;
+    }
+
+    const nameInput = document.getElementById('editCustomerName');
+    const phoneInput = document.getElementById('editCustomerPhone');
+
+    if (!nameInput.value || !phoneInput.value) {
+        alert('يجب إدخال الاسم والهاتف');
+        return;
+    }
+
+    // Submit the form to update customer
+    const url = `/udhiya/customers/${currentEditCustomerId}`;
+    const formData = new FormData();
+    formData.append('_method', 'PATCH');
+    formData.append('_token', document.querySelector('input[name="_token"]').value);
+    formData.append('name', nameInput.value);
+    formData.append('phone', phoneInput.value);
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json().catch(() => ({})))
+    .then(data => {
+        // Update customer select display
+        const sel = document.getElementById('customerSelect');
+        const name = nameInput.value;
+        const phone = phoneInput.value;
+        const option = sel.options[sel.selectedIndex];
+        if (option) {
+            option.textContent = name + (phone ? ' (' + phone + ')' : '');
+            option.setAttribute('data-phone', phone);
+        }
+
+        closeEditCustomerModal();
+        alert('تم تحديث بيانات العميل بنجاح');
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('حدث خطأ في الاتصال');
+    });
+});
+</script>
+
 <style>
     @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
     .animate-fade-in { animation: fadeIn .35s ease-out forwards; }

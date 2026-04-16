@@ -113,8 +113,11 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
 
         {{-- Contract Info --}}
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-indigo-50 to-white">
+            <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-indigo-50 to-white flex items-center justify-between">
                 <h6 class="text-base font-black text-indigo-900 m-0">تفاصيل الصك</h6>
+                <button type="button" onclick="openCustomerModal()" class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 hover:bg-indigo-200 flex items-center justify-center text-sm transition-colors" title="تعديل بيانات العميل">
+                    ✏️
+                </button>
             </div>
             <div class="px-6 py-5 space-y-4">
                 <div class="flex justify-between items-center py-2 border-b border-slate-50">
@@ -123,12 +126,12 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                 </div>
                 <div class="flex justify-between items-center py-2 border-b border-slate-50">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">العميل</span>
-                    <span class="text-sm font-black text-slate-800">{{ $contract->customer->name }}</span>
+                    <span class="text-sm font-black text-slate-800" id="customerNameDisplay">{{ $contract->customer->name }}</span>
                 </div>
                 @if($contract->customer->phone)
                 <div class="flex justify-between items-center py-2 border-b border-slate-50">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">الهاتف</span>
-                    <span class="text-sm font-bold text-slate-600 font-mono" dir="ltr">{{ $contract->customer->phone }}</span>
+                    <span class="text-sm font-bold text-slate-600 font-mono" dir="ltr" id="customerPhoneDisplay">{{ $contract->customer->phone }}</span>
                 </div>
                 @endif
                 @if($contract->slaughter_day)
@@ -246,7 +249,7 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
                 <h6 class="text-lg font-black text-slate-800 m-0 flex items-center gap-2">
-                    🐄 الحيوانات والأنصبة
+                    🐑 الأضاحي والأنصبة
                     <span class="text-sm font-bold text-slate-400">({{ $contract->items->count() }} بند)</span>
                 </h6>
             </div>
@@ -254,12 +257,13 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                 <table class="w-full text-right">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
-                            <th class="px-5 py-3">الحيوان</th>
+                            <th class="px-5 py-3">الأضحية</th>
                             <th class="px-5 py-3">النوع</th>
                             <th class="px-5 py-3">الحصة</th>
                             <th class="px-5 py-3 text-center">العدد</th>
                             <th class="px-5 py-3 text-left">سعر الوحدة</th>
                             <th class="px-5 py-3 text-left">الإجمالي</th>
+                            <th class="px-5 py-3 w-20"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -276,7 +280,7 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                                 @endif
                             </td>
                             <td class="px-5 py-4 text-sm font-semibold text-slate-700">
-                                {{ $item->animal->product->name ?? '—' }}
+                                {{ $item->animal?->product?->name ?? '—' }}
                             </td>
                             <td class="px-5 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black
@@ -293,12 +297,25 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                             <td class="px-5 py-4 text-left text-sm font-black text-slate-800">
                                 {{ number_format($item->total_price, 2) }} <span class="text-xs text-slate-400">ج.م</span>
                             </td>
+                            <td class="px-5 py-4 text-center flex gap-1">
+                                <button type="button" onclick="openItemEditModal({{ $item->id }}, {{ $item->unit_price }}, {{ $item->shares_count }})"
+                                        class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white flex items-center justify-center transition-colors text-xs" title="تعديل العنصر">
+                                    ✏️
+                                </button>
+                                <form action="{{ route('udhiya.contract-items.destroy', $item) }}" method="POST" class="inline"
+                                      onsubmit="return confirm('هل تريد حذف هذا العنصر من الصك؟')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors text-xs">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr class="bg-slate-900 text-white">
-                            <td colspan="5" class="px-5 py-4 text-sm font-bold text-slate-400">الإجمالي الكلي</td>
+                            <td colspan="6" class="px-5 py-4 text-sm font-bold text-slate-400">الإجمالي الكلي</td>
                             <td class="px-5 py-4 text-left text-xl font-black">
                                 {{ number_format($contract->total_amount, 2) }} <span class="text-sm text-indigo-400">ج.م</span>
                             </td>
@@ -382,4 +399,115 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
     </div>
 </div>
 
+{{-- Item Edit Modal --}}
+<div id="itemModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-lg max-w-md w-full overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-amber-50 to-white">
+            <h6 class="text-lg font-black text-amber-900 m-0">تعديل العنصر</h6>
+        </div>
+        <form id="itemEditForm" method="POST" class="p-6 space-y-4">
+            @csrf
+            @method('PATCH')
 
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">سعر الوحدة <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                    <input type="number" id="itemUnitPrice" name="unit_price" step="0.01" min="0.01" required
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">عدد الأنصبة <span class="text-rose-500">*</span></label>
+                <input type="number" id="itemSharesCount" name="shares_count" min="1" step="1" required
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+            </div>
+
+            <div class="flex gap-3 pt-3">
+                <button type="submit" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-amber-600 text-white hover:bg-amber-700 shadow-md shadow-amber-200/60 transition-all">
+                    ✅ حفظ التغييرات
+                </button>
+                <button type="button" onclick="closeItemModal()" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">
+                    ✕ إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Customer Edit Modal --}}
+<div id="customerModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-lg max-w-md w-full overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-indigo-50 to-white">
+            <h6 class="text-lg font-black text-indigo-900 m-0">تعديل بيانات العميل</h6>
+        </div>
+        <form action="{{ route('udhiya.customers.update', $contract->customer) }}" method="POST" class="p-6 space-y-4">
+            @csrf
+            @method('PATCH')
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">اسم العميل <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" value="{{ $contract->customer->name }}" required
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">الهاتف <span class="text-rose-500">*</span></label>
+                <input type="tel" name="phone" value="{{ $contract->customer->phone }}" required
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">العنوان</label>
+                <input type="text" name="address" value="{{ $contract->customer->address ?? '' }}"
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات</label>
+                <textarea name="notes" rows="2"
+                          class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none">{{ $contract->customer->notes ?? '' }}</textarea>
+            </div>
+
+            <div class="flex gap-3 pt-3">
+                <button type="submit" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200/60 transition-all">
+                    ✅ حفظ التغييرات
+                </button>
+                <button type="button" onclick="closeCustomerModal()" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">
+                    ✕ إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openItemEditModal(itemId, unitPrice, sharesCount) {
+    const form = document.getElementById('itemEditForm');
+    form.action = `/udhiya/contract-items/${itemId}`;
+    document.getElementById('itemUnitPrice').value = unitPrice;
+    document.getElementById('itemSharesCount').value = sharesCount;
+    document.getElementById('itemModal').classList.remove('hidden');
+    document.getElementById('itemModal').addEventListener('click', function(e) {
+        if (e.target === this) closeItemModal();
+    });
+}
+
+function closeItemModal() {
+    document.getElementById('itemModal').classList.add('hidden');
+}
+
+function openCustomerModal() {
+    document.getElementById('customerModal').classList.remove('hidden');
+    document.getElementById('customerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCustomerModal();
+    });
+}
+
+function closeCustomerModal() {
+    document.getElementById('customerModal').classList.add('hidden');
+}
+</script>
+
+@endsection
