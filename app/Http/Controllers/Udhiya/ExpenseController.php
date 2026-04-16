@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Udhiya;
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\Expense;
-use App\Models\Treasury;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
@@ -28,7 +28,7 @@ class ExpenseController extends Controller
             $query->where('animal_id', $request->animal_id);
         }
 
-        $expenses = $query->with('animal.product', 'treasury')->orderByDesc('date')->orderByDesc('id')->paginate(20)->withQueryString();
+        $expenses = $query->with('animal.product', 'wallet')->orderByDesc('date')->orderByDesc('id')->paginate(20)->withQueryString();
 
         $totals = [];
         foreach (Expense::CATEGORIES as $key => $cat) {
@@ -41,16 +41,16 @@ class ExpenseController extends Controller
         $grandTotal = array_sum($totals);
 
         $animals = Animal::with('product')->orderBy('code')->get();
-        $treasuries = Treasury::orderBy('created_at')->get();
+        $wallets = Wallet::where('is_active', true)->orderBy('name')->get();
 
-        return view('udhiya.expenses.index', compact('expenses', 'totals', 'grandTotal', 'animals', 'treasuries'));
+        return view('udhiya.expenses.index', compact('expenses', 'totals', 'grandTotal', 'animals', 'wallets'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'animal_id'   => 'nullable|exists:animals,id',
-            'treasury_id' => 'required|exists:treasuries,id',
+            'wallet_id'   => 'required|exists:wallets,id',
             'category'    => 'required|in:' . implode(',', array_keys(Expense::CATEGORIES)),
             'description' => 'required|string|max:255',
             'amount'      => 'required|numeric|min:0.01',

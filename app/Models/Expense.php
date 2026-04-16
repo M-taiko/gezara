@@ -16,11 +16,11 @@ class Expense extends Model
         'other'     => ['label' => 'مصروفات أخرى',  'emoji' => '📦'],
     ];
 
-    protected $fillable = ['animal_id', 'treasury_id', 'category', 'description', 'amount', 'date', 'notes'];
+    protected $fillable = ['animal_id', 'wallet_id', 'category', 'description', 'amount', 'date', 'notes'];
     protected $casts    = ['amount' => 'float', 'date' => 'date'];
 
     public function animal(): BelongsTo { return $this->belongsTo(Animal::class); }
-    public function treasury(): BelongsTo { return $this->belongsTo(Treasury::class); }
+    public function wallet(): BelongsTo { return $this->belongsTo(Wallet::class); }
 
     public function categoryLabel(): string
     {

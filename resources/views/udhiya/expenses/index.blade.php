@@ -32,17 +32,17 @@
                 @csrf
                 <div class="px-6 py-5 space-y-4">
 
-                    {{-- Treasury (required) --}}
+                    {{-- Wallet (required) --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">
                             الخزينة <span class="text-rose-500">*</span>
                         </label>
-                        <select name="treasury_id" required id="treasurySelect"
+                        <select name="wallet_id" required id="walletSelect"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                             <option value="">— اختر الخزينة —</option>
-                            @foreach($treasuries as $treasury)
-                            <option value="{{ $treasury->id }}" data-balance="{{ $treasury->amount }}">
-                                💰 {{ $treasury->type }} — الرصيد: {{ number_format($treasury->amount, 0) }} ج.م
+                            @foreach($wallets as $wallet)
+                            <option value="{{ $wallet->id }}" data-balance="{{ $wallet->balance }}" data-type="{{ $wallet->getTypeLabel() }}">
+                                {{ $wallet->getTypeLabel() }} — {{ $wallet->name }} — الرصيد: {{ number_format($wallet->balance, 0) }} ج.م
                             </option>
                             @endforeach
                         </select>
@@ -201,9 +201,9 @@
                                 {{ $expense->date->format('d/m/Y') }}
                             </td>
                             <td class="px-5 py-3">
-                                @if($expense->treasury)
+                                @if($expense->wallet)
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                                    💰 {{ $expense->treasury->type }}
+                                    {{ $expense->wallet->getTypeLabel() }} — {{ $expense->wallet->name }}
                                 </span>
                                 @else
                                 <span class="text-xs text-slate-400 font-semibold">—</span>
@@ -272,12 +272,12 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const treasurySelect = document.getElementById('treasurySelect');
+    const walletSelect = document.getElementById('walletSelect');
     const balanceDisplay = document.getElementById('balanceDisplay');
     const balanceAmount = document.getElementById('balanceAmount');
 
-    if (treasurySelect) {
-        treasurySelect.addEventListener('change', function() {
+    if (walletSelect) {
+        walletSelect.addEventListener('change', function() {
             const selected = this.options[this.selectedIndex];
             const balance = selected.getAttribute('data-balance');
 
