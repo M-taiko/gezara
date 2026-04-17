@@ -153,6 +153,8 @@
                         <th class="px-6 py-4 text-right">الصك</th>
                         <th class="px-6 py-4 text-right">الطريقة</th>
                         <th class="px-6 py-4 text-right">المبلغ</th>
+                        <th class="px-6 py-4 text-right hidden lg:table-cell">الرقم المرجعي</th>
+                        <th class="px-6 py-4 text-right hidden lg:table-cell">المرفقات</th>
                         <th class="px-6 py-4 text-right hidden lg:table-cell">الخزينة</th>
                         <th class="px-6 py-4 text-center">الإجراءات</th>
                     </tr>
@@ -200,6 +202,36 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 hidden lg:table-cell">
+                            @if($payment->reference_number)
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 font-mono">
+                                {{ $payment->reference_number }}
+                            </span>
+                            @else
+                            <span class="text-xs text-slate-400">—</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 hidden lg:table-cell">
+                            @if($payment->attachments && count($payment->attachments) > 0)
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
+                                    📎 {{ count($payment->attachments) }}
+                                </span>
+                                <div class="flex gap-1">
+                                    @foreach($payment->attachments as $index => $filename)
+                                    <a href="{{ asset('storage/' . ($payment->attachment_paths ? json_decode($payment->attachment_paths)[$index] : '')) }}"
+                                       target="_blank"
+                                       class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-600 transition-colors"
+                                       title="{{ $filename }}">
+                                        📄
+                                    </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @else
+                            <span class="text-xs text-slate-400">—</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 hidden lg:table-cell">
                             @if($payment->wallet)
                             <div class="flex items-center gap-1">
                                 <span class="text-sm">{{ $payment->wallet->getTypeLabel() }}</span>
@@ -215,6 +247,16 @@
                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all" title="تعديل">
                                     ✏️
                                 </a>
+                                <a href="{{ route('udhiya.collections.print', $payment) }}"
+                                   target="_blank"
+                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all" title="طباعة">
+                                    🖨️
+                                </a>
+                                <button type="button"
+                                        onclick="sharePaymentWhatsApp('{{ $payment->contract->customer->name }}', '{{ $payment->contract->contract_number }}', {{ $payment->amount }}, '{{ $payment->methodLabel() }}', '{{ $payment->date->format('d/m/Y') }}', '{{ $payment->receipt_number }}', '{{ $payment->contract->customer->phone }}')"
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition-all" title="مشاركة واتساب">
+                                    💬
+                                </button>
                                 <form action="{{ route('udhiya.collections.destroy', $payment) }}" method="POST" class="inline"
                                       onsubmit="return confirm('هل تريد حذف هذه الدفعة؟')">
                                     @csrf @method('DELETE')
@@ -228,7 +270,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="10">
                             <div class="py-16 text-center">
                                 <div class="text-6xl mb-4 opacity-50">💰</div>
                                 <p class="text-slate-400 font-bold text-lg mb-1">لا توجد دفعات مسجّلة</p>
@@ -251,3 +293,48 @@
 </div>
 
 @endsection
+
+@push('js')
+<script>
+function sharePaymentWhatsApp(customerName, contractNumber, amount, method, date, receiptNumber, phoneNumber) {
+    // Validate phone number
+    if (!phoneNumber) {
+        alert('رقم الهاتف غير متوفر لهذا العميل');
+        return;
+    }
+
+    // Format phone number: remove any spaces/dashes and ensure it starts with country code (20 for Egypt)
+    let formattedPhone = phoneNumber.replace(/\D/g, ''); // Remove non-digits
+
+    // If the phone number starts with 0 (Egyptian format), replace it with country code
+    if (formattedPhone.startsWith('0')) {
+        formattedPhone = '2' + formattedPhone.substring(1);
+    }
+
+    // If it doesn't have country code, add 20 (Egypt)
+    if (!formattedPhone.startsWith('2')) {
+        formattedPhone = '20' + formattedPhone;
+    }
+
+    // Format the payment details message
+    const message = `
+📋 *تفاصيل الاستلام*
+
+👤 العميل: ${customerName}
+📄 الصك: ${contractNumber}
+💰 المبلغ: ${parseFloat(amount).toLocaleString('ar-EG')} ج.م
+💳 الطريقة: ${method}
+📅 التاريخ: ${date}
+🧾 الإيصال: ${receiptNumber || 'بدون'}
+
+شكراً لك على تسديد المبلغ ✅
+    `.trim();
+
+    // Replace newlines with %0A (URL-encoded newline)
+    const encodedMessage = encodeURIComponent(message);
+
+    // Open WhatsApp with the message directed to the customer's phone number
+    window.open(`https://wa.me/${formattedPhone}?text=${encodedMessage}`, '_blank');
+}
+</script>
+@endpush

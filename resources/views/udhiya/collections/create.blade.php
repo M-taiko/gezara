@@ -1,338 +1,385 @@
 @extends('layouts.master')
 
 @section('page-header')
-<div class="mb-8">
-    <h1 class="text-4xl font-black text-slate-900 mb-2">💳 تسجيل دفعة جديدة</h1>
-    <nav class="flex items-center gap-2 text-slate-600 text-sm font-semibold">
-        <a href="{{ route('udhiya.dashboard') }}" class="text-blue-600 hover:text-blue-800">الرئيسية</a>
-        <span>/</span>
-        <a href="{{ route('udhiya.collections.index') }}" class="text-blue-600 hover:text-blue-800">تحصيل الدفعات</a>
-        <span>/</span>
-        <span class="text-slate-500">دفعة جديدة</span>
-    </nav>
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 mt-2">
+    <div>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+            <span class="text-emerald-600 text-4xl">💳</span> تسجيل دفعة جديدة
+        </h1>
+        <p class="text-slate-500 font-medium text-sm mt-1">
+            <a href="{{ route('udhiya.collections.index') }}" class="text-emerald-500 hover:text-emerald-700 hover:underline">تحصيل الدفعات</a> / إضافة
+        </p>
+    </div>
 </div>
 @endsection
 
 @section('content')
 
-<div class="min-h-screen pb-20">
+<form action="{{ route('udhiya.collections.store') }}" method="POST" enctype="multipart/form-data" id="paymentForm"
+      class="flex flex-col lg:flex-row gap-6 pb-16">
+    @csrf
 
-    {{-- Add Customer Form --}}
-    <div id="customerFormContainer" class="bg-gradient-to-br from-blue-50 to-blue-100/80 backdrop-blur rounded-2xl p-8 border border-blue-200 mb-8 shadow-lg hidden">
+    {{-- ═══════════ LEFT: MAIN FORM ═══════════ --}}
+    <div class="flex-1 space-y-6">
+
+        {{-- STEP 1: CUSTOMER & CONTRACT --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-emerald-100 bg-gradient-to-b from-emerald-50 to-white">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-sm flex-shrink-0">1</div>
+                    <h6 class="text-base font-black text-emerald-900 m-0">العميل والصك</h6>
+                </div>
+            </div>
+
+            <div class="px-6 py-6 space-y-5">
+                {{-- Customer Select --}}
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">اختر العميل</label>
+                    <div class="flex gap-3">
+                        <select name="customer_id" required id="customerSelect"
+                                class="flex-1 rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                            <option value="">— اختر عميل —</option>
+                            @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}"
+                                    data-contracts='@json($customer->contracts->where("remaining_amount", ">", 0)->values())'
+                                    data-phone="{{ e($customer->phone) }}"
+                                    {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
+                                {{ e($customer->name) }}
+                            </option>
+                            @endforeach
+                        </select>
+                        <button type="button" id="toggleCustomerForm"
+                                class="px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 font-bold hover:bg-emerald-100 transition-colors text-sm whitespace-nowrap">
+                            ➕ عميل جديد
+                        </button>
+                    </div>
+                    @error('customer_id')<p class="text-rose-500 text-xs mt-2">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Customer Details Display --}}
+                <div id="customerDetails" class="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 hidden">
+                    <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                        <div>
+                            <p class="text-xs font-bold text-emerald-600 mb-1">الاسم</p>
+                            <p class="font-bold text-slate-900" id="customerName">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-emerald-600 mb-1">الهاتف</p>
+                            <p class="font-bold text-slate-900" id="customerPhone">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-emerald-600 mb-1">عدد الصكوك</p>
+                            <p class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 font-bold text-sm" id="customerContracts">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Contract Select --}}
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">اختر الصك</label>
+                    <select name="contract_id" required id="contractSelect"
+                            class="w-full rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        <option value="">— اختر الصك —</option>
+                    </select>
+                    @error('contract_id')<p class="text-rose-500 text-xs mt-2">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- No Contracts Alert --}}
+                <div id="noContractsMessage" class="p-4 rounded-2xl border border-rose-200 bg-rose-50 hidden">
+                    <p class="text-rose-700 font-semibold text-sm mb-3">⚠️ هذا العميل لا يمتلك أي صكوك متاحة</p>
+                    <button type="button" id="createContractBtn"
+                            class="w-full px-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-600 font-bold hover:bg-amber-100 transition-colors text-sm">
+                        ➕ إنشاء صك جديد بسرعة
+                    </button>
+                </div>
+
+                {{-- Contract Details Display --}}
+                <div id="contractDetails" class="p-4 rounded-2xl border border-amber-100 bg-amber-50/50 hidden">
+                    <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                        <div>
+                            <p class="text-xs font-bold text-amber-600 mb-1">الإجمالي</p>
+                            <p class="font-bold text-slate-900"><span id="totalAmount">0</span></p>
+                            <p class="text-xs text-amber-600">ج.م</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-amber-600 mb-1">المدفوع</p>
+                            <p class="font-bold text-slate-900"><span id="paidAmount">0</span></p>
+                            <p class="text-xs text-amber-600">ج.م</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-amber-600 mb-1">المتبقي</p>
+                            <p class="font-bold text-amber-700"><span id="remainingAmount">0</span></p>
+                            <p class="text-xs text-amber-600">ج.م</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- STEP 2: PAYMENT DETAILS --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-blue-100 bg-gradient-to-b from-blue-50 to-white">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-sm flex-shrink-0">2</div>
+                    <h6 class="text-base font-black text-blue-900 m-0">بيانات الدفعة</h6>
+                </div>
+            </div>
+
+            <div class="px-6 py-6 space-y-5">
+                <div class="grid md:grid-cols-2 gap-5">
+                    {{-- Amount --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">المبلغ (ج.م)</label>
+                        <input type="number" name="amount" required min="0.01" step="0.01"
+                               id="amountInput" placeholder="0.00" value="{{ old('amount') }}"
+                               class="w-full rounded-xl border border-slate-200 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        @error('amount')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Payment Method --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">طريقة الدفع</label>
+                        <select name="payment_method" required
+                                class="w-full rounded-xl border border-slate-200 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                            <option value="">— اختر الطريقة —</option>
+                            <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>💵 نقدي</option>
+                            <option value="bank" {{ old('payment_method') == 'bank' ? 'selected' : '' }}>🏦 بنك</option>
+                            <option value="transfer" {{ old('payment_method') == 'transfer' ? 'selected' : '' }}>📲 تحويل</option>
+                        </select>
+                        @error('payment_method')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                {{-- Wallet & Date --}}
+                <div class="grid md:grid-cols-2 gap-5">
+                    {{-- Wallet --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">الخزينة</label>
+                        <select name="wallet_id" id="walletSelect"
+                                class="w-full rounded-xl border border-slate-200 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                            <option value="">بدون خزينة</option>
+                            @foreach($wallets as $wallet)
+                            <option value="{{ $wallet->id }}" data-balance="{{ $wallet->balance }}"
+                                    {{ old('wallet_id') == $wallet->id ? 'selected' : '' }}>
+                                {{ $wallet->getTypeLabel() }} - {{ $wallet->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Date --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">التاريخ</label>
+                        <input type="date" name="date" required value="{{ old('date', date('Y-m-d')) }}"
+                               class="w-full rounded-xl border border-slate-200 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        @error('date')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                {{-- Wallet Balance Display --}}
+                <div id="walletInfo" class="p-3 rounded-xl border border-green-200 bg-green-50 hidden">
+                    <p class="text-xs font-bold text-green-700 mb-1">الرصيد المتاح</p>
+                    <p class="text-xl font-black text-green-700"><span id="walletBalance">0</span> ج.م</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- STEP 3: ADDITIONAL DATA --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-indigo-100 bg-gradient-to-b from-indigo-50 to-white">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm flex-shrink-0">3</div>
+                    <h6 class="text-base font-black text-indigo-900 m-0">بيانات إضافية</h6>
+                </div>
+            </div>
+
+            <div class="px-6 py-6 space-y-5">
+                {{-- Reference Number --}}
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">رقم مرجعي (اختياري)</label>
+                    <input type="text" name="reference_number" placeholder="مثال: REF-2026-0001"
+                           value="{{ old('reference_number') }}"
+                           class="w-full rounded-xl border border-slate-200 bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <p class="text-xs text-slate-500 mt-1.5">رقم مرجعي للدفعة من العميل أو البنك</p>
+                </div>
+
+                {{-- File Attachments --}}
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">ارفاق ملفات</label>
+                    <input type="file" name="attachments[]" multiple accept="image/*,.pdf"
+                           id="attachmentsInput"
+                           class="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-4 px-3 text-sm font-semibold text-slate-600 cursor-pointer transition-colors">
+                    <p class="text-xs text-slate-500 mt-1.5">✓ الصيغ: صور (JPG, PNG, GIF)، PDF | الحد الأقصى: 5 ملفات × 5MB</p>
+
+                    {{-- Files Preview --}}
+                    <div id="filesPreview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3 hidden">
+                        <!-- معاينة الملفات هنا -->
+                    </div>
+                </div>
+
+                {{-- Notes --}}
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">ملاحظات</label>
+                    <textarea name="notes" rows="3" placeholder="أضف أي ملاحظات إضافية..."
+                              class="w-full rounded-xl border border-slate-200 bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none">{{ old('notes') }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        {{-- ACTION BUTTONS --}}
+        <div class="flex gap-3">
+            <button type="submit"
+                    class="flex-1 rounded-xl border-0 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 transition-colors shadow-sm hover:shadow-md">
+                ✅ تسجيل الدفعة
+            </button>
+            <button type="button" id="whatsappBtn"
+                    class="flex-1 rounded-xl border-0 bg-teal-600 hover:bg-teal-700 text-white font-black py-3 transition-colors shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                <span>📲</span> WhatsApp
+            </button>
+            <a href="{{ route('udhiya.collections.index') }}"
+               class="px-6 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 transition-colors text-center">
+                ← رجوع
+            </a>
+        </div>
+
+    </div>
+
+    {{-- ═══════════ RIGHT: SIDEBAR SUMMARY ═══════════ --}}
+    <div class="w-full lg:w-80 flex-shrink-0">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden lg:sticky lg:top-24">
+
+            {{-- Summary Header --}}
+            <div class="px-6 py-5 border-b border-emerald-100 bg-gradient-to-b from-emerald-50 to-white">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📊</span>
+                    <h6 class="text-base font-black text-slate-800 m-0">ملخص الدفعة</h6>
+                </div>
+            </div>
+
+            {{-- Summary Content --}}
+            <div class="px-6 py-5 space-y-4 text-sm">
+                <div class="pb-4 border-b border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1.5">العميل</p>
+                    <p class="font-bold text-slate-800 truncate" id="summaryCustomer">—</p>
+                </div>
+
+                <div class="pb-4 border-b border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1.5">الصك</p>
+                    <p class="font-bold text-slate-800 truncate" id="summaryContract">—</p>
+                </div>
+
+                <div class="pb-4 border-b border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1.5">الطريقة</p>
+                    <p class="font-bold text-slate-800" id="summaryMethod">—</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
+                    <p class="text-xs font-bold text-emerald-600 uppercase mb-2">المبلغ</p>
+                    <p class="text-3xl font-black text-emerald-700"><span id="summaryAmount">0</span></p>
+                    <p class="text-xs text-emerald-600 mt-1">ج.م</p>
+                </div>
+            </div>
+
+            {{-- Tip Box --}}
+            <div class="px-6 py-5 border-t border-slate-100 bg-slate-50">
+                <p class="text-xs font-bold text-slate-600 mb-2.5 uppercase">💡 نصائح</p>
+                <ul class="space-y-1.5 text-xs text-slate-600">
+                    <li class="flex gap-2 items-start">
+                        <span class="text-emerald-600 font-bold flex-shrink-0">✓</span>
+                        <span>اختر العميل والصك أولاً</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                        <span class="text-emerald-600 font-bold flex-shrink-0">✓</span>
+                        <span>المبلغ لا يتجاوز المتبقي</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                        <span class="text-emerald-600 font-bold flex-shrink-0">✓</span>
+                        <span>ارفاق الملفات اختياري</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                        <span class="text-emerald-600 font-bold flex-shrink-0">✓</span>
+                        <span>الإيصال يُنشأ تلقائياً</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+</form>
+
+{{-- Add Customer Form Modal --}}
+<div id="customerFormContainer" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-3xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">➕ إضافة عميل جديد</h2>
-            <button type="button" id="closeCustomerForm" class="text-slate-400 hover:text-slate-600 text-3xl font-bold transition">✕</button>
+            <h2 class="text-2xl font-black text-slate-900">➕ عميل جديد</h2>
+            <button type="button" id="closeCustomerForm" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">✕</button>
         </div>
 
         <form id="customerForm" action="{{ route('udhiya.customers.store') }}" method="POST" class="space-y-4">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">الاسم</label>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">الاسم</label>
                     <input type="text" name="name" required placeholder="محمد أحمد"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
+                           class="w-full rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">الهاتف</label>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">الهاتف</label>
                     <input type="tel" name="phone" required placeholder="01234567890"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
+                           class="w-full rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">العنوان</label>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">العنوان</label>
                     <input type="text" name="address" placeholder="القاهرة"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
+                           class="w-full rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">ملاحظات</label>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">ملاحظات</label>
                     <input type="text" name="notes" placeholder="ملاحظات..."
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
+                           class="w-full rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                 </div>
             </div>
 
             <div class="flex gap-3 pt-4 border-t border-slate-200">
-                <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-md hover:shadow-lg">
-                    ✅ إضافة العميل
+                <button type="submit" class="flex-1 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition">
+                    ✅ إضافة
                 </button>
-                <button type="button" id="cancelCustomerForm" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition">
+                <button type="button" id="cancelCustomerForm" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg transition">
                     إلغاء
                 </button>
             </div>
         </form>
     </div>
-
-    {{-- Main Payment Form --}}
-    <form action="{{ route('udhiya.collections.store') }}" method="POST">
-        @csrf
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-            {{-- Main Form Content --}}
-            <div class="xl:col-span-3 space-y-6">
-
-                {{-- Customer & Contract Card --}}
-                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur rounded-2xl p-6 shadow-sm hover:shadow-lg transition border border-blue-200/50">
-                    <h3 class="text-2xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-                        <span>👤</span> العميل والصك
-                    </h3>
-
-                    <div class="grid md:grid-cols-2 gap-4 mb-4">
-                        {{-- Customer --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">اختر العميل</label>
-                            <select name="customer_id" required id="customerSelect"
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
-                                <option value="">اختر عميل</option>
-                                @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}"
-                                        data-contracts='@json($customer->contracts->where("remaining_amount", ">", 0)->values())'
-                                        data-phone="{{ e($customer->phone) }}"
-                                        {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                    {{ e($customer->name) }}
-                                </option>
-                                @endforeach
-                            </select>
-                            @error('customer_id')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
-                        </div>
-
-                        {{-- Contract --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">اختر الصك</label>
-                            <select name="contract_id" required id="contractSelect"
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
-                                <option value="">اختر الصك</option>
-                            </select>
-                            @error('contract_id')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
-                        </div>
-                    </div>
-
-                    {{-- Add Customer Button --}}
-                    <button type="button" id="toggleCustomerForm" class="w-full px-4 py-3 text-sm bg-gradient-to-r from-blue-400 to-cyan-400 border  hover:from-blue-500 hover:to-cyan-500 text-dark font-bold rounded-xl transition shadow-md ">
-                        + إضافة عميل جديد
-                    </button>
-
-                    {{-- No Contracts Alert --}}
-                    <div id="noContractsMessage" class="mt-4 p-4 bg-red-50 rounded-xl border border-red-200 hidden">
-                        <p class="text-red-700 font-semibold text-sm mb-3">⚠️ لا توجد صكوك متاحة لهذا العميل</p>
-                        <button type="button" id="createContractBtn" class="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-dark font-bold rounded-xl transition shadow-md">
-                            ➕ إنشاء صك جديد الآن
-                        </button>
-                    </div>
-
-                    {{-- Contract Details --}}
-                    <div id="contractInfo" class="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200 hidden">
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <div>
-                                <p class="text-xs text-amber-600 font-bold mb-1">الإجمالي</p>
-                                <p class="text-2xl font-black text-slate-900">
-                                    <span id="totalAmount">0</span>
-                                    <span class="text-xs text-amber-600 mr-1">ج.م</span>
-                                </p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-amber-600 font-bold mb-1">المدفوع</p>
-                                <p class="text-2xl font-black text-slate-900">
-                                    <span id="paidAmount">0</span>
-                                    <span class="text-xs text-amber-600 mr-1">ج.م</span>
-                                </p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-amber-600 font-bold mb-1">المتبقي</p>
-                                <p class="text-2xl font-black text-amber-600">
-                                    <span id="remainingAmount">0</span>
-                                    <span class="text-xs text-amber-600 mr-1">ج.م</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Payment Amount Card --}}
-                <div class="bg-gradient-to-br from-emerald-50 to-green-50 backdrop-blur rounded-2xl p-6 shadow-sm hover:shadow-lg transition border border-emerald-200/50">
-                    <h3 class="text-2xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-                        <span>💰</span> المبلغ والطريقة
-                    </h3>
-
-                    <div class="grid md:grid-cols-2 gap-6">
-                        {{-- Amount --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">المبلغ (ج.م)</label>
-                            <div class="relative">
-                                <input type="number" name="amount" required min="0.01" step="0.01"
-                                       id="amountInput" placeholder="0.00" value="{{ old('amount') }}"
-                                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800 text-xl">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">ج.م</span>
-                            </div>
-                            @error('amount')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
-                        </div>
-
-                        {{-- Payment Method --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">طريقة الدفع</label>
-                            <select name="payment_method" required
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
-                                <option value="">اختر الطريقة</option>
-                                <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>💵 نقدي</option>
-                                <option value="bank" {{ old('payment_method') == 'bank' ? 'selected' : '' }}>🏦 بنك</option>
-                                <option value="transfer" {{ old('payment_method') == 'transfer' ? 'selected' : '' }}>📲 تحويل</option>
-                            </select>
-                            @error('payment_method')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Wallet & Date Card --}}
-                <div class="bg-gradient-to-br from-purple-50 to-pink-50 backdrop-blur rounded-2xl p-6 shadow-sm hover:shadow-lg transition border border-purple-200/50">
-                    <h3 class="text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-                        <span>📅</span> الخزينة والتاريخ
-                    </h3>
-
-                    <div class="grid md:grid-cols-2 gap-6">
-                        {{-- Wallet --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">الخزينة</label>
-                            <select name="wallet_id" id="walletSelect"
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
-                                <option value="">بدون خزينة</option>
-                                @foreach($wallets as $wallet)
-                                <option value="{{ $wallet->id }}" data-balance="{{ $wallet->balance }}"
-                                        {{ old('wallet_id') == $wallet->id ? 'selected' : '' }}>
-                                    {{ $wallet->getTypeLabel() }} - {{ $wallet->name }}
-                                </option>
-                                @endforeach
-                            </select>
-
-                            {{-- Wallet Balance --}}
-                            <div id="walletInfo" class="mt-3 p-3 bg-green-50 rounded-lg border border-green-200 hidden">
-                                <p class="text-xs text-green-600 font-bold mb-1">الرصيد</p>
-                                <p class="text-xl font-black text-green-700"><span id="walletBalance">0</span> ج.م</p>
-                            </div>
-                        </div>
-
-                        {{-- Date --}}
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">التاريخ</label>
-                            <input type="date" name="date" required value="{{ old('date', date('Y-m-d')) }}"
-                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
-                            @error('date')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Notes Card --}}
-                <div class="bg-gradient-to-br from-orange-50 to-amber-50 backdrop-blur rounded-2xl p-6 shadow-sm hover:shadow-lg transition border border-orange-200/50">
-                    <h3 class="text-2xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-                        <span>📝</span> ملاحظات
-                    </h3>
-                    <textarea name="notes" rows="3" placeholder="أضف أي ملاحظات إضافية..."
-                              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800 resize-none">{{ old('notes') }}</textarea>
-                </div>
-
-                {{-- Back Button --}}
-                <a href="{{ route('udhiya.collections.index') }}" class="block px-6 py-3 bg-gradient-to-r from-slate-300 to-slate-400 hover:from-slate-400 hover:to-slate-500 text-dark border font-bold rounded-xl transition text-center shadow-md hover:shadow-lg">
-                    ← العودة للقائمة
-                </a>
-
-            </div>
-
-            {{-- Sticky Summary Sidebar --}}
-            <div class="xl:col-span-1">
-                <div class="sticky top-28 space-y-4">
-
-                    {{-- Summary Card --}}
-                    <div class="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-dark border rounded-2xl p-6 shadow-xl hover:shadow-2xl transition">
-                        <h3 class="font-black text-2xl mb-6 flex items-center gap-2">
-                            <span>📊</span> الملخص
-                        </h3>
-
-                        <div class="space-y-4 text-sm">
-                            <div>
-                                <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">العميل</p>
-                                <p class="font-bold text-base truncate" id="summaryCustomer">—</p>
-                            </div>
-
-                            <div>
-                                <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">الصك</p>
-                                <p class="font-bold text-base truncate" id="summaryContract">—</p>
-                            </div>
-
-                            <div>
-                                <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">الطريقة</p>
-                                <p class="font-bold text-base" id="summaryMethod">—</p>
-                            </div>
-
-                            <div class="pt-4 border-t border-blue-400">
-                                <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-2">المبلغ</p>
-                                <p class="text-5xl font-black" id="summaryAmount">0</p>
-                                <p class="text-blue-200 text-xs mt-1">ج.م</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Customer Info Card --}}
-                    <div id="customerInfoCard" class="bg-gradient-to-br from-indigo-50 to-blue-50 backdrop-blur rounded-2xl p-6 shadow-sm border border-indigo-200/50 hidden">
-                        <div class="space-y-3 text-sm">
-                            <div>
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">الاسم</p>
-                                <p class="font-bold text-slate-900" id="customerName">—</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">الهاتف</p>
-                                <p class="font-bold text-slate-900" id="customerPhone">—</p>
-                            </div>
-                            <div>
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">الصكوك</p>
-                                <p class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-sm font-bold" id="customerContracts">0</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Submit Button --}}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-green-500 via-emerald-500 border to-teal-600 hover:from-green-600 hover:via-emerald-600 hover:to-teal-700 text-dark font-black text-lg rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition transform">
-                        ✅ تسجيل الدفعة
-                    </button>
-
-                </div>
-            </div>
-
-        </div>
-
-    </form>
-
 </div>
 
-{{-- Create Contract Modal --}}
+{{-- Quick Contract Modal --}}
 <div id="contractFormContainer" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-8 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-scale-in border border-amber-200">
-        <div class="flex items-center justify-between mb-6 pb-6 border-b-2 border-amber-300">
-            <h2 class="text-3xl font-black bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent flex items-center gap-2">
-                <span>⚡</span> صك بسرعة
-            </h2>
-            <button type="button" id="closeContractForm" class="text-amber-400 hover:text-amber-600 text-3xl font-bold transition">✕</button>
+    <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-black text-slate-900">⚡ صك جديد بسرعة</h2>
+            <button type="button" id="closeContractForm" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">✕</button>
         </div>
 
         <form id="quickContractForm" class="space-y-4">
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">العميل</label>
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">العميل</label>
                 <input type="text" id="contractCustomerName" readonly
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 font-semibold">
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-sm font-semibold text-slate-600">
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
-                    الإجمالي (ج.م) <span class="text-red-600">*</span>
-                </label>
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">الإجمالي (ج.م) <span class="text-rose-600">*</span></label>
                 <input type="number" id="contractAmount" required min="0.01" step="0.01" placeholder="0.00"
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800 text-xl">
+                       class="w-full rounded-xl border border-slate-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
-                    نوع المشاركة <span class="text-red-600">*</span>
-                </label>
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">النوع <span class="text-rose-600">*</span></label>
                 <select id="contractShareType" required
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800">
-                    <option value="">اختر النوع</option>
-                    <option value="full">🐑 كامل</option>
+                        class="w-full rounded-xl border border-slate-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <option value="">— اختر —</option>
+                    <option value="full">كامل</option>
                     <option value="half">نصف</option>
                     <option value="quarter">ربع</option>
                     <option value="third">ثلث</option>
@@ -343,16 +390,16 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">ملاحظات</label>
-                <textarea id="contractNotes" rows="3" placeholder="ملاحظات (اختيارية)..."
-                          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-800 resize-none"></textarea>
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">ملاحظات</label>
+                <textarea id="contractNotes" rows="2" placeholder="ملاحظات..."
+                          class="w-full rounded-xl border border-slate-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none"></textarea>
             </div>
 
-            <div class="pt-4 space-y-3 border-t border-slate-200">
-                <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold rounded-xl transition shadow-md hover:shadow-lg">
-                    ✅ إنشاء الصك
+            <div class="flex gap-3 pt-4 border-t border-slate-200">
+                <button type="submit" class="flex-1 px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition">
+                    ✅ إنشاء
                 </button>
-                <button type="button" id="cancelContractForm" class="w-full px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition">
+                <button type="button" id="cancelContractForm" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg transition">
                     إلغاء
                 </button>
             </div>
@@ -363,23 +410,6 @@
 @endsection
 
 @push('js')
-<style>
-    @keyframes scaleIn {
-        from {
-            transform: scale(0.9);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    .animate-scale-in {
-        animation: scaleIn 0.2s ease;
-    }
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const customerSelect = document.getElementById('customerSelect');
@@ -387,22 +417,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const amountInput = document.getElementById('amountInput');
     const walletSelect = document.getElementById('walletSelect');
     const paymentMethodSelect = document.querySelector('select[name="payment_method"]');
-    const customerInfoCard = document.getElementById('customerInfoCard');
+    const attachmentsInput = document.getElementById('attachmentsInput');
+    const filesPreview = document.getElementById('filesPreview');
+    const whatsappBtn = document.getElementById('whatsappBtn');
 
-    // ✅ 1. Customer Selection
+    // Customer Selection
     customerSelect.addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const contractsData = selected.getAttribute('data-contracts');
 
-        contractSelect.innerHTML = '<option value="">اختر الصك</option>';
-        document.getElementById('contractInfo').classList.add('hidden');
-        customerInfoCard.classList.add('hidden');
+        contractSelect.innerHTML = '<option value="">— اختر الصك —</option>';
+        document.getElementById('contractDetails').classList.add('hidden');
+        document.getElementById('customerDetails').classList.add('hidden');
         document.getElementById('noContractsMessage').classList.add('hidden');
         amountInput.value = '';
         document.getElementById('summaryAmount').textContent = '0';
 
         let contracts = [];
-
         try {
             contracts = contractsData ? JSON.parse(contractsData) : [];
         } catch (e) {
@@ -416,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('customerName').textContent = customerName;
         document.getElementById('customerPhone').textContent = customerPhone;
         document.getElementById('customerContracts').textContent = contracts.length;
-        customerInfoCard.classList.remove('hidden');
+        document.getElementById('customerDetails').classList.remove('hidden');
         document.getElementById('summaryCustomer').textContent = customerName;
 
         if (contracts.length > 0) {
@@ -435,12 +466,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ✅ 2. Contract Selection
+    // Contract Selection
     contractSelect.addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
 
         if (!selected || !selected.hasAttribute('data-total')) {
-            document.getElementById('contractInfo').classList.add('hidden');
+            document.getElementById('contractDetails').classList.add('hidden');
             document.getElementById('summaryContract').textContent = '—';
             amountInput.max = '';
             return;
@@ -453,12 +484,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('totalAmount').textContent = new Intl.NumberFormat('ar-EG').format(total);
         document.getElementById('paidAmount').textContent = new Intl.NumberFormat('ar-EG').format(paid);
         document.getElementById('remainingAmount').textContent = new Intl.NumberFormat('ar-EG').format(remaining);
-        document.getElementById('contractInfo').classList.remove('hidden');
+        document.getElementById('contractDetails').classList.remove('hidden');
         amountInput.max = remaining;
         document.getElementById('summaryContract').textContent = selected.textContent.split(' —')[0];
     });
 
-    // ✅ 3. Amount Input Validation
+    // Amount Validation
     amountInput.addEventListener('input', function() {
         const max = parseFloat(this.max || 0);
         const value = parseFloat(this.value || 0);
@@ -470,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('summaryAmount').textContent = new Intl.NumberFormat('ar-EG').format(this.value || 0);
     });
 
-    // ✅ 4. Payment Method
+    // Payment Method
     paymentMethodSelect.addEventListener('change', function() {
         const methodText = {
             'cash': '💵 نقدي',
@@ -480,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('summaryMethod').textContent = methodText[this.value] || '—';
     });
 
-    // ✅ 5. Wallet Balance
+    // Wallet Balance
     walletSelect.addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const balance = selected.getAttribute('data-balance');
@@ -493,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ✅ 6. Toggle Customer Form
+    // Add Customer Form
     const toggleBtn = document.getElementById('toggleCustomerForm');
     const closeBtn = document.getElementById('closeCustomerForm');
     const cancelBtn = document.getElementById('cancelCustomerForm');
@@ -504,10 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleBtn.addEventListener('click', function(e) {
             e.preventDefault();
             formContainer.classList.toggle('hidden');
-            if (!formContainer.classList.contains('hidden')) {
-                const firstInput = formContainer.querySelector('input[name="name"]');
-                if (firstInput) firstInput.focus();
-            }
         });
     }
 
@@ -527,18 +554,80 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ 7. Contract Form Toggle & Handling
+    // Customer Form Submit (AJAX)
+    if (customerForm) {
+        customerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Close modal
+                    formContainer.classList.add('hidden');
+                    customerForm.reset();
+
+                    // Add new customer to dropdown
+                    const newOption = document.createElement('option');
+                    newOption.value = data.customer.id;
+                    newOption.textContent = data.customer.name;
+                    newOption.setAttribute('data-contracts', '[]');
+                    newOption.setAttribute('data-phone', data.customer.phone || '');
+                    newOption.selected = true;
+                    customerSelect.appendChild(newOption);
+
+                    // Trigger customer selection event to update form
+                    const event = new Event('change', { bubbles: true });
+                    customerSelect.dispatchEvent(event);
+
+                    // Show success message
+                    if (typeof showToast === 'function') {
+                        showToast('success', 'تم إضافة العميل بنجاح');
+                    }
+                } else {
+                    alert('حدث خطأ: ' + (data.message || 'فشل إضافة العميل'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ في الإرسال');
+            }
+        });
+    }
+
+    // Close customer modal when clicking backdrop
+    if (formContainer) {
+        formContainer.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+                customerForm.reset();
+            }
+        });
+    }
+
+    // Quick Contract Form
     const createContractBtn = document.getElementById('createContractBtn');
     const contractFormContainer = document.getElementById('contractFormContainer');
     const closeContractBtn = document.getElementById('closeContractForm');
     const cancelContractBtn = document.getElementById('cancelContractForm');
     const quickContractForm = document.getElementById('quickContractForm');
+    let quickContractCustomerId = null; // Store customer ID for quick contract
 
     if (createContractBtn) {
         createContractBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            // Store the customer ID when opening the modal
+            quickContractCustomerId = customerSelect.value;
             contractFormContainer.classList.remove('hidden');
-            document.getElementById('contractAmount').focus();
         });
     }
 
@@ -558,7 +647,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Close modal when clicking outside
     if (contractFormContainer) {
         contractFormContainer.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -572,65 +660,135 @@ document.addEventListener('DOMContentLoaded', function() {
         quickContractForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const customerId = customerSelect.value;
+            const customerId = quickContractCustomerId || customerSelect.value;
             const amount = document.getElementById('contractAmount').value;
             const shareType = document.getElementById('contractShareType').value;
             const notes = document.getElementById('contractNotes').value;
 
             if (!customerId || !amount || !shareType) {
                 alert('يرجى ملء جميع الحقول المطلوبة');
+                console.error('Missing fields:', { customerId, amount, shareType });
                 return;
             }
 
+            const payload = {
+                customer_id: parseInt(customerId),
+                total_amount: parseFloat(amount),
+                share_type: shareType,
+                notes: notes || ''
+            };
+
+            console.log('Sending contract data:', payload);
+
             try {
+                const csrfElement = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfElement ? csrfElement.getAttribute('content') : '';
+
+                if (!csrfToken) {
+                    alert('خطأ في الأمان: لم يتم العثور على CSRF token');
+                    console.error('CSRF token not found');
+                    return;
+                }
+
                 const response = await fetch('{{ route("udhiya.contracts.quick") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken
                     },
-                    body: JSON.stringify({
-                        customer_id: customerId,
-                        total_amount: parseFloat(amount),
-                        share_type: shareType,
-                        notes: notes
-                    })
+                    body: JSON.stringify(payload)
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    const data = await response.json();
-                    alert(data.message || 'حدث خطأ في إنشاء الصك');
+                    console.error('Contract creation error:', data);
+                    alert('❌ خطأ: ' + (data.message || 'خطأ في إنشاء الصك'));
                     return;
                 }
 
-                const data = await response.json();
                 const newContractId = data.contract.id;
                 const newContractNumber = data.contract.contract_number;
+                const newAmount = data.contract.total_amount;
 
-                // Add new contract to dropdown
                 const option = document.createElement('option');
                 option.value = newContractId;
-                option.textContent = `${newContractNumber} — متبقي ${amount} ج.م`;
-                option.setAttribute('data-total', amount);
+                option.textContent = `${newContractNumber} — متبقي ${newAmount} ج.م`;
+                option.setAttribute('data-total', newAmount);
                 option.setAttribute('data-paid', 0);
-                option.setAttribute('data-remaining', amount);
+                option.setAttribute('data-remaining', newAmount);
                 contractSelect.appendChild(option);
 
-                // Select the new contract
                 contractSelect.value = newContractId;
                 contractSelect.dispatchEvent(new Event('change'));
 
-                // Hide form and message
                 contractFormContainer.classList.add('hidden');
                 document.getElementById('noContractsMessage').classList.add('hidden');
                 quickContractForm.reset();
 
-                // Show success message
                 alert('✅ تم إنشاء الصك بنجاح');
             } catch (error) {
                 console.error('Error:', error);
-                alert('حدث خطأ في إنشاء الصك');
+                alert('خطأ في إنشاء الصك');
             }
+        });
+    }
+
+    // File Attachments
+    if (attachmentsInput) {
+        attachmentsInput.addEventListener('change', function(e) {
+            const files = this.files;
+            if (files.length === 0) {
+                filesPreview.classList.add('hidden');
+                return;
+            }
+
+            filesPreview.innerHTML = '';
+            Array.from(files).forEach((file) => {
+                const isImage = file.type.startsWith('image/');
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'relative group';
+                fileDiv.innerHTML = `
+                    <div class="relative rounded-lg overflow-hidden bg-slate-100 aspect-square border border-slate-200">
+                        ${isImage ? `
+                            <img src="${URL.createObjectURL(file)}" alt="Preview" class="w-full h-full object-cover">
+                        ` : `
+                            <div class="w-full h-full flex items-center justify-center">
+                                <span class="text-3xl">📄</span>
+                            </div>
+                        `}
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1 truncate">${file.name}</p>
+                `;
+                filesPreview.appendChild(fileDiv);
+            });
+
+            filesPreview.classList.remove('hidden');
+        });
+    }
+
+    // WhatsApp Button
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const customerPhone = document.getElementById('customerPhone').textContent;
+            const customerName = document.getElementById('customerName').textContent;
+            const contractNum = document.getElementById('summaryContract').textContent;
+            const amount = document.getElementById('summaryAmount').textContent;
+            const method = document.getElementById('summaryMethod').textContent;
+
+            if (customerPhone === '—' || !customerPhone) {
+                alert('❌ لم يتم اختيار عميل بعد');
+                return;
+            }
+
+            const message = `🎯 *تفاصيل الدفعة*\n\n👤 الاسم: ${customerName}\n📄 الصك: ${contractNum}\n💰 المبلغ: ${amount} ج.م\n💳 الطريقة: ${method}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n\nشكراً على التعاملك معنا!`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappLink = `https://wa.me/2${customerPhone.replace(/^0/, '')}?text=${encodedMessage}`;
+
+            window.open(whatsappLink, '_blank');
         });
     }
 });

@@ -7,8 +7,8 @@ class Payment extends Model
 {
     const METHOD_LABELS = ['cash' => 'نقدي', 'bank' => 'بنك', 'transfer' => 'تحويل'];
 
-    protected $fillable = ['contract_id', 'amount', 'payment_method', 'receipt_number', 'date', 'notes', 'wallet_id'];
-    protected $casts = ['amount' => 'float', 'date' => 'date'];
+    protected $fillable = ['contract_id', 'amount', 'payment_method', 'receipt_number', 'reference_number', 'date', 'notes', 'wallet_id', 'attachments', 'attachment_paths'];
+    protected $casts = ['amount' => 'float', 'date' => 'date', 'attachments' => 'array'];
 
     protected static function booted(): void
     {

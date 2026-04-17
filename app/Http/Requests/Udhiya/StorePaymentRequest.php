@@ -15,11 +15,15 @@ class StorePaymentRequest extends FormRequest
         $maxAmount = $contract ? $contract->remaining_amount : 999999999;
 
         return [
-            'contract_id'    => 'required|exists:contracts,id',
-            'amount'         => "required|numeric|min:0.01|max:{$maxAmount}",
-            'payment_method' => 'required|in:cash,bank,transfer',
-            'date'           => 'required|date',
-            'notes'          => 'nullable|string',
+            'contract_id'       => 'required|exists:contracts,id',
+            'amount'            => "required|numeric|min:0.01|max:{$maxAmount}",
+            'payment_method'    => 'required|in:cash,bank,transfer',
+            'date'              => 'required|date',
+            'notes'             => 'nullable|string',
+            'reference_number'  => 'nullable|string|max:100',
+            'wallet_id'         => 'nullable|exists:wallets,id',
+            'attachments'       => 'nullable|array|max:5',
+            'attachments.*'     => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ];
     }
 

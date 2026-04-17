@@ -49,13 +49,16 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'contract_id' => 'required|exists:contracts,id',
-            'amount'      => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,bank,transfer',
-            'wallet_id'   => 'nullable|exists:wallets,id',
-            'date'        => 'required|date',
-            'notes'       => 'nullable|string',
+            'customer_id'       => 'required|exists:customers,id',
+            'contract_id'       => 'required|exists:contracts,id',
+            'amount'            => 'required|numeric|min:0.01',
+            'payment_method'    => 'required|in:cash,bank,transfer',
+            'wallet_id'         => 'nullable|exists:wallets,id',
+            'date'              => 'required|date',
+            'notes'             => 'nullable|string',
+            'reference_number'  => 'nullable|string|max:100',
+            'attachments'       => 'nullable|array|max:5',
+            'attachments.*'     => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ]);
 
         // Verify contract belongs to customer
@@ -79,6 +82,17 @@ class CollectionController extends Controller
             : 1;
 
         $data['receipt_number'] = 'RCP-' . date('Y') . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+        // Handle file attachments
+        $attachmentPaths = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('payments/' . date('Y/m/d'), 'public');
+                $attachmentPaths[] = $path;
+            }
+            $data['attachment_paths'] = json_encode($attachmentPaths);
+            $data['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
+        }
 
         Payment::create($data);
 
@@ -137,5 +151,11 @@ class CollectionController extends Controller
     {
         $payment->delete();
         return back()->with('toast_success', 'تم حذف الدفعة.');
+    }
+
+    public function print(Payment $payment)
+    {
+        $payment->load('contract.customer', 'wallet');
+        return view('udhiya.collections.print', compact('payment'));
     }
 }

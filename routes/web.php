@@ -167,6 +167,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('collections/{payment}/edit', [CollectionController::class, 'edit'])->name('collections.edit');
     Route::put('collections/{payment}', [CollectionController::class, 'update'])->name('collections.update');
     Route::delete('collections/{payment}', [CollectionController::class, 'destroy'])->name('collections.destroy');
+    Route::get('collections/{payment}/print', [CollectionController::class, 'print'])->name('collections.print');
 
     // Slaughter Groups
     Route::resource('groups', SlaughterGroupController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);

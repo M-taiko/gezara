@@ -121,7 +121,7 @@ class ContractController extends Controller
     public function storeQuick(\Illuminate\Http\Request $request)
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'customer_id' => 'required|exists:customers,id',
                 'total_amount' => 'required|numeric|min:0.01',
                 'share_type' => 'required|in:full,seven,six,five,quarter,third,half',
@@ -130,13 +130,13 @@ class ContractController extends Controller
 
             // Create a quick contract with a single item (no animal)
             $contractData = [
-                'customer_id' => $request->customer_id,
-                'notes' => $request->notes,
+                'customer_id' => $validated['customer_id'],
+                'notes' => $validated['notes'] ?? null,
                 'items' => [
                     [
                         'animal_id' => null,
-                        'unit_price' => $request->total_amount,
-                        'share_type' => $request->share_type,
+                        'unit_price' => (float) $validated['total_amount'],
+                        'share_type' => $validated['share_type'],
                         'shares_count' => 1,
                         'group_id' => null,
                     ]
@@ -155,11 +155,26 @@ class ContractController extends Controller
                     'paid_amount' => $contract->paid_amount,
                     'remaining_amount' => $contract->remaining_amount,
                 ]
-            ]);
-        } catch (\Throwable $e) {
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errorMessages = [];
+            foreach ($e->errors() as $field => $messages) {
+                $errorMessages[] = implode(' ', $messages);
+            }
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => implode(' | ', $errorMessages) ?: 'خطأ في البيانات المدخلة',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            \Log::error('Contract storeQuick error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'خطأ في إنشاء الصك'
             ], 400);
         }
     }
