@@ -278,7 +278,7 @@
                                 <tbody class="divide-y divide-slate-100">
                                     @foreach($contract->payments as $payment)
                                     <tr>
-                                        <td class="px-3 py-2 text-slate-500 text-xs">{{ $payment->date }}</td>
+                                        <td class="px-3 py-2 text-slate-500 text-xs">{{ $payment->date ? $payment->date->format('Y/m/d') : '—' }}</td>
                                         <td class="px-3 py-2 text-slate-600 text-xs">
                                             {{ ['cash'=>'💵 نقدي','bank'=>'🏦 بنك','transfer'=>'📲 تحويل'][$payment->payment_method] ?? $payment->payment_method }}
                                         </td>

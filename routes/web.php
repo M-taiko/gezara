@@ -30,6 +30,7 @@ use App\Http\Controllers\Udhiya\MeatSaleController;
 use App\Http\Controllers\Udhiya\WalletController;
 use App\Http\Controllers\Udhiya\ContractRequestController;
 use App\Http\Controllers\Udhiya\ContractItemController;
+use App\Http\Controllers\Udhiya\CollectionController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicAnimalController;
 
@@ -147,6 +148,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::resource('customers', CustomerController::class)->except(['show', 'create', 'edit']);
 
     // Contracts
+    Route::post('contracts/quick', [ContractController::class, 'storeQuick'])->name('contracts.quick');
     Route::resource('contracts', ContractController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::get('contracts/{contract}/print', [ContractController::class, 'printView'])->name('contracts.print');
     Route::patch('contract-items/{item}/assign-animal', [ContractController::class, 'assignAnimal'])->name('contract-items.assign-animal');
@@ -155,9 +157,16 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::patch('contract-items/{item}', [ContractItemController::class, 'update'])->name('contract-items.update');
     Route::delete('contract-items/{item}', [ContractItemController::class, 'destroy'])->name('contract-items.destroy');
 
-    // Payments
+    // Payments & Collections
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     Route::get('payments/{payment}/print', [PaymentController::class, 'printView'])->name('payments.print');
+    Route::get('collections', [CollectionController::class, 'index'])->name('collections.index');
+    Route::get('collections/create', [CollectionController::class, 'create'])->name('collections.create');
+    Route::post('collections', [CollectionController::class, 'store'])->name('collections.store');
+    Route::get('collections/{payment}/edit', [CollectionController::class, 'edit'])->name('collections.edit');
+    Route::put('collections/{payment}', [CollectionController::class, 'update'])->name('collections.update');
+    Route::delete('collections/{payment}', [CollectionController::class, 'destroy'])->name('collections.destroy');
 
     // Slaughter Groups
     Route::resource('groups', SlaughterGroupController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);

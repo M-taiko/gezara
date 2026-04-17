@@ -25,7 +25,12 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request)
     {
-        Customer::create($request->validated());
+        $customer = Customer::create($request->validated());
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'customer' => $customer]);
+        }
+
         return redirect()->route('udhiya.customers.index')
             ->with('toast_success', 'تم إضافة العميل بنجاح.');
     }

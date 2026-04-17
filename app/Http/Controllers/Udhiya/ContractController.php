@@ -86,6 +86,20 @@ class ContractController extends Controller
             $contract   = $this->service->store($request->validated());
             $printAfter = $request->input('print_after') === '1';
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم إنشاء الصك بنجاح',
+                    'contract' => [
+                        'id' => $contract->id,
+                        'contract_number' => $contract->contract_number,
+                        'total_amount' => $contract->total_amount,
+                        'paid_amount' => $contract->paid_amount,
+                        'remaining_amount' => $contract->remaining_amount,
+                    ]
+                ]);
+            }
+
             if ($printAfter) {
                 return redirect()->route('udhiya.contracts.print', $contract)
                     ->with('toast_success', 'تم إنشاء الصك #' . $contract->contract_number . ' — جاهز للطباعة.');
@@ -94,7 +108,59 @@ class ContractController extends Controller
             return redirect()->route('udhiya.contracts.show', $contract)
                 ->with('toast_success', 'تم إنشاء الصك #' . $contract->contract_number . ' بنجاح.');
         } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 400);
+            }
             return back()->withInput()->with('toast_error', $e->getMessage());
+        }
+    }
+
+    public function storeQuick(\Illuminate\Http\Request $request)
+    {
+        try {
+            $request->validate([
+                'customer_id' => 'required|exists:customers,id',
+                'total_amount' => 'required|numeric|min:0.01',
+                'share_type' => 'required|in:full,seven,six,five,quarter,third,half',
+                'notes' => 'nullable|string',
+            ]);
+
+            // Create a quick contract with a single item (no animal)
+            $contractData = [
+                'customer_id' => $request->customer_id,
+                'notes' => $request->notes,
+                'items' => [
+                    [
+                        'animal_id' => null,
+                        'unit_price' => $request->total_amount,
+                        'share_type' => $request->share_type,
+                        'shares_count' => 1,
+                        'group_id' => null,
+                    ]
+                ]
+            ];
+
+            $contract = $this->service->store($contractData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إنشاء الصك بنجاح',
+                'contract' => [
+                    'id' => $contract->id,
+                    'contract_number' => $contract->contract_number,
+                    'total_amount' => $contract->total_amount,
+                    'paid_amount' => $contract->paid_amount,
+                    'remaining_amount' => $contract->remaining_amount,
+                ]
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 

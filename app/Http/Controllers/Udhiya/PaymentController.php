@@ -29,4 +29,10 @@ class PaymentController extends Controller
         $payment->load('contract.customer');
         return view('udhiya.print.receipt', compact('payment'));
     }
+
+    public function destroy(Payment $payment)
+    {
+        $payment->delete();
+        return back()->with('toast_success', 'تم حذف الدفعة.');
+    }
 }

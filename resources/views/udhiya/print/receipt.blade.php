@@ -21,7 +21,7 @@
     </div>
     <div class="info-box">
         <label class="block text-sm font-semibold text-slate-700 mb-4">تاريخ الإيصال</label>
-        <span>{{ $payment->date }}</span>
+        <span>{{ $payment->date ? $payment->date->format('d/m/Y') : '—' }}</span>
     </div>
     <div class="info-box">
         <label class="block text-sm font-semibold text-slate-700 mb-4">طريقة الدفع</label>
