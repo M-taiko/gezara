@@ -7,6 +7,7 @@ use App\Models\Animal;
 use App\Models\ContractItem;
 use App\Models\Customer;
 use App\Models\MeatInventory;
+use App\Models\Product;
 use App\Models\SlaughterGroup;
 use App\Models\SlaughterGroupMember;
 use Illuminate\Http\Request;
@@ -39,18 +40,23 @@ class SlaughterGroupController extends Controller
             ->get();
 
         $shareLabels = SlaughterGroup::SHARE_LABELS;
+        $products = Product::with('mainCategory')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-        return view('udhiya.groups.create', compact('animals', 'shareLabels'));
+        return view('udhiya.groups.create', compact('animals', 'shareLabels', 'products'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'          => 'required|string|max:255',
-            'animal_id'     => 'nullable|exists:animals,id',
-            'share_type'    => 'required|in:' . implode(',', array_keys(\App\Models\SlaughterGroup::SHARE_MAP)),
-            'slaughter_day' => 'nullable|date',
-            'notes'         => 'nullable|string',
+            'name'               => 'required|string|max:255',
+            'animal_id'          => 'nullable|exists:animals,id',
+            'animal_type_label'  => 'nullable|string|max:255',
+            'share_type'         => 'required|in:' . implode(',', array_keys(\App\Models\SlaughterGroup::SHARE_MAP)),
+            'slaughter_day'      => 'nullable|date',
+            'notes'              => 'nullable|string',
         ]);
 
         $group = SlaughterGroup::create($data);
@@ -319,11 +325,28 @@ class SlaughterGroupController extends Controller
             'members.contractItem.contract.payments',
         ]);
 
+        // Get animals that are:
+        // 1. Not slaughtered
+        // 2. Either not assigned to any group OR assigned to this group
         $animals = Animal::with('product.mainCategory')
+            ->where('status', '!=', 'slaughtered')
+            ->where(function ($q) use ($group) {
+                $q->whereNotIn('id', function ($subquery) use ($group) {
+                    $subquery->select('animal_id')
+                        ->from('slaughter_groups')
+                        ->where('animal_id', '!=', null)
+                        ->where('id', '!=', $group->id);
+                })->orWhere('id', $group->animal_id);
+            })
             ->orderBy('code')
             ->get();
 
-        return view('udhiya.groups.edit', compact('group', 'animals'));
+        $products = Product::with('mainCategory')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('udhiya.groups.edit', compact('group', 'animals', 'products'));
     }
 
     /**
@@ -334,6 +357,7 @@ class SlaughterGroupController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'animal_id' => 'nullable|exists:animals,id',
+            'animal_type_label' => 'nullable|string|max:255',
             'slaughter_day' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
@@ -344,11 +368,21 @@ class SlaughterGroupController extends Controller
         if ($group->name !== $data['name']) {
             $changes[] = "تغيير اسم المجموعة من \"{$group->name}\" إلى \"{$data['name']}\"";
         }
-        if ($group->animal_id !== $data['animal_id']) {
+
+        $newAnimalId = $data['animal_id'] ?? null;
+        if ($group->animal_id !== $newAnimalId) {
             $oldAnimal = $group->animal?->code ?? 'بدون';
-            $newAnimal = Animal::find($data['animal_id'])?->code ?? 'بدون';
+            $newAnimal = Animal::find($newAnimalId)?->code ?? 'بدون';
             $changes[] = "تغيير الحيوان من \"{$oldAnimal}\" إلى \"{$newAnimal}\"";
         }
+
+        $newLabel = $data['animal_type_label'] ?? null;
+        if ($group->animal_type_label !== $newLabel) {
+            $oldLabel = $group->animal_type_label ?? 'لم يحدد';
+            $newLabelDisplay = $newLabel ?? 'لم يحدد';
+            $changes[] = "تغيير نوع الذبيحة من \"{$oldLabel}\" إلى \"{$newLabelDisplay}\"";
+        }
+
         if ($group->slaughter_day !== $request->input('slaughter_day')) {
             $oldDate = $group->slaughter_day?->format('Y-m-d') ?? 'لم يحدد';
             $newDate = $data['slaughter_day'] ?? 'لم يحدد';

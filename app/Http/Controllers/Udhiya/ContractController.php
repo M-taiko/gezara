@@ -181,8 +181,9 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $contract->load('customer', 'items.animal.product.mainCategory', 'payments');
-        return view('udhiya.contracts.show', compact('contract'));
+        $contract->load('customer', 'items.animal.product.mainCategory', 'payments.wallet');
+        $wallets = \App\Models\Wallet::where('is_active', true)->orderBy('name')->get();
+        return view('udhiya.contracts.show', compact('contract', 'wallets'));
     }
 
     public function edit(Contract $contract)

@@ -267,14 +267,43 @@
         </div>
         
         <div class="p-6 flex-1 flex flex-col">
-            <div class="flex justify-between items-center mb-4 text-slate-500 font-bold text-sm bg-slate-50 p-3 rounded-xl border border-slate-100">
+            {{-- Animal Code and Category --}}
+            <div class="flex justify-between items-center mb-2 text-slate-500 font-bold text-sm bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <span class="flex items-center gap-1 text-indigo-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                     {{ $group->animal?->code ?? 'غير مرتبط' }}
                 </span>
                 <span>{{ $cat?->name ?? 'مجموعة فارغة' }}</span>
             </div>
-            
+
+            {{-- Animal Type Label --}}
+            @if($group->animal_type_label)
+            <div class="mb-4 px-3 py-2 rounded-lg border border-amber-100 bg-amber-50 text-right">
+                <p class="text-xs font-bold text-amber-700">{{ $group->animal_type_label }}</p>
+            </div>
+            @endif
+
+            {{-- Status Badge --}}
+            @php
+                $isSlaughtered = $group->animal?->status === 'slaughtered';
+                $allDelivered = $isSlaughtered && $group->members->every(fn($m) => $m->contractItem?->delivered_at);
+            @endphp
+            <div class="mb-4">
+                @if($isSlaughtered && $allDelivered)
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-100 text-emerald-700 border border-emerald-300">
+                        ✅ تم التسليم
+                    </span>
+                @elseif($isSlaughtered)
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-black bg-rose-100 text-rose-700 border border-rose-300">
+                        🔪 تم الذبح
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-black bg-sky-100 text-sky-700 border border-sky-300">
+                        ⏳ لم يتم الذبح
+                    </span>
+                @endif
+            </div>
+
             <div class="flex justify-between items-center mb-6 text-slate-600 font-medium text-xs">
                 <span class="flex items-center gap-1">
                     <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>

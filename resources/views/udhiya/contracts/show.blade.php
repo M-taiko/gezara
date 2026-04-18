@@ -222,6 +222,20 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                         </select>
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">
+                            الخزينة <span class="text-slate-400 font-normal text-xs">(اختياري)</span>
+                        </label>
+                        <select name="wallet_id"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+                            <option value="">— بدون خزينة —</option>
+                            @foreach($wallets as $wallet)
+                            <option value="{{ $wallet->id }}">
+                                {{ $wallet->getTypeLabel() }} — {{ $wallet->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">التاريخ <span class="text-rose-500">*</span></label>
                         <input type="date" name="date" required value="{{ date('Y-m-d') }}"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
@@ -346,6 +360,7 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                             <th class="px-5 py-3">رقم الإيصال</th>
                             <th class="px-5 py-3">التاريخ</th>
                             <th class="px-5 py-3">طريقة الدفع</th>
+                            <th class="px-5 py-3">الخزينة</th>
                             <th class="px-5 py-3 text-left">المبلغ</th>
                             <th class="px-5 py-3">ملاحظات</th>
                             <th class="px-5 py-3 w-16"></th>
@@ -367,6 +382,15 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                                     {{ $payment->payment_method === 'cash' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }}">
                                     {{ $methodLabels[$payment->payment_method] ?? $payment->payment_method }}
                                 </span>
+                            </td>
+                            <td class="px-5 py-4 text-sm">
+                                @if($payment->wallet)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-black bg-indigo-100 text-indigo-700">
+                                        {{ $payment->wallet->getTypeLabel() }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">—</span>
+                                @endif
                             </td>
                             <td class="px-5 py-4 text-left text-base font-black text-emerald-600">
                                 {{ number_format($payment->amount, 2) }} <span class="text-xs text-emerald-400">ج.م</span>

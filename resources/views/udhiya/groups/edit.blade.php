@@ -90,6 +90,27 @@
                         @enderror
                     </div>
 
+                    {{-- Animal Type Label --}}
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            نوع الذبيحة <span class="text-slate-400 font-normal text-xs">(اختياري)</span>
+                        </label>
+                        <select name="animal_type_label"
+                                class="w-full rounded-xl border @error('animal_type_label') border-rose-400 bg-rose-50 @else border-slate-200 bg-slate-50 @enderror focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors py-3 px-4 text-sm font-semibold text-slate-800 shadow-inner">
+                            <option value="">— اختر نوع الذبيحة —</option>
+                            @if(isset($products))
+                                @foreach($products as $product)
+                                <option value="{{ $product->name }}" {{ old('animal_type_label', $group->animal_type_label) === $product->name ? 'selected' : '' }}>
+                                    {{ $product->mainCategory?->name ?? '' }}{{ $product->mainCategory?->name ? ' / ' : '' }}{{ $product->name }}
+                                </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('animal_type_label')
+                            <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                 </div>
             </div>
         </div>
