@@ -68,10 +68,75 @@
     $allDelivered = $isSlaughtered && $group->members->every(fn($m) => $m->contractItem?->delivered_at);
 @endphp
 
-<div class="space-y-8 pb-16">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 pb-16">
+    {{-- Sidebar: Group Information --}}
+    <div class="lg:col-span-1 space-y-4">
+        {{-- Group Details Card --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden sticky top-24">
+            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                <h6 class="text-sm font-black text-slate-800 m-0">تفاصيل المجموعة</h6>
+            </div>
+            <div class="p-6 space-y-4 text-sm">
+                {{-- Category --}}
+                @if($group->animal?->product?->mainCategory)
+                <div>
+                    <p class="text-xs font-bold text-slate-500 mb-1">الفئة</p>
+                    <p class="font-bold text-slate-800">{{ $group->animal->product->mainCategory->name }}</p>
+                </div>
+                @endif
+
+                {{-- Product --}}
+                @if($group->animal?->product)
+                <div>
+                    <p class="text-xs font-bold text-slate-500 mb-1">النوع</p>
+                    <p class="font-bold text-slate-800">{{ $group->animal->product->name }}</p>
+                </div>
+                @endif
+
+                {{-- Share Type --}}
+                <div>
+                    <p class="text-xs font-bold text-slate-500 mb-1">نوع الحصة</p>
+                    <p class="font-bold text-indigo-700 text-base">{{ $group->shareLabel() }}</p>
+                </div>
+
+                {{-- Slaughter Date --}}
+                @if($group->slaughter_day)
+                <div>
+                    <p class="text-xs font-bold text-slate-500 mb-1">موعد الذبح</p>
+                    <p class="font-bold text-slate-800">{{ $group->slaughter_day->format('d/m/Y') }}</p>
+                </div>
+                @endif
+
+                {{-- Notes --}}
+                @if($group->notes)
+                <div class="pt-3 border-t border-slate-100">
+                    <p class="text-xs font-bold text-slate-500 mb-2">ملاحظات</p>
+                    <p class="text-slate-700 text-xs bg-slate-50 p-2.5 rounded">{{ $group->notes }}</p>
+                </div>
+                @endif
+
+                {{-- Created At --}}
+                <div class="pt-3 border-t border-slate-100">
+                    <p class="text-xs font-bold text-slate-500 mb-1">تاريخ الإنشاء</p>
+                    <p class="text-xs text-slate-600">{{ $group->created_at->format('d/m/Y') }}</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Add Member Button --}}
+        @if(!$group->animal?->status === 'slaughtered')
+        <button type="button" onclick="document.getElementById('addMemberModal').showModal()"
+                class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-lg">
+            ➕ إضافة عضو
+        </button>
+        @endif
+    </div>
+
+    {{-- Main Content --}}
+    <div class="lg:col-span-3 space-y-8">
 
     {{-- ===== KEY METRICS ===== --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {{-- Status --}}
         <div class="bg-gradient-to-br rounded-2xl p-6 border-2 shadow-sm"
              :class="$isSlaughtered && $allDelivered ? 'from-emerald-50 to-emerald-100 border-emerald-200' : ($isSlaughtered ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-amber-50 to-amber-100 border-amber-200')">
@@ -309,5 +374,100 @@
     </div>
     @endif
 
+    </div>
 </div>
+
+{{-- ===== ADD MEMBER MODAL ===== --}}
+<dialog id="addMemberModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
+    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 px-8 py-6 border-b border-slate-200">
+        <h3 class="text-xl font-black text-slate-800 m-0">➕ إضافة عضو للمجموعة</h3>
+        <p class="text-sm text-slate-600 mt-1">{{ $remaining }} أنصبة متاحة</p>
+    </div>
+
+    <form action="{{ route('udhiya.groups.members.add', $group) }}" method="POST" class="p-8 space-y-6">
+        @csrf
+
+        {{-- Tabs: Select Existing or Create New --}}
+        <div class="flex gap-2 border-b border-slate-200">
+            <button type="button" onclick="showTab('existing')" class="px-4 py-2 font-bold text-sm border-b-2 border-emerald-600 text-emerald-700">
+                👤 عميل موجود
+            </button>
+            <button type="button" onclick="showTab('new')" class="px-4 py-2 font-bold text-sm text-slate-600 hover:text-slate-800 border-b-2 border-transparent">
+                ➕ عميل جديد
+            </button>
+        </div>
+
+        {{-- Tab 1: Existing Customer --}}
+        <div id="tab-existing" class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">العميل</label>
+                <select name="customer_id" class="w-full rounded-lg border border-slate-300 bg-white text-slate-800 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                    <option value="">-- اختر عميلاً --</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->name }}
+                            @if($customer->phone)
+                                ({{ $customer->phone }})
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- Tab 2: New Customer --}}
+        <div id="tab-new" class="space-y-4" style="display: none;">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">اسم العميل *</label>
+                <input type="text" name="new_customer_name" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="أدخل اسم العميل">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">رقم الهاتف</label>
+                <input type="text" name="new_customer_phone" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="رقم الهاتف (اختياري)">
+            </div>
+        </div>
+
+        {{-- Shares Count --}}
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">عدد الأنصبة</label>
+            <input type="number" name="shares_count" min="1" max="{{ $remaining }}" required class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="1">
+            <p class="text-xs text-slate-500 mt-1">الحد الأقصى: {{ $remaining }} أنصبة</p>
+        </div>
+
+        {{-- Contract Number (Optional) --}}
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">رقم الصك (اختياري)</label>
+            <input type="text" name="contract_number" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="إذا تُركت فارغة، سيتم إنشاء الصك لاحقاً">
+        </div>
+
+        {{-- Notes --}}
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+            <textarea name="notes" rows="2" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="ملاحظات إضافية (اختيارية)"></textarea>
+        </div>
+
+        {{-- Actions --}}
+        <div class="flex gap-3 pt-4 border-t border-slate-200">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all">
+                ✓ إضافة العضو
+            </button>
+            <button type="button" onclick="document.getElementById('addMemberModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+function showTab(tab) {
+    document.getElementById('tab-existing').style.display = tab === 'existing' ? 'block' : 'none';
+    document.getElementById('tab-new').style.display = tab === 'new' ? 'block' : 'none';
+    document.querySelectorAll('[onclick*="showTab"]').forEach(btn => {
+        btn.classList.remove('border-b-2', 'border-emerald-600', 'text-emerald-700');
+        btn.classList.add('border-b-2', 'border-transparent', 'text-slate-600', 'hover:text-slate-800');
+    });
+    event.target.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-700');
+    event.target.classList.remove('border-b-2', 'border-transparent', 'text-slate-600', 'hover:text-slate-800');
+}
+</script>
+
 @endsection
