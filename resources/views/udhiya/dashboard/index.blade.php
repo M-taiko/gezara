@@ -53,28 +53,28 @@
     <div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-blue-500 hover:shadow-md transition-all bg-white rounded-2xl shadow-sm border-b-4 h-full p-10 hover:-translate-y-1 transition-transform duration-300">
             <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl mb-4 shadow-sm">💰</div>
-            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['revenue_total']/1000,1) }}k</div>
+            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['revenue_total'], 2) }}</div>
             <div class="text-sm font-semibold text-slate-500 uppercase">إجمالي المبيعات ج.م</div>
         </div>
     </div>
     <div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-teal-500 hover:shadow-md transition-all bg-white rounded-2xl shadow-sm border-b-4 h-full p-10 hover:-translate-y-1 transition-transform duration-300">
             <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl mb-4 shadow-sm">💵</div>
-            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['collected_total']/1000,1) }}k</div>
+            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['collected_total'], 2) }}</div>
             <div class="text-sm font-semibold text-slate-500 uppercase">المحصّل ج.م</div>
         </div>
     </div>
     <div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-orange-500 hover:shadow-md transition-all bg-white rounded-2xl shadow-sm border-b-4 h-full p-10 hover:-translate-y-1 transition-transform duration-300">
             <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl mb-4 shadow-sm">⏳</div>
-            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['remaining_total']/1000,1) }}k</div>
+            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['remaining_total'], 2) }}</div>
             <div class="text-sm font-semibold text-slate-500 uppercase">المتبقي ج.م</div>
         </div>
     </div>
     <div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-emerald-500 hover:shadow-md transition-all bg-white rounded-2xl shadow-sm border-b-4 h-full p-10 hover:-translate-y-1 transition-transform duration-300">
             <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl mb-4 shadow-sm">🏦</div>
-            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['treasury_balance']/1000,1) }}k</div>
+            <div class="text-3xl font-black text-slate-800 mb-1 tracking-tight">{{ number_format($stats['treasury_balance'], 2) }}</div>
             <div class="text-sm font-semibold text-slate-500 uppercase">رصيد الخزينة ج.م</div>
         </div>
     </div>
