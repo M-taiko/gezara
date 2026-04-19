@@ -26,7 +26,16 @@
             / {{ $animal->product?->name }} / {{ $animal->code }}
         </p>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
+        <a href="{{ route('udhiya.animals.edit', $animal) }}" class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white border border-amber-100 shadow-sm transition-all no-print">
+            ✏️ تعديل
+        </a>
+        <form action="{{ route('udhiya.animals.destroy', $animal) }}" method="POST" class="inline no-print" onsubmit="return confirm('هل تريد حذف هذا الحيوان؟');">
+            @csrf @method('DELETE')
+            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white border border-rose-100 shadow-sm transition-all">
+                🗑️ حذف
+            </button>
+        </form>
         <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm no-print">
             🖨️ طباعة
         </button>

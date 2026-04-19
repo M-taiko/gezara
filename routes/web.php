@@ -31,6 +31,7 @@ use App\Http\Controllers\Udhiya\WalletController;
 use App\Http\Controllers\Udhiya\ContractRequestController;
 use App\Http\Controllers\Udhiya\ContractItemController;
 use App\Http\Controllers\Udhiya\CollectionController;
+use App\Http\Controllers\Udhiya\AdvanceController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicAnimalController;
 
@@ -133,6 +134,9 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('animals-by-warehouse', [AnimalController::class, 'byWarehouse'])->name('animals.by-warehouse');
     Route::post('animals', [AnimalController::class, 'store'])->name('animals.store');
     Route::get('animals/{animal}', [AnimalController::class, 'show'])->name('animals.show');
+    Route::get('animals/{animal}/edit', [AnimalController::class, 'edit'])->name('animals.edit');
+    Route::put('animals/{animal}', [AnimalController::class, 'update'])->name('animals.update');
+    Route::delete('animals/{animal}', [AnimalController::class, 'destroy'])->name('animals.destroy');
     Route::post('animals/{animal}/set-grouped', [AnimalController::class, 'setGrouped'])->name('animals.set-grouped');
     Route::post('animals/{animal}/unset-grouped', [AnimalController::class, 'unsetGrouped'])->name('animals.unset-grouped');
     Route::post('animals/{animal}/transfer', [AnimalController::class, 'transfer'])->name('animals.transfer');
@@ -198,6 +202,11 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::post('contract-requests', [ContractRequestController::class, 'store'])->name('contract-requests.store');
     Route::patch('contract-requests/{contractRequest}/status', [ContractRequestController::class, 'updateStatus'])->name('contract-requests.update-status');
     Route::post('contract-requests/{contractRequest}/convert', [ContractRequestController::class, 'convertToContract'])->name('contract-requests.convert');
+
+    // Advances (السلف)
+    Route::resource('advances', AdvanceController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::post('advances/{advance}/transaction', [AdvanceController::class, 'addTransaction'])->name('advances.transaction');
+    Route::get('accounts', [AdvanceController::class, 'accounts'])->name('accounts');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

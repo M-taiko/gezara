@@ -42,9 +42,11 @@
                         ['route' => 'udhiya.purchases.index',      'icon' => '🛒', 'label' => 'المشتريات',          'pattern' => 'udhiya.purchases.*'],
                         ['route' => 'udhiya.wallets.index',        'icon' => '💰', 'label' => 'الخزائن',            'pattern' => 'udhiya.wallets.*'],
                         ['route' => 'udhiya.suppliers.index',      'icon' => '🚚', 'label' => 'الموردين',           'pattern' => 'udhiya.suppliers.*'],
+                        ['route' => 'udhiya.advances.index',       'icon' => '💸', 'label' => 'السلف',              'pattern' => 'udhiya.advances.*'],
+                        ['route' => 'udhiya.accounts',             'icon' => '📊', 'label' => 'الحسابات العامة',    'pattern' => 'udhiya.accounts'],
                         ['route' => 'udhiya.groups.index',         'icon' => '🔪', 'label' => 'الذبح',              'pattern' => 'udhiya.groups.*'],
-                        ['route' => 'udhiya.expenses.index',       'icon' => '💸', 'label' => 'المصروفات',          'pattern' => 'udhiya.expenses.*'],
-                        ['route' => 'udhiya.collections.index',    'icon' => '💳', 'label' => 'تحصيل الدفعات',     'pattern' => 'udhiya.collections.*'],
+                        ['route' => 'udhiya.expenses.index',       'icon' => '💳', 'label' => 'المصروفات',          'pattern' => 'udhiya.expenses.*'],
+                        ['route' => 'udhiya.collections.index',    'icon' => '🎯', 'label' => 'تحصيل الدفعات',     'pattern' => 'udhiya.collections.*'],
                         ['route' => 'udhiya.meat-inventory.index', 'icon' => '🧊', 'label' => 'مخزن اللحوم',       'pattern' => 'udhiya.meat-inventory.*'],
                         ['route' => 'udhiya.reports.index',        'icon' => '📈', 'label' => 'التقارير',           'pattern' => 'udhiya.reports.*'],
                     ];

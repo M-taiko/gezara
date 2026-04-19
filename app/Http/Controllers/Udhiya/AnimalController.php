@@ -198,4 +198,91 @@ class AnimalController extends Controller
         $animal->update(['code' => $request->code]);
         return back()->with('toast_success', 'تم تحديث كود الحيوان.');
     }
+
+    public function edit(Animal $animal)
+    {
+        $animal->load('product.mainCategory', 'warehouse', 'supplier');
+        $products = Product::with('mainCategory')->where('is_active', true)->orderBy('name')->get();
+        $warehouses = Warehouse::all();
+        $suppliers = Supplier::orderBy('name')->get();
+
+        return view('udhiya.animals.edit', compact('animal', 'products', 'warehouses', 'suppliers'));
+    }
+
+    public function update(Request $request, Animal $animal)
+    {
+        $request->validate([
+            'code'         => 'required|string|max:50|unique:animals,code,' . $animal->id,
+            'product_id'   => 'required|exists:products,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'supplier_id'  => 'nullable|exists:suppliers,id',
+            'weight'       => 'nullable|numeric|min:0',
+            'cost'         => 'nullable|numeric|min:0',
+            'price_per_kg' => 'nullable|numeric|min:0',
+            'price_full'   => 'nullable|numeric|min:0',
+            'price_seven'  => 'nullable|numeric|min:0',
+            'price_six'    => 'nullable|numeric|min:0',
+            'price_five'   => 'nullable|numeric|min:0',
+            'price_quarter'=> 'nullable|numeric|min:0',
+            'price_third'  => 'nullable|numeric|min:0',
+            'price_half'   => 'nullable|numeric|min:0',
+            'notes'        => 'nullable|string',
+        ], [
+            'code.required'         => 'كود الحيوان مطلوب.',
+            'code.unique'           => 'هذا الكود مستخدم بالفعل.',
+            'product_id.required'   => 'يجب اختيار نوع الحيوان.',
+            'warehouse_id.required' => 'يجب اختيار المخزن.',
+        ]);
+
+        $animal->update([
+            'code'         => $request->code,
+            'product_id'   => $request->product_id,
+            'warehouse_id' => $request->warehouse_id,
+            'supplier_id'  => $request->supplier_id ?: null,
+            'weight'       => $request->weight ?: null,
+            'price_per_kg' => $request->price_per_kg ?: null,
+            'cost'         => $request->cost ?? 0,
+            'price_full'   => $request->price_full ?: null,
+            'price_seven'  => $request->price_seven ?: null,
+            'price_six'    => $request->price_six ?: null,
+            'price_five'   => $request->price_five ?: null,
+            'price_quarter'=> $request->price_quarter ?: null,
+            'price_third'  => $request->price_third ?: null,
+            'price_half'   => $request->price_half ?: null,
+            'notes'        => $request->notes,
+        ]);
+
+        return redirect()->route('udhiya.animals.show', $animal)
+            ->with('toast_success', 'تم تحديث بيانات الحيوان بنجاح.');
+    }
+
+    public function destroy(Animal $animal)
+    {
+        // Check if animal is being used
+        if ($animal->contractItems()->exists()) {
+            return back()->with('toast_error', 'لا يمكن حذف حيوان مرتبط به عقود.');
+        }
+
+        if ($animal->transfers()->exists()) {
+            return back()->with('toast_error', 'لا يمكن حذف حيوان تم نقله.');
+        }
+
+        if ($animal->shareSetting()->exists()) {
+            return back()->with('toast_error', 'لا يمكن حذف حيوان لديه إعدادات أنصبة.');
+        }
+
+        if ($animal->expenses()->exists()) {
+            return back()->with('toast_error', 'لا يمكن حذف حيوان مرتبط به مصروفات.');
+        }
+
+        if ($animal->meatInventory()->exists()) {
+            return back()->with('toast_error', 'لا يمكن حذف حيوان موجود في المخزن.');
+        }
+
+        $code = $animal->code;
+        $animal->delete();
+
+        return redirect()->route('udhiya.animals.index')
+            ->with('toast_success', "تم حذف الحيوان ({$code}) بنجاح.");
+    }
 }

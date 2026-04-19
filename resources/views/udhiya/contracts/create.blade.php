@@ -209,8 +209,9 @@
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
                                 <th class="px-4 py-3 min-w-[200px]">الحيوان</th>
-                                <th class="px-4 py-3 w-36">نوع الحصة</th>
-                                <th class="px-4 py-3 w-24">العدد</th>
+                                <th class="px-4 py-3 w-36 share-type-header">نوع الحصة</th>
+                                <th class="px-4 py-3 w-24 count-header">العدد</th>
+                                <th class="px-4 py-3 w-24 weight-header" style="display:none;">الوزن (كجم)</th>
                                 <th class="px-4 py-3 w-28 text-center">سعر الوحدة</th>
                                 <th class="px-4 py-3 w-28 text-center">الإجمالي (ج.م)</th>
                                 <th class="px-4 py-3 w-12"></th>
@@ -228,6 +229,7 @@
                                             data-grouped="{{ $animal->is_grouped ? 1 : 0 }}"
                                             data-share-type="{{ $animal->shareSetting->share_type ?? '' }}"
                                             data-remaining="{{ $animal->shareSetting->remaining_shares ?? 1 }}"
+                                            data-weight="{{ $animal->weight ?? 0 }}"
                                             data-price-full="{{ $animal->price_full ?? 0 }}"
                                             data-price-seven="{{ $animal->price_seven ?? 0 }}"
                                             data-price-six="{{ $animal->price_six ?? 0 }}"
@@ -251,10 +253,9 @@
                                     </div>
                                 </td>
                                 {{-- Share type --}}
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3 share-type-cell">
                                     <select name="items[0][share_type]"
-                                            class="share-type-select w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm font-bold text-slate-800 transition-colors"
-                                            required>
+                                            class="share-type-select w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm font-bold text-slate-800 transition-colors">
                                         <option value="full">كامل</option>
                                         <option value="seven">سُبع (7)</option>
                                         <option value="six">سُدس (6)</option>
@@ -266,12 +267,19 @@
                                     {{-- Carries value when select is disabled --}}
                                     <input type="hidden" class="share-type-hidden" name="" value="">
                                 </td>
-                                {{-- Count --}}
-                                <td class="px-4 py-3">
+                                {{-- Count (for group mode) --}}
+                                <td class="px-4 py-3 count-cell">
                                     <input type="number" name="items[0][shares_count]"
                                            class="shares-count w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-2 text-sm font-bold text-center text-slate-800 transition-colors"
-                                           min="1" max="7" value="1" required>
+                                           min="1" max="7" value="1">
                                     <div class="shares-limit-label text-xs font-bold text-slate-400 mt-1 text-center"></div>
+                                </td>
+                                {{-- Weight (for standalone mode) --}}
+                                <td class="px-4 py-3 weight-cell" style="display:none;">
+                                    <input type="number" name="items[0][weight]"
+                                           class="animal-weight w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-2 text-sm font-bold text-center text-slate-800 transition-colors"
+                                           step="0.01" min="0.01" placeholder="الوزن">
+                                    <div class="text-xs font-bold text-slate-400 mt-1 text-center">كجم</div>
                                 </td>
                                 {{-- Unit price --}}
                                 <td class="px-4 py-3 text-center">
@@ -390,6 +398,7 @@ function updateRow(row) {
     const opt       = animalSel.selectedOptions[0];
     const shareType = _getShareType(row);
     const sharesIn  = row.querySelector('.shares-count');
+    const weightIn  = row.querySelector('.animal-weight');
     const priceIn   = row.querySelector('.item-price');
     const totalIn   = row.querySelector('.item-total');
 
@@ -398,14 +407,21 @@ function updateRow(row) {
         const priceKey  = { full:'priceFull', seven:'priceSeven', six:'priceSix', five:'priceFive', quarter:'priceQuarter', third:'priceThird', half:'priceHalf' };
         unitPrice = parseFloat(opt.dataset[priceKey[shareType]]) || 0;
         priceIn.value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
+
+        // In standalone mode, populate weight from animal
+        if (weightIn && !weightIn.parentElement.parentElement.style.display || weightIn.parentElement.parentElement.style.display === '') {
+            weightIn.value = opt.dataset.weight || '';
+        }
     } else {
         unitPrice = parseFloat(priceIn.value) || 0;
     }
 
-    const count = parseInt(sharesIn.value) || 1;
-    totalIn.value = (unitPrice * count).toFixed(2);
+    // Calculate total based on mode (shares count or weight)
+    const isStandaloneMode = weightIn && (weightIn.parentElement.parentElement.style.display === '' || !weightIn.parentElement.parentElement.style.display);
+    const quantity = isStandaloneMode ? (parseFloat(weightIn.value) || 0) : (parseInt(sharesIn.value) || 1);
+    totalIn.value = (unitPrice * quantity).toFixed(2);
 
-    if (!sharesIn.readOnly) {
+    if (!sharesIn.readOnly && sharesIn.parentElement.parentElement.style.display !== 'none') {
         const typeMax = SHARE_MAX[shareType] || 7;
         sharesIn.max  = typeMax;
         row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
@@ -624,7 +640,40 @@ function enableStandaloneMode() {
     document.getElementById('groupMembersPanel').style.display = 'none';
     document.getElementById('standaloneRow').style.display    = 'none';
     document.getElementById('standaloneBadge').style.display  = '';
+
+    // Switch to weight/standalone mode
+    switchToStandaloneMode();
     clearGroupLock();
+}
+
+function switchToStandaloneMode() {
+    // Hide share type and count columns, show weight column
+    document.querySelectorAll('.share-type-header, .count-header, .share-type-cell, .count-cell').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.weight-header, .weight-cell').forEach(el => {
+        el.style.display = '';
+    });
+
+    // Populate weight from animal if selected, make unit_price free input
+    const row = document.querySelector('.item-row');
+    if (row) {
+        const animalSel = row.querySelector('.animal-select');
+        if (animalSel.value) {
+            const opt = animalSel.selectedOptions[0];
+            row.querySelector('.animal-weight').value = opt.dataset.weight || '';
+        }
+    }
+}
+
+function switchToGroupMode() {
+    // Show share type and count columns, hide weight column
+    document.querySelectorAll('.share-type-header, .count-header, .share-type-cell, .count-cell').forEach(el => {
+        el.style.display = '';
+    });
+    document.querySelectorAll('.weight-header, .weight-cell').forEach(el => {
+        el.style.display = 'none';
+    });
 }
 
 function disableStandaloneMode() {
@@ -636,6 +685,9 @@ function disableStandaloneMode() {
     document.getElementById('standaloneRow').style.display   = '';
     document.getElementById('standaloneBadge').style.display = 'none';
     document.getElementById('groupMembersPanel').style.display = 'none';
+
+    // Switch back to group mode
+    switchToGroupMode();
 }
 
 /* ══════════════════════════════════
@@ -649,7 +701,7 @@ document.getElementById('itemsBody').addEventListener('change', function (e) {
 
 document.getElementById('itemsBody').addEventListener('input', function (e) {
     const row = e.target.closest('.item-row');
-    if (row && (e.target.classList.contains('shares-count') || e.target.classList.contains('item-price'))) {
+    if (row && (e.target.classList.contains('shares-count') || e.target.classList.contains('animal-weight') || e.target.classList.contains('item-price'))) {
         if (e.target.classList.contains('shares-count')) {
             const max = parseInt(e.target.max) || 7;
             if (parseInt(e.target.value) > max) e.target.value = max;
@@ -689,6 +741,18 @@ document.getElementById('addRow').addEventListener('click', function () {
 
     tpl.querySelector('.group-info').style.display = 'none';
     tpl.querySelector('.shares-limit-label').textContent = '';
+
+    // Apply current mode's visibility to new row
+    const currentMode = document.querySelector('.weight-cell').style.display;
+    if (currentMode === 'none') {
+        // Group mode
+        tpl.querySelectorAll('.share-type-cell, .count-cell').forEach(el => el.style.display = '');
+        tpl.querySelectorAll('.weight-cell').forEach(el => el.style.display = 'none');
+    } else {
+        // Standalone mode
+        tpl.querySelectorAll('.share-type-cell, .count-cell').forEach(el => el.style.display = 'none');
+        tpl.querySelectorAll('.weight-cell').forEach(el => el.style.display = '');
+    }
 
     // Re-index names
     tpl.querySelectorAll('[name]').forEach(el => {

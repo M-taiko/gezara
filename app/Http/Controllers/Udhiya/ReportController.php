@@ -51,7 +51,7 @@ class ReportController extends Controller
             ->get();
 
         $totalRevenue   = $contracts->sum('total_amount');
-        $totalCost      = $contracts->sum(fn($c) => $c->items->sum(fn($i) => $i->animal->cost));
+        $totalCost      = $contracts->sum(fn($c) => $c->items->sum(fn($i) => $i->animal?->cost ?? 0));
         $totalCollected = $contracts->sum('paid_amount');
 
         // Expenses

@@ -29,14 +29,18 @@ class ContractService
             $itemsData = [];
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
-                    $sharesCount = $item['shares_count'] ?? 1;
+                    // Standalone item: use weight if provided, otherwise use shares_count
+                    $weight = isset($item['weight']) ? (float) $item['weight'] : null;
+                    $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
+                    $quantity = $weight ?? $sharesCount;
                     $unitPrice   = (float) $item['unit_price'];
-                    $totalPrice  = $unitPrice * $sharesCount;
+                    $totalPrice  = $unitPrice * $quantity;
 
                     $itemsData[] = [
                         'animal'       => null,
-                        'share_type'   => $item['share_type'],
+                        'share_type'   => $item['share_type'] ?? 'full',
                         'shares_count' => $sharesCount,
+                        'weight'       => $weight,
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
@@ -137,6 +141,7 @@ class ContractService
                     'group_id'     => $itemData['group_id'] ?? null,
                     'share_type'   => $itemData['share_type'],
                     'shares_count' => $itemData['shares_count'],
+                    'weight'       => $itemData['weight'] ?? null,
                     'unit_price'   => $itemData['unit_price'],
                     'total_price'  => $itemData['total_price'],
                 ]);
@@ -219,14 +224,17 @@ class ContractService
             $itemsData = [];
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
-                    $sharesCount = $item['shares_count'] ?? 1;
+                    $weight = isset($item['weight']) ? (float) $item['weight'] : null;
+                    $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
+                    $quantity = $weight ?? $sharesCount;
                     $unitPrice   = (float) $item['unit_price'];
-                    $totalPrice  = $unitPrice * $sharesCount;
+                    $totalPrice  = $unitPrice * $quantity;
 
                     $itemsData[] = [
                         'animal'       => null,
-                        'share_type'   => $item['share_type'],
+                        'share_type'   => $item['share_type'] ?? 'full',
                         'shares_count' => $sharesCount,
+                        'weight'       => $weight,
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
@@ -327,6 +335,7 @@ class ContractService
                     'group_id'     => $itemData['group_id'] ?? null,
                     'share_type'   => $itemData['share_type'],
                     'shares_count' => $itemData['shares_count'],
+                    'weight'       => $itemData['weight'] ?? null,
                     'unit_price'   => $itemData['unit_price'],
                     'total_price'  => $itemData['total_price'],
                 ]);

@@ -21,6 +21,11 @@ class ContractItemController extends Controller
         $item->total_price = $item->unit_price * $item->shares_count;
         $item->save();
 
+        // Update corresponding group member if exists
+        if ($item->groupMember) {
+            $item->groupMember->update(['shares_count' => $data['shares_count']]);
+        }
+
         // Recalculate contract total
         $contract = $item->contract;
         $contract->update([
