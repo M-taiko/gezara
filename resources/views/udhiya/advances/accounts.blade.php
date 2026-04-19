@@ -134,8 +134,14 @@
                 <tbody class="divide-y divide-slate-50">
                     @forelse($paginatedTransactions as $t)
                     <tr class="hover:bg-slate-50/40 transition-colors">
-                        <td class="px-6 py-4 font-bold text-slate-700">
-                            {{ $t['reference'] ?: '—' }}
+                        <td class="px-6 py-4 font-bold">
+                            @if($t['reference_url'])
+                                <a href="{{ $t['reference_url'] }}" class="text-indigo-600 hover:text-indigo-800 hover:underline">
+                                    {{ $t['reference'] ?: '—' }}
+                                </a>
+                            @else
+                                <span class="text-slate-700">{{ $t['reference'] ?: '—' }}</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 font-semibold text-slate-700">
                             {{ $t['description'] }}
