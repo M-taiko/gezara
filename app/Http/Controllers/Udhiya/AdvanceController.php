@@ -11,6 +11,7 @@ use App\Models\Wallet;
 use App\Models\Purchase;
 use App\Models\MeatSale;
 use App\Models\Payment;
+use App\Models\Contract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -255,6 +256,31 @@ class AdvanceController extends Controller
                     ];
                 });
             $allTransactions = $allTransactions->concat($payments);
+        }
+
+        // Contract Transactions (صكوك العملاء)
+        if (!$transaction_type || $transaction_type === 'contract') {
+            $contracts = Contract::with('customer')
+                ->when($start_date, fn($q) => $q->whereDate('created_at', '>=', $start_date))
+                ->when($end_date, fn($q) => $q->whereDate('created_at', '<=', $end_date))
+                ->get()
+                ->map(function ($c) {
+                    return [
+                        'id' => $c->id,
+                        'type' => 'contract',
+                        'transaction_type' => 'صك عميل',
+                        'date' => $c->created_at,
+                        'description' => 'صك للعميل - ' . $c->customer?->name ?? '—',
+                        'reference' => $c->contract_number,
+                        'reference_url' => route('udhiya.contracts.show', $c),
+                        'debit' => $c->total_amount,
+                        'credit' => 0,
+                        'wallet_name' => '—',
+                        'wallet_id' => null,
+                        'notes' => $c->notes ?? '',
+                    ];
+                });
+            $allTransactions = $allTransactions->concat($contracts);
         }
 
         // Sort by date descending, paginate

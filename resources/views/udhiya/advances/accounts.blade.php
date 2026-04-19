@@ -65,10 +65,11 @@
                     <label class="block text-xs font-bold text-slate-600 mb-2">نوع العملية</label>
                     <select name="transaction_type" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                         <option value="">-- الكل --</option>
+                        <option value="contract" {{ $transaction_type === 'contract' ? 'selected' : '' }}>الصكوك</option>
+                        <option value="payment" {{ $transaction_type === 'payment' ? 'selected' : '' }}>الدفعات</option>
                         <option value="advance" {{ $transaction_type === 'advance' ? 'selected' : '' }}>السلف</option>
                         <option value="purchase" {{ $transaction_type === 'purchase' ? 'selected' : '' }}>المشتريات</option>
                         <option value="sale" {{ $transaction_type === 'sale' ? 'selected' : '' }}>المبيعات</option>
-                        <option value="payment" {{ $transaction_type === 'payment' ? 'selected' : '' }}>الدفعات</option>
                     </select>
                 </div>
 
@@ -148,10 +149,12 @@
                         </td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black
-                                @if($t['type'] === 'advance') bg-blue-100 text-blue-700
+                                @if($t['type'] === 'contract') bg-purple-100 text-purple-700
+                                @elseif($t['type'] === 'payment') bg-indigo-100 text-indigo-700
+                                @elseif($t['type'] === 'advance') bg-blue-100 text-blue-700
                                 @elseif($t['type'] === 'purchase') bg-orange-100 text-orange-700
                                 @elseif($t['type'] === 'sale') bg-emerald-100 text-emerald-700
-                                @else bg-indigo-100 text-indigo-700 @endif">
+                                @else bg-slate-100 text-slate-700 @endif">
                                 {{ $t['transaction_type'] }}
                             </span>
                         </td>
