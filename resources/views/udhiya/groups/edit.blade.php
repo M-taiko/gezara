@@ -116,28 +116,33 @@
         </div>
 
         {{-- ===== SECTION 2: Members Management ===== --}}
-        @if($group->members->count() > 0)
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">👥</div>
-                <h6 class="text-lg font-black text-slate-800 m-0">أعضاء المجموعة</h6>
-                <span class="text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full mr-auto">{{ $group->members->count() }} عضو</span>
+            <div class="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">👥</div>
+                    <h6 class="text-lg font-black text-slate-800 m-0">أعضاء المجموعة</h6>
+                    <span class="text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{{ $group->members->count() }} عضو</span>
+                </div>
+                <button type="button" onclick="document.getElementById('addMemberEditModal').showModal()"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all">
+                    ➕ إضافة عضو
+                </button>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-right">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-100">
+                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">#</th>
                             <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">العميل</th>
-                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">نوع النصيب</th>
-                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">عدد الأنصبة</th>
-                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">سعر النصيب</th>
-                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">الإجمالي</th>
+                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">الأنصبة</th>
+                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">الصك</th>
                             <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">الحالة</th>
+                            <th class="px-6 py-3 text-xs font-bold text-slate-600 uppercase">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
-                        @foreach($group->members as $member)
+                        @forelse($group->members as $i => $member)
                         @php
                             $contract = $member->contractItem?->contract;
                             $payment = $contract?->paid_amount ?? 0;
@@ -145,51 +150,96 @@
                             $isPaid = $total > 0 && $payment >= $total;
                         @endphp
                         <tr class="hover:bg-slate-50/40">
-                            <td class="px-6 py-4 font-semibold text-slate-800">{{ $member->customer?->name ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-slate-600">
-                                @php
-                                    $shareLabels = ['full' => 'كامل', 'seven' => 'سُبع', 'six' => 'سُدس', 'five' => 'خُمس', 'quarter' => 'ربع', 'third' => 'ثُلث', 'half' => 'نصف'];
-                                @endphp
-                                {{ $shareLabels[$member->share_type] ?? $member->share_type }}
+                            <td class="px-6 py-4 font-bold text-slate-400">{{ $i + 1 }}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs">
+                                        {{ mb_substr($member->customer?->name ?? '?', 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-800">{{ $member->customer?->name ?? '—' }}</p>
+                                        @if($member->customer?->phone)
+                                            <p class="text-xs text-slate-400">{{ $member->customer->phone }}</p>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600">{{ $member->shares_count ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-slate-600">{{ number_format($member->unit_price ?? 0, 2) }}</td>
-                            <td class="px-6 py-4 font-bold text-indigo-600">{{ number_format($member->total_price ?? 0, 2) }}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold {{ $member->contractItem ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }}">
+                                    {{ $member->shares_count }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($member->contractItem)
+                                    <span class="text-xs font-bold text-indigo-600">📄 {{ $member->contractItem->contract?->contract_number }}</span>
+                                @else
+                                    <span class="text-xs text-slate-400">بدون صك</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-sm">
                                 @if($isPaid)
                                     <span class="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ مدفوع</span>
-                                @else
+                                @elseif($member->contractItem)
                                     <span class="inline-block bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-bold">⏳ متبقي</span>
+                                @else
+                                    <span class="inline-block bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs font-bold">—</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 flex gap-1.5">
+                                @if(!$member->contractItem)
+                                    <button type="button" onclick="openEditMemberEditModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
+                                            class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                            title="تعديل">
+                                        ✏️
+                                    </button>
+                                @endif
+                                @if(!$member->contractItem)
+                                    <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')" style="display: inline;">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                                title="حذف">
+                                            🗑
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-slate-300 text-sm" title="مرتبط بصك">🔒</span>
                                 @endif
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <p class="text-4xl mb-3">👥</p>
+                                <p class="text-slate-500 font-bold mb-1">لا يوجد أعضاء بعد</p>
+                                <p class="text-slate-400 text-sm">ابدأ بإضافة أعضاء للمجموعة</p>
+                            </td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
             <div class="px-8 py-4 bg-slate-50/50 border-t border-slate-100">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <p class="text-xs font-bold text-slate-600 mb-1">عدد الأعضاء</p>
+                        <p class="text-lg font-black text-slate-800">{{ $group->members->count() }}</p>
+                    </div>
                     <div>
                         <p class="text-xs font-bold text-slate-600 mb-1">إجمالي الأنصبة</p>
                         <p class="text-lg font-black text-slate-800">{{ $group->members->sum('shares_count') }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-slate-600 mb-1">إجمالي الأسعار</p>
-                        <p class="text-lg font-black text-slate-800">{{ number_format($group->members->sum('unit_price'), 2) }}</p>
+                        <p class="text-xs font-bold text-slate-600 mb-1">متبقي</p>
+                        <p class="text-lg font-black text-orange-600">{{ $group->remainingSlots() }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-slate-600 mb-1">الإجمالي</p>
-                        <p class="text-lg font-black text-indigo-600">{{ number_format($group->members->sum('total_price'), 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-600 mb-1">عدد الأعضاء</p>
-                        <p class="text-lg font-black text-slate-800">{{ $group->members->count() }}</p>
+                        <p class="text-xs font-bold text-slate-600 mb-1">السعة الكاملة</p>
+                        <p class="text-lg font-black text-indigo-600">{{ $group->totalSlots() }}</p>
                     </div>
                 </div>
             </div>
         </div>
-        @endif
 
         {{-- ===== SECTION 3: Extra Details + Submit ===== --}}
         <div class="flex flex-col lg:flex-row gap-8">
@@ -279,6 +329,120 @@
 
     </div>
 </form>
+
+{{-- ===== ADD MEMBER MODAL (Edit Page) ===== --}}
+<dialog id="addMemberEditModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
+    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 px-8 py-6 border-b border-slate-200">
+        <h3 class="text-xl font-black text-slate-800 m-0">➕ إضافة عضو للمجموعة</h3>
+        <p class="text-sm text-slate-600 mt-1">{{ $group->remainingSlots() }} أنصبة متاحة</p>
+    </div>
+
+    <form action="{{ route('udhiya.groups.members.add', $group) }}" method="POST" class="p-8 space-y-6">
+        @csrf
+
+        {{-- Tabs: Select Existing or Create New --}}
+        <div class="flex gap-2 border-b border-slate-200">
+            <button type="button" onclick="showTabEdit('existing')" class="px-4 py-2 font-bold text-sm border-b-2 border-emerald-600 text-emerald-700">
+                👤 عميل موجود
+            </button>
+            <button type="button" onclick="showTabEdit('new')" class="px-4 py-2 font-bold text-sm text-slate-600 hover:text-slate-800 border-b-2 border-transparent">
+                ➕ عميل جديد
+            </button>
+        </div>
+
+        {{-- Tab 1: Existing Customer --}}
+        <div id="tab-existing-edit" class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">العميل</label>
+                <select name="customer_id" class="w-full rounded-lg border border-slate-300 bg-white text-slate-800 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                    <option value="">-- اختر عميلاً --</option>
+                    @foreach(\App\Models\Customer::orderBy('name')->get() as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->name }}
+                            @if($customer->phone)
+                                ({{ $customer->phone }})
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- Tab 2: New Customer --}}
+        <div id="tab-new-edit" class="space-y-4" style="display: none;">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">اسم العميل *</label>
+                <input type="text" name="new_customer_name" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="أدخل اسم العميل">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">رقم الهاتف</label>
+                <input type="text" name="new_customer_phone" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="رقم الهاتف (اختياري)">
+            </div>
+        </div>
+
+        {{-- Shares Count --}}
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">عدد الأنصبة</label>
+            <input type="number" name="shares_count" min="1" max="{{ $group->remainingSlots() }}" required class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="1">
+            <p class="text-xs text-slate-500 mt-1">الحد الأقصى: {{ $group->remainingSlots() }} أنصبة</p>
+        </div>
+
+        {{-- Contract Number (Optional) --}}
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">رقم الصك (اختياري)</label>
+            <input type="text" name="contract_number" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="إذا تُركت فارغة، سيتم إنشاء الصك لاحقاً">
+        </div>
+
+        {{-- Notes --}}
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+            <textarea name="notes" rows="2" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="ملاحظات إضافية (اختيارية)"></textarea>
+        </div>
+
+        {{-- Actions --}}
+        <div class="flex gap-3 pt-4 border-t border-slate-200">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all">
+                ✓ إضافة العضو
+            </button>
+            <button type="button" onclick="document.getElementById('addMemberEditModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </form>
+</dialog>
+
+{{-- ===== EDIT MEMBER MODAL (Edit Page) ===== --}}
+<dialog id="editMemberEditModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
+    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-8 py-6 border-b border-slate-200">
+        <h3 class="text-xl font-black text-slate-800 m-0">✏️ تعديل بيانات العضو</h3>
+        <p id="memberNameEditDisplay" class="text-sm text-slate-600 mt-1"></p>
+    </div>
+
+    <form id="editMemberEditForm" method="POST" class="p-8 space-y-6">
+        @csrf @method('PATCH')
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">عدد الأنصبة</label>
+            <input type="number" name="shares_count" id="editSharesCountEdit" min="1" max="{{ $group->totalSlots() }}" required
+                   class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+            <p class="text-xs text-slate-500 mt-1">الحد الأقصى: {{ $group->remainingSlots() }} أنصبة متاحة</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+            <textarea name="notes" id="editNotesEdit" rows="2" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-slate-200">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-all">
+                ✓ حفظ التعديلات
+            </button>
+            <button type="button" onclick="document.getElementById('editMemberEditModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </form>
+</dialog>
+
 @endsection
 
 @push('js')
@@ -294,5 +458,27 @@ $(function () {
     });
     @endif
 });
+
+function showTabEdit(tab) {
+    document.getElementById('tab-existing-edit').style.display = tab === 'existing' ? 'block' : 'none';
+    document.getElementById('tab-new-edit').style.display = tab === 'new' ? 'block' : 'none';
+    document.querySelectorAll('[onclick*="showTabEdit"]').forEach(btn => {
+        btn.classList.remove('border-b-2', 'border-emerald-600', 'text-emerald-700');
+        btn.classList.add('border-b-2', 'border-transparent', 'text-slate-600', 'hover:text-slate-800');
+    });
+    event.target.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-700');
+    event.target.classList.remove('border-b-2', 'border-transparent', 'text-slate-600', 'hover:text-slate-800');
+}
+
+function openEditMemberEditModal(memberId, memberName, sharesCount, notes) {
+    document.getElementById('memberNameEditDisplay').textContent = memberName;
+    document.getElementById('editSharesCountEdit').value = sharesCount;
+    document.getElementById('editNotesEdit').value = notes;
+
+    const form = document.getElementById('editMemberEditForm');
+    form.action = `{{ route('udhiya.groups.members.update', [$group, ':memberId']) }}`.replace(':memberId', memberId);
+
+    document.getElementById('editMemberEditModal').showModal();
+}
 </script>
 @endpush
