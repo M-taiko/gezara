@@ -69,4 +69,46 @@ class PaymentService
             return $payment;
         });
     }
+
+    public function delete(Payment $payment): void
+    {
+        DB::transaction(function () use ($payment) {
+            $contract = $payment->contract;
+
+            // Reverse contract financials
+            $newPaid      = $contract->paid_amount - $payment->amount;
+            $newRemaining = $contract->total_amount - $newPaid;
+            $newStatus    = 'active'; // Revert to active since it's no longer fully paid
+
+            $contract->update([
+                'paid_amount'      => $newPaid,
+                'remaining_amount' => $newRemaining,
+                'status'           => $newStatus,
+            ]);
+
+            // Reverse wallet transaction if wallet was used
+            if ($payment->wallet_id) {
+                $wallet = Wallet::findOrFail($payment->wallet_id);
+                $this->walletService->debit(
+                    $wallet,
+                    $payment->amount,
+                    $payment->date,
+                    Payment::class,
+                    $payment->id,
+                    'استرجاع دفعة من ' . $contract->customer->name . ' — إيصال #' . $payment->receipt_number
+                );
+            } else {
+                // Legacy: remove old treasury entry if it exists
+                Treasury::where('reference_type', Payment::class)
+                    ->where('reference_id', $payment->id)
+                    ->delete();
+            }
+
+            // Reverse accounting entry
+            $this->accounting->reverseCustomerPayment($payment);
+
+            // Finally delete the payment
+            $payment->delete();
+        });
+    }
 }

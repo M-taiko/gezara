@@ -140,4 +140,40 @@ class AccountingService
 
         return $entry;
     }
+
+    public function reverseCustomerPayment(Payment $payment): void
+    {
+        // Find and delete the journal entry for this payment
+        $entry = JournalEntry::where('reference_type', Payment::class)
+            ->where('reference_id', $payment->id)
+            ->first();
+
+        if ($entry) {
+            // Reverse all journal entry items and account balances
+            foreach ($entry->items as $item) {
+                $account = $item->account;
+
+                // Reverse the balance update
+                if ($item->type === 'debit') {
+                    if (in_array($account->type, ['asset', 'expense'])) {
+                        $account->decrement('balance', $item->amount);
+                    } else {
+                        $account->increment('balance', $item->amount);
+                    }
+                } else {
+                    if (in_array($account->type, ['liability', 'revenue', 'equity'])) {
+                        $account->decrement('balance', $item->amount);
+                    } else {
+                        $account->increment('balance', $item->amount);
+                    }
+                }
+
+                // Delete the journal entry item
+                $item->delete();
+            }
+
+            // Delete the journal entry
+            $entry->delete();
+        }
+    }
 }

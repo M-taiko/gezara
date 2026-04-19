@@ -32,7 +32,11 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment)
     {
-        $payment->delete();
-        return back()->with('toast_success', 'تم حذف الدفعة.');
+        try {
+            $this->service->delete($payment);
+            return back()->with('toast_success', 'تم حذف الدفعة وتحديث الحسابات المالية.');
+        } catch (\Throwable $e) {
+            return back()->with('toast_error', $e->getMessage());
+        }
     }
 }
