@@ -8,10 +8,7 @@ use App\Models\AdvanceTransaction;
 use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\Wallet;
-use App\Models\Purchase;
-use App\Models\MeatSale;
-use App\Models\Payment;
-use App\Models\Contract;
+use App\Services\Udhiya\GeneralLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -141,160 +138,27 @@ class AdvanceController extends Controller
 
     public function accounts(Request $request)
     {
-        $transaction_type = $request->input('transaction_type'); // 'advance', 'purchase', 'sale', 'payment'
-        $wallet_id = $request->input('wallet_id');
-        $start_date = $request->input('start_date');
-        $end_date = $request->input('end_date');
+        $service = new GeneralLedgerService();
 
-        // Build base date queries
-        $dateFilter = function($query) use ($start_date, $end_date) {
-            if ($start_date) $query->whereDate('created_at', '>=', $start_date);
-            if ($end_date) $query->whereDate('created_at', '<=', $end_date);
-            return $query;
-        };
+        $filters = [
+            'transaction_type' => $request->input('transaction_type'),
+            'wallet_id' => $request->input('wallet_id'),
+            'start_date' => $request->input('start_date'),
+            'end_date' => $request->input('end_date'),
+        ];
 
-        $allTransactions = collect();
+        // Get all transactions from service
+        $allTransactions = $service->getGeneralLedger($filters);
 
-        // Advance Transactions
-        if (!$transaction_type || $transaction_type === 'advance') {
-            $advances = AdvanceTransaction::with('advance.customer', 'advance.supplier', 'wallet')
-                ->when($wallet_id, fn($q) => $q->where('wallet_id', $wallet_id))
-                ->when($start_date, fn($q) => $q->whereDate('date', '>=', $start_date))
-                ->when($end_date, fn($q) => $q->whereDate('date', '<=', $end_date))
-                ->get()
-                ->map(function ($t) {
-                    return [
-                        'id' => $t->id,
-                        'type' => 'advance',
-                        'transaction_type' => $t->type === 'receipt' ? 'استلام' : 'رد',
-                        'date' => $t->date,
-                        'description' => ($t->advance->type === 'customer' ? 'سلف عميل' : 'سلف مورد') . ' - ' . $t->advance->getName(),
-                        'reference' => $t->advance->advance_number,
-                        'reference_url' => route('udhiya.advances.show', $t->advance),
-                        'debit' => $t->type === 'receipt' ? $t->amount : 0,
-                        'credit' => $t->type === 'return' ? $t->amount : 0,
-                        'wallet_name' => $t->wallet?->name ?? '—',
-                        'wallet_id' => $t->wallet_id,
-                        'notes' => $t->notes ?? '',
-                    ];
-                });
-            $allTransactions = $allTransactions->concat($advances);
-        }
+        // Calculate totals
+        $totals = $service->calculateTotals($allTransactions);
 
-        // Purchase Transactions
-        if (!$transaction_type || $transaction_type === 'purchase') {
-            $purchases = Purchase::with('supplier')
-                ->when($wallet_id, fn($q) => $q->where('wallet_id', $wallet_id ?? null))
-                ->when($start_date, fn($q) => $q->whereDate('date', '>=', $start_date))
-                ->when($end_date, fn($q) => $q->whereDate('date', '<=', $end_date))
-                ->get()
-                ->map(function ($p) {
-                    return [
-                        'id' => $p->id,
-                        'type' => 'purchase',
-                        'transaction_type' => 'شراء',
-                        'date' => $p->date,
-                        'description' => 'فاتورة شراء - ' . ($p->supplier?->name ?? '—'),
-                        'reference' => $p->id,
-                        'reference_url' => route('udhiya.purchases.show', $p),
-                        'debit' => $p->total,
-                        'credit' => 0,
-                        'wallet_name' => '—',
-                        'wallet_id' => null,
-                        'notes' => $p->notes ?? '',
-                    ];
-                });
-            $allTransactions = $allTransactions->concat($purchases);
-        }
-
-        // Sale Transactions
-        if (!$transaction_type || $transaction_type === 'sale') {
-            $sales = MeatSale::with('inventory')
-                ->when($start_date, fn($q) => $q->whereDate('sale_date', '>=', $start_date))
-                ->when($end_date, fn($q) => $q->whereDate('sale_date', '<=', $end_date))
-                ->get()
-                ->map(function ($s) {
-                    return [
-                        'id' => $s->id,
-                        'type' => 'sale',
-                        'transaction_type' => 'بيع',
-                        'date' => $s->sale_date,
-                        'description' => 'بيع لحوم - ' . $s->customer_name,
-                        'reference' => $s->id,
-                        'reference_url' => null,
-                        'debit' => 0,
-                        'credit' => $s->total_amount,
-                        'wallet_name' => '—',
-                        'wallet_id' => null,
-                        'notes' => $s->notes ?? '',
-                    ];
-                });
-            $allTransactions = $allTransactions->concat($sales);
-        }
-
-        // Payment Transactions
-        if (!$transaction_type || $transaction_type === 'payment') {
-            $payments = Payment::with('wallet', 'contract')
-                ->when($wallet_id, fn($q) => $q->where('wallet_id', $wallet_id))
-                ->when($start_date, fn($q) => $q->whereDate('date', '>=', $start_date))
-                ->when($end_date, fn($q) => $q->whereDate('date', '<=', $end_date))
-                ->get()
-                ->map(function ($p) {
-                    return [
-                        'id' => $p->id,
-                        'type' => 'payment',
-                        'transaction_type' => 'دفع',
-                        'date' => $p->date,
-                        'description' => 'دفع صك #' . ($p->contract?->contract_number ?? '—'),
-                        'reference' => $p->receipt_number,
-                        'reference_url' => $p->contract ? route('udhiya.contracts.show', $p->contract) : null,
-                        'debit' => 0,
-                        'credit' => $p->amount,
-                        'wallet_name' => $p->wallet?->name ?? '—',
-                        'wallet_id' => $p->wallet_id,
-                        'notes' => $p->notes ?? '',
-                    ];
-                });
-            $allTransactions = $allTransactions->concat($payments);
-        }
-
-        // Contract Transactions (صكوك العملاء)
-        if (!$transaction_type || $transaction_type === 'contract') {
-            $contracts = Contract::with('customer')
-                ->when($start_date, fn($q) => $q->whereDate('created_at', '>=', $start_date))
-                ->when($end_date, fn($q) => $q->whereDate('created_at', '<=', $end_date))
-                ->get()
-                ->map(function ($c) {
-                    return [
-                        'id' => $c->id,
-                        'type' => 'contract',
-                        'transaction_type' => 'صك عميل',
-                        'date' => $c->created_at,
-                        'description' => 'صك للعميل - ' . $c->customer?->name ?? '—',
-                        'reference' => $c->contract_number,
-                        'reference_url' => route('udhiya.contracts.show', $c),
-                        'debit' => $c->total_amount,
-                        'credit' => 0,
-                        'wallet_name' => '—',
-                        'wallet_id' => null,
-                        'notes' => $c->notes ?? '',
-                        'is_contract' => true,
-                        'collected' => $c->paid_amount,
-                        'remaining' => $c->remaining_amount,
-                        'total' => $c->total_amount,
-                    ];
-                });
-            $allTransactions = $allTransactions->concat($contracts);
-        }
-
-        // Sort by date descending, paginate
-        $allTransactions = $allTransactions->sortByDesc('date')->values();
+        // Paginate
         $perPage = 50;
-        $page = request()->get('page', 1);
-        $total = count($allTransactions);
-        $paginatedTransactions = new \Illuminate\Pagination\LengthAwarePaginator(
+        $page = $request->get('page', 1);
+        $paginatedTransactions = new LengthAwarePaginator(
             $allTransactions->forPage($page, $perPage),
-            $total,
+            count($allTransactions),
             $perPage,
             $page,
             ['path' => route('udhiya.accounts'), 'query' => $request->query()]
@@ -302,21 +166,11 @@ class AdvanceController extends Controller
 
         $wallets = Wallet::where('is_active', true)->get();
 
-        // Calculate totals
-        $totalDebits = $allTransactions->sum('debit');
-        $totalCredits = $allTransactions->sum('credit');
-        $netAmount = $totalDebits - $totalCredits;
-
         return view('udhiya.advances.accounts', compact(
             'paginatedTransactions',
             'wallets',
-            'transaction_type',
-            'wallet_id',
-            'start_date',
-            'end_date',
-            'totalDebits',
-            'totalCredits',
-            'netAmount'
+            'totals',
+            'filters'
         ));
     }
 

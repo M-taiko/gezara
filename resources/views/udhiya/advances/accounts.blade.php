@@ -16,42 +16,55 @@
 @section('content')
 <div class="space-y-6">
     {{-- Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {{-- Total Debits --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {{-- Contracts Receivable --}}
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-6 border border-purple-200">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-bold text-purple-700 mb-1">الصكوك المستحقة</p>
+                    <p class="text-2xl font-black text-purple-900">{{ number_format($totals['contracts_receivable'], 2) }}</p>
+                    <p class="text-xs text-purple-600 mt-1">ج.م</p>
+                </div>
+                <div class="text-3xl">📋</div>
+            </div>
+        </div>
+
+        {{-- Payments Received --}}
         <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl p-6 border border-emerald-200">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-bold text-emerald-700 mb-1">إجمالي المدخلات</p>
-                    <p class="text-3xl font-black text-emerald-900">{{ number_format($totalDebits, 2) }}</p>
+                    <p class="text-xs font-bold text-emerald-700 mb-1">المدفوع من العملاء</p>
+                    <p class="text-2xl font-black text-emerald-900">{{ number_format($totals['payments_received'], 2) }}</p>
                     <p class="text-xs text-emerald-600 mt-1">ج.م</p>
                 </div>
-                <div class="text-4xl">📥</div>
+                <div class="text-3xl">💵</div>
             </div>
         </div>
 
-        {{-- Total Credits --}}
-        <div class="bg-gradient-to-br from-rose-50 to-rose-100 rounded-3xl p-6 border border-rose-200">
+        {{-- Purchases Payable --}}
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-3xl p-6 border border-orange-200">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-bold text-rose-700 mb-1">إجمالي المخرجات</p>
-                    <p class="text-3xl font-black text-rose-900">{{ number_format($totalCredits, 2) }}</p>
-                    <p class="text-xs text-rose-600 mt-1">ج.م</p>
+                    <p class="text-xs font-bold text-orange-700 mb-1">التزام الشراء</p>
+                    <p class="text-2xl font-black text-orange-900">{{ number_format($totals['purchases_payable'], 2) }}</p>
+                    <p class="text-xs text-orange-600 mt-1">ج.م</p>
                 </div>
-                <div class="text-4xl">📤</div>
+                <div class="text-3xl">🛒</div>
             </div>
         </div>
 
-        {{-- Net Amount --}}
-        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-3xl p-6 border border-indigo-200">
+        {{-- Net Balance --}}
+        <div class="bg-gradient-to-br rounded-3xl p-6 border-2"
+             :class="totals['net_balance'] >= 0 ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-rose-50 to-rose-100 border-rose-200'">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-bold text-indigo-700 mb-1">الصافي</p>
-                    <p class="text-3xl font-black" :class="netAmount >= 0 ? 'text-indigo-900' : 'text-rose-900'">
-                        {{ number_format($netAmount, 2) }}
+                    <p class="text-xs font-bold mb-1" :class="totals['net_balance'] >= 0 ? 'text-blue-700' : 'text-rose-700'">الرصيد الصافي</p>
+                    <p class="text-2xl font-black" :class="totals['net_balance'] >= 0 ? 'text-blue-900' : 'text-rose-900'">
+                        {{ number_format($totals['net_balance'], 2) }}
                     </p>
-                    <p class="text-xs text-indigo-600 mt-1">ج.م</p>
+                    <p class="text-xs mt-1" :class="totals['net_balance'] >= 0 ? 'text-blue-600' : 'text-rose-600'">ج.م</p>
                 </div>
-                <div class="text-4xl">💰</div>
+                <div class="text-3xl">{{ $totals['net_balance'] >= 0 ? '📈' : '📉' }}</div>
             </div>
         </div>
     </div>
@@ -65,11 +78,11 @@
                     <label class="block text-xs font-bold text-slate-600 mb-2">نوع العملية</label>
                     <select name="transaction_type" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                         <option value="">-- الكل --</option>
-                        <option value="contract" {{ $transaction_type === 'contract' ? 'selected' : '' }}>الصكوك</option>
-                        <option value="payment" {{ $transaction_type === 'payment' ? 'selected' : '' }}>الدفعات</option>
-                        <option value="advance" {{ $transaction_type === 'advance' ? 'selected' : '' }}>السلف</option>
-                        <option value="purchase" {{ $transaction_type === 'purchase' ? 'selected' : '' }}>المشتريات</option>
-                        <option value="sale" {{ $transaction_type === 'sale' ? 'selected' : '' }}>المبيعات</option>
+                        <option value="contract" {{ $filters['transaction_type'] === 'contract' ? 'selected' : '' }}>الصكوك</option>
+                        <option value="payment" {{ $filters['transaction_type'] === 'payment' ? 'selected' : '' }}>الدفعات</option>
+                        <option value="advance" {{ $filters['transaction_type'] === 'advance' ? 'selected' : '' }}>السلف</option>
+                        <option value="purchase" {{ $filters['transaction_type'] === 'purchase' ? 'selected' : '' }}>المشتريات</option>
+                        <option value="sale" {{ $filters['transaction_type'] === 'sale' ? 'selected' : '' }}>المبيعات</option>
                     </select>
                 </div>
 
@@ -79,7 +92,7 @@
                     <select name="wallet_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                         <option value="">-- الكل --</option>
                         @foreach($wallets as $w)
-                        <option value="{{ $w->id }}" {{ $wallet_id == $w->id ? 'selected' : '' }}>{{ $w->getTypeLabel() }} - {{ $w->name }}</option>
+                        <option value="{{ $w->id }}" {{ $filters['wallet_id'] == $w->id ? 'selected' : '' }}>{{ $w->getTypeLabel() }} - {{ $w->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -87,14 +100,14 @@
                 {{-- Start Date --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2">من تاريخ</label>
-                    <input type="date" name="start_date" value="{{ $start_date }}"
+                    <input type="date" name="start_date" value="{{ $filters['start_date'] }}"
                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                 </div>
 
                 {{-- End Date --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2">إلى تاريخ</label>
-                    <input type="date" name="end_date" value="{{ $end_date }}"
+                    <input type="date" name="end_date" value="{{ $filters['end_date'] }}"
                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                 </div>
             </div>
