@@ -19,8 +19,8 @@ class ContractController extends Controller
         $search = $request->input('search');
         $filterType = $request->input('filter_type');
         $filterShare = $request->input('filter_share');
-        
-        $contracts = Contract::with('customer', 'items.animal.product', 'items.group')
+
+        $query = Contract::with('customer', 'items.animal.product', 'items.group')
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('customer', function ($q2) use ($search) {
                     $q2->where('name', 'like', "%{$search}%")
@@ -41,11 +41,23 @@ class ContractController extends Controller
                 $q->whereHas('items', function ($q2) use ($filterShare) {
                     $q2->where('share_type', $filterShare);
                 });
-            })
-            ->latest()
+            });
+
+        // Calculate summary stats from all contracts (not paginated)
+        $summary = [
+            'total_contracts' => (clone $query)->count(),
+            'total_amount' => (clone $query)->sum('total_amount'),
+            'total_paid' => (clone $query)->sum('paid_amount'),
+            'total_remaining' => (clone $query)->sum('remaining_amount'),
+            'active_contracts' => (clone $query)->where('status', 'active')->count(),
+            'completed_contracts' => (clone $query)->where('status', 'completed')->count(),
+        ];
+
+        $contracts = $query->latest()
             ->paginate(20)
             ->withQueryString();
-        return view('udhiya.contracts.index', compact('contracts', 'search', 'filterType', 'filterShare'));
+
+        return view('udhiya.contracts.index', compact('contracts', 'search', 'filterType', 'filterShare', 'summary'));
     }
 
     public function create()

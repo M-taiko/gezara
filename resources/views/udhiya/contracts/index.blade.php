@@ -19,6 +19,50 @@
 
 @section('content')
 
+{{-- Summary Cards --}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    {{-- Total Contracts --}}
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-purple-500">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">📋</div>
+        <div class="text-2xl font-black text-slate-800 mb-1">{{ $summary['total_contracts'] }}</div>
+        <div class="text-xs font-bold text-slate-500 uppercase">إجمالي الصكوك</div>
+    </div>
+
+    {{-- Total Amount --}}
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-blue-500">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">💰</div>
+        <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($summary['total_amount'], 2) }}</div>
+        <div class="text-xs font-bold text-slate-500 uppercase">الإجمالي ج.م</div>
+    </div>
+
+    {{-- Paid Amount --}}
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-emerald-500">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">✅</div>
+        <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($summary['total_paid'], 2) }}</div>
+        <div class="text-xs font-bold text-slate-500 uppercase">المحصّل ج.م</div>
+    </div>
+
+    {{-- Remaining Amount --}}
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-orange-500">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">⏳</div>
+        <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($summary['total_remaining'], 2) }}</div>
+        <div class="text-xs font-bold text-slate-500 uppercase">المتبقي ج.م</div>
+    </div>
+
+    {{-- Collection Rate --}}
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-indigo-500">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">📊</div>
+        <div class="text-2xl font-black text-slate-800 mb-1">
+            @if($summary['total_amount'] > 0)
+                {{ number_format(($summary['total_paid'] / $summary['total_amount']) * 100, 1) }}%
+            @else
+                —
+            @endif
+        </div>
+        <div class="text-xs font-bold text-slate-500 uppercase">نسبة التحصيل</div>
+    </div>
+</div>
+
 {{-- Search bar --}}
 <form method="GET" action="{{ route('udhiya.contracts.index') }}" class="mb-5">
     <div class="flex gap-3">
