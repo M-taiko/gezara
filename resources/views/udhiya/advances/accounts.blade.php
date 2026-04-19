@@ -15,8 +15,51 @@
 
 @section('content')
 <div class="space-y-6">
-    {{-- Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {{-- Quick Summary --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        {{-- Total Contracts --}}
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-purple-500">
+            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">📋</div>
+            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['contracts_receivable'], 0) }}</div>
+            <div class="text-xs font-bold text-slate-500 uppercase">الصكوك المستحقة ج.م</div>
+        </div>
+
+        {{-- Total Payments --}}
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-emerald-500">
+            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">✅</div>
+            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['payments_received'], 0) }}</div>
+            <div class="text-xs font-bold text-slate-500 uppercase">المحصّل من العملاء ج.م</div>
+        </div>
+
+        {{-- Total Purchases --}}
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-orange-500">
+            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">🛒</div>
+            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['purchases_payable'], 0) }}</div>
+            <div class="text-xs font-bold text-slate-500 uppercase">التزام الشراء ج.م</div>
+        </div>
+
+        {{-- Total Sales --}}
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-blue-500">
+            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">🧊</div>
+            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['sales_revenue'], 0) }}</div>
+            <div class="text-xs font-bold text-slate-500 uppercase">إيراد المبيعات ج.م</div>
+        </div>
+
+        {{-- Net Balance --}}
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4"
+             :class="$totals['net_balance'] >= 0 ? 'border-b-indigo-500' : 'border-b-rose-500'">
+            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">
+                {{ $totals['net_balance'] >= 0 ? '📈' : '📉' }}
+            </div>
+            <div class="text-2xl font-black mb-1" :class="$totals['net_balance'] >= 0 ? 'text-slate-800' : 'text-slate-800'">
+                {{ number_format($totals['net_balance'], 0) }}
+            </div>
+            <div class="text-xs font-bold text-slate-500 uppercase">الرصيد الصافي ج.م</div>
+        </div>
+    </div>
+
+    {{-- Detailed Summary Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {{-- Contracts Receivable --}}
         <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-6 border border-purple-200">
             <div class="flex items-start justify-between">
@@ -55,14 +98,14 @@
 
         {{-- Net Balance --}}
         <div class="bg-gradient-to-br rounded-3xl p-6 border-2"
-             :class="totals['net_balance'] >= 0 ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-rose-50 to-rose-100 border-rose-200'">
+             :class="$totals['net_balance'] >= 0 ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-rose-50 to-rose-100 border-rose-200'">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-bold mb-1" :class="totals['net_balance'] >= 0 ? 'text-blue-700' : 'text-rose-700'">الرصيد الصافي</p>
-                    <p class="text-2xl font-black" :class="totals['net_balance'] >= 0 ? 'text-blue-900' : 'text-rose-900'">
+                    <p class="text-xs font-bold mb-1" :class="$totals['net_balance'] >= 0 ? 'text-blue-700' : 'text-rose-700'">الرصيد الصافي</p>
+                    <p class="text-2xl font-black" :class="$totals['net_balance'] >= 0 ? 'text-blue-900' : 'text-rose-900'">
                         {{ number_format($totals['net_balance'], 2) }}
                     </p>
-                    <p class="text-xs mt-1" :class="totals['net_balance'] >= 0 ? 'text-blue-600' : 'text-rose-600'">ج.م</p>
+                    <p class="text-xs mt-1" :class="$totals['net_balance'] >= 0 ? 'text-blue-600' : 'text-rose-600'">ج.م</p>
                 </div>
                 <div class="text-3xl">{{ $totals['net_balance'] >= 0 ? '📈' : '📉' }}</div>
             </div>
