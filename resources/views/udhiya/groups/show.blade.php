@@ -304,20 +304,38 @@
                                 </td>
                             @endif
                             <td class="px-6 py-4 flex gap-1.5">
-                                @if(!$member->contract_item_id)
-                                    <button type="button" onclick="openEditMemberModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
-                                            class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm">
-                                        ✏️
-                                    </button>
-                                    <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')" style="display: inline;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm">
-                                            🗑
+                                <div class="flex gap-1.5">
+                                    {{-- Edit Member Shares --}}
+                                    @if(!$member->contract_item_id)
+                                        <button type="button" onclick="openEditMemberModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
+                                                class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                                title="تعديل عدد الأنصبة">
+                                            ✏️
                                         </button>
-                                    </form>
-                                @else
-                                    <span class="text-slate-300">🔒</span>
-                                @endif
+                                    @endif
+
+                                    {{-- Edit Customer --}}
+                                    @if($member->customer)
+                                        <button type="button" onclick="openEditCustomerModal({{ $member->customer->id }}, '{{ addslashes($member->customer->name) }}', '{{ addslashes($member->customer->phone ?? '') }}', '{{ addslashes($member->customer->address ?? '') }}', '{{ addslashes($member->customer->notes ?? '') }}')"
+                                                class="w-7 h-7 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                                title="تعديل بيانات العميل">
+                                            👤
+                                        </button>
+                                    @endif
+
+                                    {{-- Delete Member --}}
+                                    @if(!$member->contract_item_id)
+                                        <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')" style="display: inline;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                                    title="حذف العضو">
+                                                🗑
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-slate-300 text-sm" title="مرتبط بصك">🔒</span>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -373,7 +391,7 @@
 
 </div>
 
-{{-- ===== EDIT MEMBER MODAL ===== --}}
+{{-- ===== EDIT MEMBER SHARES MODAL ===== --}}
 <dialog id="editMemberModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
     <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-8 py-6 border-b border-slate-200">
         <h3 class="text-xl font-black text-slate-800 m-0">✏️ تعديل بيانات العضو</h3>
@@ -400,6 +418,54 @@
                 ✓ حفظ التعديلات
             </button>
             <button type="button" onclick="document.getElementById('editMemberModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </form>
+</dialog>
+
+{{-- ===== EDIT CUSTOMER MODAL ===== --}}
+<dialog id="editCustomerModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
+    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 px-8 py-6 border-b border-slate-200">
+        <h3 class="text-xl font-black text-slate-800 m-0">👤 تعديل بيانات العميل</h3>
+        <p id="customerNameDisplay" class="text-sm text-slate-600 mt-1"></p>
+    </div>
+
+    <form id="editCustomerForm" method="POST" class="p-8 space-y-6">
+        @csrf @method('PATCH')
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">الاسم *</label>
+            <input type="text" name="name" id="editCustomerName" required
+                   class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">الهاتف</label>
+            <input type="text" name="phone" id="editCustomerPhone"
+                   class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                   placeholder="رقم الهاتف (اختياري)">
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">العنوان</label>
+            <input type="text" name="address" id="editCustomerAddress"
+                   class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                   placeholder="العنوان (اختياري)">
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+            <textarea name="notes" id="editCustomerNotes" rows="2"
+                   class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                   placeholder="ملاحظات عن العميل (اختيارية)"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-slate-200">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all">
+                ✓ حفظ التعديلات
+            </button>
+            <button type="button" onclick="document.getElementById('editCustomerModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
                 إلغاء
             </button>
         </div>
@@ -504,10 +570,22 @@ function openEditMemberModal(memberId, memberName, sharesCount, notes) {
     document.getElementById('editNotes').value = notes;
 
     const form = document.getElementById('editMemberForm');
-    form.action = `{{ route('udhiya.groups.show', $group) }}/members/${memberId}`.replace('show', 'groups').replace('/members', '/members');
     form.action = `{{ route('udhiya.groups.members.update', [$group, ':memberId']) }}`.replace(':memberId', memberId);
 
     document.getElementById('editMemberModal').showModal();
+}
+
+function openEditCustomerModal(customerId, customerName, customerPhone, customerAddress, customerNotes) {
+    document.getElementById('customerNameDisplay').textContent = customerName;
+    document.getElementById('editCustomerName').value = customerName;
+    document.getElementById('editCustomerPhone').value = customerPhone;
+    document.getElementById('editCustomerAddress').value = customerAddress;
+    document.getElementById('editCustomerNotes').value = customerNotes;
+
+    const form = document.getElementById('editCustomerForm');
+    form.action = `{{ route('udhiya.customers.update', ':customerId') }}`.replace(':customerId', customerId);
+
+    document.getElementById('editCustomerModal').showModal();
 }
 </script>
 

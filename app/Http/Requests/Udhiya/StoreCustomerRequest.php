@@ -13,7 +13,7 @@ class StoreCustomerRequest extends FormRequest
         $id = $this->route('customer')?->id;
         return [
             'name'    => 'required|string|max:255',
-            'phone'   => "required|string|max:20|unique:customers,phone,{$id}",
+            'phone'   => "nullable|string|max:20|unique:customers,phone,{$id}",
             'address' => 'nullable|string|max:500',
             'notes'   => 'nullable|string',
         ];
