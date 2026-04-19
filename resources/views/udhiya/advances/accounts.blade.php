@@ -134,41 +134,79 @@
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @forelse($paginatedTransactions as $t)
-                    <tr class="hover:bg-slate-50/40 transition-colors">
-                        <td class="px-6 py-4 font-bold">
-                            @if($t['reference_url'])
+                    @if($t['is_contract'] ?? false)
+                        {{-- Contract Row with Payment Breakdown --}}
+                        <tr class="hover:bg-slate-50/40 transition-colors bg-purple-50/30">
+                            <td class="px-6 py-4 font-bold">
                                 <a href="{{ $t['reference_url'] }}" class="text-indigo-600 hover:text-indigo-800 hover:underline">
-                                    {{ $t['reference'] ?: '—' }}
+                                    {{ $t['reference'] }}
                                 </a>
-                            @else
-                                <span class="text-slate-700">{{ $t['reference'] ?: '—' }}</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 font-semibold text-slate-700">
-                            {{ $t['description'] }}
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black
-                                @if($t['type'] === 'contract') bg-purple-100 text-purple-700
-                                @elseif($t['type'] === 'payment') bg-indigo-100 text-indigo-700
-                                @elseif($t['type'] === 'advance') bg-blue-100 text-blue-700
-                                @elseif($t['type'] === 'purchase') bg-orange-100 text-orange-700
-                                @elseif($t['type'] === 'sale') bg-emerald-100 text-emerald-700
-                                @else bg-slate-100 text-slate-700 @endif">
-                                {{ $t['transaction_type'] }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center font-black text-emerald-600">
-                            {{ $t['debit'] > 0 ? '+' . number_format($t['debit'], 2) : '—' }}
-                        </td>
-                        <td class="px-6 py-4 text-center font-black text-rose-600">
-                            {{ $t['credit'] > 0 ? '-' . number_format($t['credit'], 2) : '—' }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-600">
-                            {{ $t['wallet_name'] }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-600">{{ $t['date']->format('d/m/Y') }}</td>
-                    </tr>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-slate-700">{{ $t['description'] }}</div>
+                                <div class="text-xs text-slate-500 mt-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-emerald-600 font-bold">محصّل: {{ number_format($t['collected'], 2) }} ج.م</span>
+                                        <span class="text-rose-600 font-bold">متبقي: {{ number_format($t['remaining'], 2) }} ج.م</span>
+                                    </div>
+                                    <div class="mt-1 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ $t['total'] > 0 ? ($t['collected'] / $t['total'] * 100) : 0 }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-purple-100 text-purple-700">
+                                    {{ $t['transaction_type'] }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center font-black text-emerald-600">
+                                +{{ number_format($t['debit'], 2) }}
+                            </td>
+                            <td class="px-6 py-4 text-center font-black text-slate-400">
+                                —
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                {{ $t['wallet_name'] }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">{{ $t['date']->format('d/m/Y') }}</td>
+                        </tr>
+                    @else
+                        {{-- Regular Transaction Row --}}
+                        <tr class="hover:bg-slate-50/40 transition-colors">
+                            <td class="px-6 py-4 font-bold">
+                                @if($t['reference_url'])
+                                    <a href="{{ $t['reference_url'] }}" class="text-indigo-600 hover:text-indigo-800 hover:underline">
+                                        {{ $t['reference'] ?: '—' }}
+                                    </a>
+                                @else
+                                    <span class="text-slate-700">{{ $t['reference'] ?: '—' }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 font-semibold text-slate-700">
+                                {{ $t['description'] }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black
+                                    @if($t['type'] === 'payment') bg-indigo-100 text-indigo-700
+                                    @elseif($t['type'] === 'advance') bg-blue-100 text-blue-700
+                                    @elseif($t['type'] === 'purchase') bg-orange-100 text-orange-700
+                                    @elseif($t['type'] === 'sale') bg-emerald-100 text-emerald-700
+                                    @else bg-slate-100 text-slate-700 @endif">
+                                    {{ $t['transaction_type'] }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center font-black text-emerald-600">
+                                {{ $t['debit'] > 0 ? '+' . number_format($t['debit'], 2) : '—' }}
+                            </td>
+                            <td class="px-6 py-4 text-center font-black text-rose-600">
+                                {{ $t['credit'] > 0 ? '-' . number_format($t['credit'], 2) : '—' }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                {{ $t['wallet_name'] }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">{{ $t['date']->format('d/m/Y') }}</td>
+                        </tr>
+                    @endif
                     @empty
                     <tr>
                         <td colspan="7" class="px-6 py-12 text-center">

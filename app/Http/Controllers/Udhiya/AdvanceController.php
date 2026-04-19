@@ -278,6 +278,10 @@ class AdvanceController extends Controller
                         'wallet_name' => '—',
                         'wallet_id' => null,
                         'notes' => $c->notes ?? '',
+                        'is_contract' => true,
+                        'collected' => $c->paid_amount,
+                        'remaining' => $c->remaining_amount,
+                        'total' => $c->total_amount,
                     ];
                 });
             $allTransactions = $allTransactions->concat($contracts);
