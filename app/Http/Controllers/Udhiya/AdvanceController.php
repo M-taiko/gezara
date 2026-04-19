@@ -147,11 +147,11 @@ class AdvanceController extends Controller
             'end_date' => $request->input('end_date'),
         ];
 
-        // Get all transactions from service
+        // Get all transactions from service for detailed table
         $allTransactions = $service->getGeneralLedger($filters);
 
-        // Calculate totals
-        $totals = $service->calculateTotals($allTransactions);
+        // Get totals from source tables (not from transactions)
+        $totals = $service->getSourceTotals($filters);
 
         // Paginate
         $perPage = 50;

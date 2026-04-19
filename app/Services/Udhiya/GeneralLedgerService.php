@@ -195,4 +195,44 @@ class GeneralLedgerService
             'sales_revenue' => $transactions->where('type', 'sale')->sum('credit'),
         ];
     }
+
+    public function getSourceTotals($filters = [])
+    {
+        $startDate = $filters['start_date'] ?? null;
+        $endDate = $filters['end_date'] ?? null;
+
+        // Get totals directly from source tables
+        $contracts = Contract::when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate));
+
+        $payments = Payment::when($startDate, fn($q) => $q->whereDate('date', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('date', '<=', $endDate));
+
+        $purchases = Purchase::when($startDate, fn($q) => $q->whereDate('date', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('date', '<=', $endDate));
+
+        $sales = MeatSale::when($startDate, fn($q) => $q->whereDate('sale_date', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('sale_date', '<=', $endDate));
+
+        $contractsTotal = (clone $contracts)->sum('total_amount');
+        $contractsPaid = (clone $contracts)->sum('paid_amount');
+        $contractsRemaining = (clone $contracts)->sum('remaining_amount');
+        $paymentsTotal = (clone $payments)->sum('amount');
+        $purchasesTotal = (clone $purchases)->sum('total');
+        $salesTotal = (clone $sales)->sum('total_amount');
+
+        return [
+            'total_debit' => $contractsTotal + $purchasesTotal,
+            'total_credit' => $paymentsTotal + $salesTotal,
+            'net_balance' => ($contractsTotal + $purchasesTotal) - ($paymentsTotal + $salesTotal),
+            'contracts_receivable' => $contractsTotal,
+            'contracts_paid' => $contractsPaid,
+            'contracts_remaining' => $contractsRemaining,
+            'payments_received' => $paymentsTotal,
+            'advances_out' => 0,
+            'advances_returned' => 0,
+            'purchases_payable' => $purchasesTotal,
+            'sales_revenue' => $salesTotal,
+        ];
+    }
 }
