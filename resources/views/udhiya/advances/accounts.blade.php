@@ -16,110 +16,75 @@
 @section('content')
 <div class="space-y-6">
     {{-- Quick Summary --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         {{-- Total Contracts --}}
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-purple-500">
-            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">📋</div>
-            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['contracts_receivable'], 0) }}</div>
-            <div class="text-xs font-bold text-slate-500 uppercase">الصكوك المستحقة ج.م</div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-600 mb-1">الصكوك المستحقة</p>
+                    <p class="text-xl font-black text-purple-700">{{ number_format($totals['contracts_receivable'], 0) }}</p>
+                </div>
+                <div class="text-2xl">📋</div>
+            </div>
         </div>
 
         {{-- Total Payments --}}
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-emerald-500">
-            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">✅</div>
-            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['payments_received'], 0) }}</div>
-            <div class="text-xs font-bold text-slate-500 uppercase">المحصّل من العملاء ج.م</div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-600 mb-1">المحصّل من العملاء</p>
+                    <p class="text-xl font-black text-emerald-700">{{ number_format($totals['payments_received'], 0) }}</p>
+                </div>
+                <div class="text-2xl">✅</div>
+            </div>
         </div>
 
         {{-- Total Purchases --}}
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-orange-500">
-            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">🛒</div>
-            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['purchases_payable'], 0) }}</div>
-            <div class="text-xs font-bold text-slate-500 uppercase">التزام الشراء ج.م</div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-600 mb-1">التزام الشراء</p>
+                    <p class="text-xl font-black text-orange-700">{{ number_format($totals['purchases_payable'], 0) }}</p>
+                </div>
+                <div class="text-2xl">🛒</div>
+            </div>
         </div>
 
         {{-- Total Sales --}}
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4 border-b-blue-500">
-            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">🧊</div>
-            <div class="text-2xl font-black text-slate-800 mb-1">{{ number_format($totals['sales_revenue'], 0) }}</div>
-            <div class="text-xs font-bold text-slate-500 uppercase">إيراد المبيعات ج.م</div>
-        </div>
-
-        {{-- Net Balance --}}
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-b-4"
-             :class="$totals['net_balance'] >= 0 ? 'border-b-indigo-500' : 'border-b-rose-500'">
-            <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg mb-3 shadow-sm">
-                {{ $totals['net_balance'] >= 0 ? '📈' : '📉' }}
-            </div>
-            <div class="text-2xl font-black mb-1" :class="$totals['net_balance'] >= 0 ? 'text-slate-800' : 'text-slate-800'">
-                {{ number_format($totals['net_balance'], 0) }}
-            </div>
-            <div class="text-xs font-bold text-slate-500 uppercase">الرصيد الصافي ج.م</div>
-        </div>
-    </div>
-
-    {{-- Detailed Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {{-- Contracts Receivable --}}
-        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-6 border border-purple-200">
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-xs font-bold text-purple-700 mb-1">الصكوك المستحقة</p>
-                    <p class="text-2xl font-black text-purple-900">{{ number_format($totals['contracts_receivable'], 2) }}</p>
-                    <p class="text-xs text-purple-600 mt-1">ج.م</p>
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-600 mb-1">إيراد المبيعات</p>
+                    <p class="text-xl font-black text-blue-700">{{ number_format($totals['sales_revenue'], 0) }}</p>
                 </div>
-                <div class="text-3xl">📋</div>
-            </div>
-        </div>
-
-        {{-- Payments Received --}}
-        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl p-6 border border-emerald-200">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-xs font-bold text-emerald-700 mb-1">المدفوع من العملاء</p>
-                    <p class="text-2xl font-black text-emerald-900">{{ number_format($totals['payments_received'], 2) }}</p>
-                    <p class="text-xs text-emerald-600 mt-1">ج.م</p>
-                </div>
-                <div class="text-3xl">💵</div>
-            </div>
-        </div>
-
-        {{-- Purchases Payable --}}
-        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-3xl p-6 border border-orange-200">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-xs font-bold text-orange-700 mb-1">التزام الشراء</p>
-                    <p class="text-2xl font-black text-orange-900">{{ number_format($totals['purchases_payable'], 2) }}</p>
-                    <p class="text-xs text-orange-600 mt-1">ج.م</p>
-                </div>
-                <div class="text-3xl">🛒</div>
+                <div class="text-2xl">🧊</div>
             </div>
         </div>
 
         {{-- Net Balance --}}
-        <div class="bg-gradient-to-br rounded-3xl p-6 border-2"
-             :class="$totals['net_balance'] >= 0 ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-rose-50 to-rose-100 border-rose-200'">
+        <div class="rounded-xl p-4 shadow-sm border hover:shadow-md transition-shadow"
+             :class="$totals['net_balance'] >= 0 ? 'bg-white border-indigo-200' : 'bg-white border-rose-200'">
             <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-xs font-bold mb-1" :class="$totals['net_balance'] >= 0 ? 'text-blue-700' : 'text-rose-700'">الرصيد الصافي</p>
-                    <p class="text-2xl font-black" :class="$totals['net_balance'] >= 0 ? 'text-blue-900' : 'text-rose-900'">
-                        {{ number_format($totals['net_balance'], 2) }}
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-600 mb-1">الرصيد الصافي</p>
+                    <p class="text-xl font-black" :class="$totals['net_balance'] >= 0 ? 'text-indigo-700' : 'text-rose-700'">
+                        {{ number_format($totals['net_balance'], 0) }}
                     </p>
-                    <p class="text-xs mt-1" :class="$totals['net_balance'] >= 0 ? 'text-blue-600' : 'text-rose-600'">ج.م</p>
                 </div>
-                <div class="text-3xl">{{ $totals['net_balance'] >= 0 ? '📈' : '📉' }}</div>
+                <div class="text-2xl">{{ $totals['net_balance'] >= 0 ? '📈' : '📉' }}</div>
             </div>
         </div>
     </div>
+
 
     {{-- Filters --}}
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <form method="GET" action="{{ route('udhiya.accounts') }}" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {{-- Transaction Type --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2">نوع العملية</label>
-                    <select name="transaction_type" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <select name="transaction_type" class="w-full rounded-lg border border-slate-200 bg-white hover:border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm text-slate-800 transition-colors">
                         <option value="">-- الكل --</option>
                         <option value="contract" {{ $filters['transaction_type'] === 'contract' ? 'selected' : '' }}>الصكوك</option>
                         <option value="payment" {{ $filters['transaction_type'] === 'payment' ? 'selected' : '' }}>الدفعات</option>
@@ -132,7 +97,7 @@
                 {{-- Wallet --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2">الخزينة</label>
-                    <select name="wallet_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <select name="wallet_id" class="w-full rounded-lg border border-slate-200 bg-white hover:border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm text-slate-800 transition-colors">
                         <option value="">-- الكل --</option>
                         @foreach($wallets as $w)
                         <option value="{{ $w->id }}" {{ $filters['wallet_id'] == $w->id ? 'selected' : '' }}>{{ $w->getTypeLabel() }} - {{ $w->name }}</option>
@@ -144,34 +109,34 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2">من تاريخ</label>
                     <input type="date" name="start_date" value="{{ $filters['start_date'] }}"
-                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                           class="w-full rounded-lg border border-slate-200 bg-white hover:border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm text-slate-800 transition-colors">
                 </div>
 
                 {{-- End Date --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2">إلى تاريخ</label>
                     <input type="date" name="end_date" value="{{ $filters['end_date'] }}"
-                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                           class="w-full rounded-lg border border-slate-200 bg-white hover:border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm text-slate-800 transition-colors">
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button type="submit" class="rounded-xl bg-indigo-600 text-white font-black py-2.5 px-6 hover:bg-indigo-700 transition-colors">
+            <div class="flex gap-2 pt-2">
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white font-bold py-2 px-5 hover:bg-indigo-700 transition-colors shadow-sm">
                     🔍 تصفية
                 </button>
-                <a href="{{ route('udhiya.accounts') }}" class="rounded-xl bg-slate-200 text-slate-700 font-bold py-2.5 px-6 hover:bg-slate-300 transition-colors">
-                    ↻ مسح الفلاتر
+                <a href="{{ route('udhiya.accounts') }}" class="inline-flex items-center gap-2 rounded-lg bg-slate-100 text-slate-700 font-bold py-2 px-4 hover:bg-slate-200 transition-colors">
+                    ↻ مسح
                 </a>
             </div>
         </form>
     </div>
 
     {{-- Transactions Table --}}
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-            <h6 class="text-lg font-black text-slate-800 m-0 flex items-center gap-3">
-                📋 العمليات
-                <span class="text-sm font-bold text-slate-400">({{ $paginatedTransactions->total() }})</span>
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-100">
+            <h6 class="text-base font-black text-slate-800 m-0 flex items-center gap-2">
+                📋 تفاصيل العمليات
+                <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">({{ $paginatedTransactions->total() }})</span>
             </h6>
         </div>
 
@@ -277,8 +242,10 @@
     </div>
 
     {{-- Pagination --}}
-    <div class="flex justify-center">
+    @if($paginatedTransactions->hasPages())
+    <div class="flex justify-center pt-4">
         {{ $paginatedTransactions->links() }}
     </div>
+    @endif
 </div>
 @endsection
