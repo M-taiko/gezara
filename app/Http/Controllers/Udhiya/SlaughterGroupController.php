@@ -303,6 +303,31 @@ class SlaughterGroupController extends Controller
         return back()->with('toast_success', "✅ تم تسجيل تسليم {$member->customer?->name}");
     }
 
+    public function updateMember(Request $request, SlaughterGroup $group, SlaughterGroupMember $member)
+    {
+        if ($member->contract_item_id) {
+            return back()->with('toast_error', 'لا يمكن تعديل عضو مربوط بصك');
+        }
+
+        $data = $request->validate([
+            'shares_count' => 'required|integer|min:1',
+            'notes' => 'nullable|string',
+        ]);
+
+        $oldShares = $member->shares_count;
+        $newShares = $data['shares_count'];
+        $shareDiff = $newShares - $oldShares;
+
+        // Check if remaining slots allow the new share count
+        if ($shareDiff > 0 && $group->remainingSlots() < $shareDiff) {
+            return back()->with('toast_error', "لا تتوفر {$shareDiff} أنصبة إضافية في المجموعة");
+        }
+
+        $member->update($data);
+
+        return back()->with('toast_success', "تم تحديث بيانات العضو");
+    }
+
     public function removeMember(SlaughterGroup $group, SlaughterGroupMember $member)
     {
         if ($member->contract_item_id) {

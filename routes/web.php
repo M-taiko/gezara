@@ -178,6 +178,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::get('groups/{group}/print', [SlaughterGroupController::class, 'printView'])->name('groups.print');
     Route::post('groups/from-contracts', [SlaughterGroupController::class, 'storeFromContracts'])->name('groups.store-from-contracts');
     Route::post('groups/{group}/members', [SlaughterGroupController::class, 'addMember'])->name('groups.members.add');
+    Route::patch('groups/{group}/members/{member}', [SlaughterGroupController::class, 'updateMember'])->name('groups.members.update');
     Route::delete('groups/{group}/members/{member}', [SlaughterGroupController::class, 'removeMember'])->name('groups.members.remove');
     Route::patch('groups/{group}/assign-animal', [SlaughterGroupController::class, 'assignAnimal'])->name('groups.assign-animal');
     Route::post('groups/{group}/slaughter', [SlaughterGroupController::class, 'slaughter'])->name('groups.slaughter');

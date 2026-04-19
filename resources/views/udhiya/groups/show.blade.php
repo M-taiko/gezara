@@ -138,12 +138,12 @@
     {{-- ===== KEY METRICS ===== --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {{-- Status --}}
-        <div class="bg-gradient-to-br rounded-2xl p-6 border-2 shadow-sm"
-             :class="$isSlaughtered && $allDelivered ? 'from-emerald-50 to-emerald-100 border-emerald-200' : ($isSlaughtered ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-amber-50 to-amber-100 border-amber-200')">
+        <div class="bg-gradient-to-br rounded-2xl p-6 border-2 shadow-sm
+            {{ $isSlaughtered && $allDelivered ? 'from-emerald-50 to-emerald-100 border-emerald-200' : ($isSlaughtered ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-amber-50 to-amber-100 border-amber-200') }}">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-bold text-slate-600 mb-1">الحالة</p>
-                    <p class="text-2xl font-black" :class="$isSlaughtered && $allDelivered ? 'text-emerald-900' : ($isSlaughtered ? 'text-blue-900' : 'text-amber-900')">
+                    <p class="text-2xl font-black {{ $isSlaughtered && $allDelivered ? 'text-emerald-900' : ($isSlaughtered ? 'text-blue-900' : 'text-amber-900') }}">
                         @if($isSlaughtered && $allDelivered)
                             مكتملة
                         @elseif($isSlaughtered)
@@ -310,9 +310,13 @@
                                     @endif
                                 </td>
                             @endif
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 flex gap-1.5">
                                 @if(!$member->contract_item_id)
-                                    <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')">
+                                    <button type="button" onclick="openEditMemberModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
+                                            class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm">
+                                        ✏️
+                                    </button>
+                                    <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')" style="display: inline;">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm">
                                             🗑
@@ -376,6 +380,39 @@
 
     </div>
 </div>
+
+{{-- ===== EDIT MEMBER MODAL ===== --}}
+<dialog id="editMemberModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
+    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-8 py-6 border-b border-slate-200">
+        <h3 class="text-xl font-black text-slate-800 m-0">✏️ تعديل بيانات العضو</h3>
+        <p id="memberNameDisplay" class="text-sm text-slate-600 mt-1"></p>
+    </div>
+
+    <form id="editMemberForm" method="POST" class="p-8 space-y-6">
+        @csrf @method('PATCH')
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">عدد الأنصبة</label>
+            <input type="number" name="shares_count" id="editSharesCount" min="1" max="{{ $total }}" required
+                   class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+            <p class="text-xs text-slate-500 mt-1">الحد الأقصى: {{ $remaining }} أنصبة متاحة</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات</label>
+            <textarea name="notes" id="editNotes" rows="2" class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-slate-200">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-all">
+                ✓ حفظ التعديلات
+            </button>
+            <button type="button" onclick="document.getElementById('editMemberModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </form>
+</dialog>
 
 {{-- ===== ADD MEMBER MODAL ===== --}}
 <dialog id="addMemberModal" class="rounded-2xl shadow-2xl max-w-2xl w-full">
@@ -467,6 +504,18 @@ function showTab(tab) {
     });
     event.target.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-700');
     event.target.classList.remove('border-b-2', 'border-transparent', 'text-slate-600', 'hover:text-slate-800');
+}
+
+function openEditMemberModal(memberId, memberName, sharesCount, notes) {
+    document.getElementById('memberNameDisplay').textContent = memberName;
+    document.getElementById('editSharesCount').value = sharesCount;
+    document.getElementById('editNotes').value = notes;
+
+    const form = document.getElementById('editMemberForm');
+    form.action = `{{ route('udhiya.groups.show', $group) }}/members/${memberId}`.replace('show', 'groups').replace('/members', '/members');
+    form.action = `{{ route('udhiya.groups.members.update', [$group, ':memberId']) }}`.replace(':memberId', memberId);
+
+    document.getElementById('editMemberModal').showModal();
 }
 </script>
 
