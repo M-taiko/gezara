@@ -68,18 +68,22 @@
     $allDelivered = $isSlaughtered && $group->members->every(fn($m) => $m->contractItem?->delivered_at);
 @endphp
 
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 pb-16">
-    {{-- Sidebar: Group Information --}}
-    <div class="lg:col-span-1 space-y-4">
-        {{-- Group Details Card --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden sticky top-24">
-            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-pink-50">
-                <h6 class="text-sm font-black text-slate-800 m-0">تفاصيل المجموعة</h6>
-            </div>
-            <div class="p-6 space-y-4 text-sm">
+<div class="space-y-8 pb-16">
+
+    {{-- ===== GROUP DETAILS SECTION ===== --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-pink-50 flex items-center justify-between">
+            <h6 class="text-lg font-black text-slate-800 m-0">📋 تفاصيل المجموعة</h6>
+            <button type="button" onclick="document.getElementById('addMemberModal').showModal()"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all">
+                ➕ إضافة عضو
+            </button>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {{-- Category --}}
                 @if($group->animal?->product?->mainCategory)
-                <div>
+                <div class="flex flex-col">
                     <p class="text-xs font-bold text-slate-500 mb-1">الفئة</p>
                     <p class="font-bold text-slate-800">{{ $group->animal->product->mainCategory->name }}</p>
                 </div>
@@ -87,56 +91,45 @@
 
                 {{-- Product --}}
                 @if($group->animal?->product)
-                <div>
+                <div class="flex flex-col">
                     <p class="text-xs font-bold text-slate-500 mb-1">النوع</p>
                     <p class="font-bold text-slate-800">{{ $group->animal->product->name }}</p>
                 </div>
                 @endif
 
                 {{-- Share Type --}}
-                <div>
+                <div class="flex flex-col">
                     <p class="text-xs font-bold text-slate-500 mb-1">نوع الحصة</p>
-                    <p class="font-bold text-indigo-700 text-base">{{ $group->shareLabel() }}</p>
+                    <p class="font-bold text-indigo-700">{{ $group->shareLabel() }}</p>
                 </div>
 
                 {{-- Slaughter Date --}}
                 @if($group->slaughter_day)
-                <div>
+                <div class="flex flex-col">
                     <p class="text-xs font-bold text-slate-500 mb-1">موعد الذبح</p>
                     <p class="font-bold text-slate-800">{{ $group->slaughter_day->format('d/m/Y') }}</p>
                 </div>
                 @endif
 
-                {{-- Notes --}}
-                @if($group->notes)
-                <div class="pt-3 border-t border-slate-100">
-                    <p class="text-xs font-bold text-slate-500 mb-2">ملاحظات</p>
-                    <p class="text-slate-700 text-xs bg-slate-50 p-2.5 rounded">{{ $group->notes }}</p>
-                </div>
-                @endif
-
                 {{-- Created At --}}
-                <div class="pt-3 border-t border-slate-100">
+                <div class="flex flex-col">
                     <p class="text-xs font-bold text-slate-500 mb-1">تاريخ الإنشاء</p>
                     <p class="text-xs text-slate-600">{{ $group->created_at->format('d/m/Y') }}</p>
                 </div>
             </div>
-        </div>
 
-        {{-- Add Member Button --}}
-        @if(!$group->animal?->status === 'slaughtered')
-        <button type="button" onclick="document.getElementById('addMemberModal').showModal()"
-                class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-lg">
-            ➕ إضافة عضو
-        </button>
-        @endif
+            {{-- Notes --}}
+            @if($group->notes)
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <p class="text-xs font-bold text-slate-500 mb-2">ملاحظات</p>
+                <p class="text-sm text-slate-700 bg-slate-50 p-3 rounded">{{ $group->notes }}</p>
+            </div>
+            @endif
+        </div>
     </div>
 
-    {{-- Main Content --}}
-    <div class="lg:col-span-3 space-y-8">
-
     {{-- ===== KEY METRICS ===== --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {{-- Status --}}
         <div class="bg-gradient-to-br rounded-2xl p-6 border-2 shadow-sm
             {{ $isSlaughtered && $allDelivered ? 'from-emerald-50 to-emerald-100 border-emerald-200' : ($isSlaughtered ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-amber-50 to-amber-100 border-amber-200') }}">
@@ -378,7 +371,6 @@
     </div>
     @endif
 
-    </div>
 </div>
 
 {{-- ===== EDIT MEMBER MODAL ===== --}}
@@ -520,3 +512,4 @@ function openEditMemberModal(memberId, memberName, sharesCount, notes) {
 </script>
 
 @endsection
+
