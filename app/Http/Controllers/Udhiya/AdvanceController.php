@@ -13,7 +13,7 @@ use App\Models\MeatSale;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdvanceController extends Controller
 {
@@ -258,13 +258,13 @@ class AdvanceController extends Controller
         $perPage = 50;
         $page = request()->get('page', 1);
         $total = count($allTransactions);
-        $paginatedTransactions = new Paginator(
+        $paginatedTransactions = new \Illuminate\Pagination\LengthAwarePaginator(
             $allTransactions->forPage($page, $perPage),
+            $total,
             $perPage,
             $page,
             ['path' => route('udhiya.accounts'), 'query' => $request->query()]
         );
-        $paginatedTransactions->total = $total;
 
         $wallets = Wallet::where('is_active', true)->get();
 
