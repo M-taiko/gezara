@@ -32,6 +32,7 @@ use App\Http\Controllers\Udhiya\ContractRequestController;
 use App\Http\Controllers\Udhiya\ContractItemController;
 use App\Http\Controllers\Udhiya\CollectionController;
 use App\Http\Controllers\Udhiya\AdvanceController;
+use App\Http\Controllers\Udhiya\AccountController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicAnimalController;
 
@@ -207,7 +208,10 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     // Advances (السلف)
     Route::resource('advances', AdvanceController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::post('advances/{advance}/transaction', [AdvanceController::class, 'addTransaction'])->name('advances.transaction');
-    Route::get('accounts', [AdvanceController::class, 'accounts'])->name('accounts');
+
+    // Chart of Accounts (الدليل المحاسبي)
+    Route::resource('accounts', AccountController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::patch('accounts/{account}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
