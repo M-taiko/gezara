@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Udhiya;
 
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
+use App\Models\Contract;
 use App\Models\ContractItem;
 use App\Models\Customer;
 use App\Models\MeatInventory;
 use App\Models\Product;
 use App\Models\SlaughterGroup;
 use App\Models\SlaughterGroupMember;
+use App\Services\Udhiya\ContractService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SlaughterGroupController extends Controller
 {
@@ -328,15 +331,67 @@ class SlaughterGroupController extends Controller
         return back()->with('toast_success', "تم تحديث بيانات العضو");
     }
 
-    public function removeMember(SlaughterGroup $group, SlaughterGroupMember $member)
+    public function removeMember(Request $request, SlaughterGroup $group, SlaughterGroupMember $member)
     {
-        if ($member->contract_item_id) {
-            return back()->with('toast_error', 'لا يمكن حذف عضو مربوط بصك — ألغِ الصك أولاً');
+        // If member has no contract, just delete the member
+        if (!$member->contract_item_id) {
+            $member->delete();
+            return back()->with('toast_success', 'تم حذف العضو من المجموعة');
         }
 
-        $member->delete();
+        // Member has a contract - handle based on delete_option
+        $deleteOption = $request->input('delete_option', 'separate_contract');
+        $contractService = app(ContractService::class);
 
-        return back()->with('toast_success', 'تم حذف العضو من المجموعة');
+        try {
+            DB::transaction(function () use ($member, $deleteOption, $contractService) {
+                $contract = $member->contractItem->contract;
+                $contractItem = $member->contractItem;
+
+                if ($deleteOption === 'delete_contract') {
+                    // Option 1: Cancel the contract (reverses all accounting)
+                    if ($contract->paid_amount > 0) {
+                        throw new \RuntimeException('لا يمكن حذف الصك — تم دفع مبالغ عليه. يرجى حذف الدفعات أولاً.');
+                    }
+
+                    // Cancel the contract (this reverses all accounting entries)
+                    $contractService->cancel($contract);
+
+                } elseif ($deleteOption === 'separate_contract') {
+                    // Option 2: Convert to separate contract
+                    // Remove from current contract first
+                    $contractItem->update(['group_id' => null]);
+                    $member->update(['contract_item_id' => null]);
+
+                    // Create new contract for the item
+                    $newContract = Contract::create([
+                        'customer_id' => $member->customer_id,
+                        'total_amount' => $contractItem->total_price,
+                        'remaining_amount' => $contractItem->total_price,
+                        'status' => 'active',
+                    ]);
+
+                    // Move the item to new contract
+                    $contractItem->update(['contract_id' => $newContract->id]);
+
+                    // Delete the member from group
+                    $member->delete();
+
+                    return;
+                }
+
+                // For delete_contract option, remove member after cancellation
+                $member->delete();
+            });
+
+            if ($deleteOption === 'delete_contract') {
+                return back()->with('toast_success', 'تم حذف الصك والعضو من المجموعة وإرجاع جميع المبالغ المحاسبية');
+            } else {
+                return back()->with('toast_success', 'تم تحويل الصك إلى صك منفصل وحذف العضو من المجموعة');
+            }
+        } catch (\Throwable $e) {
+            return back()->with('toast_error', $e->getMessage());
+        }
     }
 
     /**

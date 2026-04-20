@@ -152,6 +152,24 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                     <p class="text-sm text-slate-600 font-medium leading-relaxed m-0">{{ $contract->notes }}</p>
                 </div>
                 @endif
+
+                @if($contract->attachments && count($contract->attachments) > 0)
+                <div class="py-2 border-t border-slate-100">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-2">📎 المرفقات</span>
+                    <div class="space-y-1.5">
+                        @foreach($contract->attachments as $index => $attachment)
+                        <a href="{{ asset('storage/' . ($contract->attachment_paths ? json_decode($contract->attachment_paths, true)[$index] ?? '' : '')) }}"
+                           target="_blank"
+                           class="flex items-center gap-2 text-xs text-indigo-600 hover:text-indigo-700 hover:underline">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            {{ $attachment }}
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 

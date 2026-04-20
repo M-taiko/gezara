@@ -92,6 +92,11 @@
                 <h6 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">تفاصيل إضافية</h6>
                 <div class="space-y-4">
                     <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الصك <span class="text-slate-400 font-normal">(اختياري)</span></label>
+                        <input type="text" name="contract_number" placeholder="سيتم إنشاء رقم تلقائي إن تركته فارغاً"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">تاريخ الذبح</label>
                         <input type="date" name="slaughter_day"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
@@ -100,6 +105,13 @@
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">ترتيب الذبح</label>
                         <input type="number" name="slaughter_order" min="1" placeholder="رقم الترتيب"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">📎 مرفقات الصك</label>
+                        <input type="file" name="attachments[]" multiple
+                               accept="image/*,.pdf"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1">صورة التحويل البنكي أو الإيصال (JPG, PNG, PDF)</p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات ووصايا التسليم</label>
@@ -403,7 +415,12 @@ function updateRow(row) {
     const totalIn   = row.querySelector('.item-total');
 
     let unitPrice = 0;
-    if (opt && opt.value) {
+
+    // Check if user has manually entered a price
+    const manualPrice = parseFloat(priceIn.value) || 0;
+
+    if (opt && opt.value && manualPrice === 0) {
+        // Animal is selected AND no manual price - get price from animal data
         const priceKey  = { full:'priceFull', seven:'priceSeven', six:'priceSix', five:'priceFive', quarter:'priceQuarter', third:'priceThird', half:'priceHalf' };
         unitPrice = parseFloat(opt.dataset[priceKey[shareType]]) || 0;
         priceIn.value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
@@ -413,12 +430,23 @@ function updateRow(row) {
             weightIn.value = opt.dataset.weight || '';
         }
     } else {
-        unitPrice = parseFloat(priceIn.value) || 0;
+        // User entered manual price OR no animal - use the entered price
+        unitPrice = manualPrice;
     }
 
     // Calculate total based on mode (shares count or weight)
     const isStandaloneMode = weightIn && (weightIn.parentElement.parentElement.style.display === '' || !weightIn.parentElement.parentElement.style.display);
-    const quantity = isStandaloneMode ? (parseFloat(weightIn.value) || 0) : (parseInt(sharesIn.value) || 1);
+    let quantity = 1;
+
+    if (isStandaloneMode) {
+        // Standalone mode: quantity is weight, default to 1 if not specified
+        quantity = parseFloat(weightIn.value) || 1;
+    } else {
+        // Group mode: quantity is shares count
+        quantity = parseInt(sharesIn.value) || 1;
+    }
+
+    // Calculate and display total
     totalIn.value = (unitPrice * quantity).toFixed(2);
 
     if (!sharesIn.readOnly && sharesIn.parentElement.parentElement.style.display !== 'none') {
@@ -709,6 +737,23 @@ document.getElementById('itemsBody').addEventListener('input', function (e) {
         updateRow(row);
     }
 });
+
+// Initialize calculation on page load
+function initializeCalculations() {
+    const itemRows = document.querySelectorAll('.item-row');
+    if (itemRows.length > 0) {
+        itemRows.forEach(row => {
+            updateRow(row);
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCalculations);
+} else {
+    // Page already loaded
+    initializeCalculations();
+}
 
 /* ══════════════════════════════════
    ADD / REMOVE ROW

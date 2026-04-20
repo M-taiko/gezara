@@ -176,4 +176,40 @@ class AccountingService
             $entry->delete();
         }
     }
+
+    public function reverseContract(Contract $contract): void
+    {
+        // Find and delete the journal entry for this contract
+        $entry = JournalEntry::where('reference_type', Contract::class)
+            ->where('reference_id', $contract->id)
+            ->first();
+
+        if ($entry) {
+            // Reverse all journal entry items and account balances
+            foreach ($entry->items as $item) {
+                $account = $item->account;
+
+                // Reverse the balance update
+                if ($item->type === 'debit') {
+                    if (in_array($account->type, ['asset', 'expense'])) {
+                        $account->decrement('balance', $item->amount);
+                    } else {
+                        $account->increment('balance', $item->amount);
+                    }
+                } else {
+                    if (in_array($account->type, ['liability', 'revenue', 'equity'])) {
+                        $account->decrement('balance', $item->amount);
+                    } else {
+                        $account->increment('balance', $item->amount);
+                    }
+                }
+
+                // Delete the journal entry item
+                $item->delete();
+            }
+
+            // Delete the journal entry
+            $entry->delete();
+        }
+    }
 }

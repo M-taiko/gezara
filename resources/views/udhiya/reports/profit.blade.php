@@ -77,7 +77,7 @@
                     <tbody class="divide-y divide-slate-50">
                         @foreach($contracts as $c)
                         @php
-                            $cost   = $c->items->sum(fn($i) => $i->animal->cost);
+                            $cost   = $contractCosts[$c->id] ?? 0;
                             $profit = $c->total_amount - $cost;
                         @endphp
                         <tr class="hover:bg-slate-50/40 transition-colors">

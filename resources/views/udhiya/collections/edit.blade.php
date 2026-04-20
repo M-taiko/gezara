@@ -104,6 +104,34 @@
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
                     </div>
 
+                    {{-- Attachments (optional) --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">📎 المرفقات</label>
+                        <input type="file" name="attachments[]" multiple
+                               accept="image/*,.pdf"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1">صور الصك أو إيصالات الدفع (JPG, PNG, PDF)</p>
+
+                        @if($payment->attachments && count($payment->attachments) > 0)
+                        <div class="mt-3 space-y-2">
+                            <p class="text-xs font-bold text-slate-600">المرفقات الحالية:</p>
+                            @foreach($payment->attachments as $index => $attachment)
+                            <div class="flex items-center justify-between gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                                <a href="{{ asset('storage/' . $attachment) }}" target="_blank"
+                                   class="text-xs text-indigo-600 hover:underline truncate flex-1">
+                                    📄 {{ basename($attachment) }}
+                                </a>
+                                <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                    <input type="checkbox" name="remove_attachments[]" value="{{ $index }}"
+                                           class="rounded">
+                                    <span class="text-rose-600">حذف</span>
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+
                     {{-- Notes (optional) --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات</label>

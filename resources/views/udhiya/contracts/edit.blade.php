@@ -348,22 +348,46 @@ function updateRow(row) {
     const opt       = animalSel.selectedOptions[0];
     const shareType = _getShareType(row);
     const sharesIn  = row.querySelector('.shares-count');
+    const weightIn  = row.querySelector('.animal-weight');
     const priceIn   = row.querySelector('.item-price');
     const totalIn   = row.querySelector('.item-total');
 
     let unitPrice = 0;
-    if (opt && opt.value) {
+
+    // Check if user has manually entered a price
+    const manualPrice = parseFloat(priceIn.value) || 0;
+
+    if (opt && opt.value && manualPrice === 0) {
+        // Animal is selected AND no manual price - get price from animal data
         const priceKey  = { full:'priceFull', seven:'priceSeven', six:'priceSix', five:'priceFive', quarter:'priceQuarter', third:'priceThird', half:'priceHalf' };
         unitPrice = parseFloat(opt.dataset[priceKey[shareType]]) || 0;
         priceIn.value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
+
+        // In standalone mode, populate weight from animal
+        if (weightIn && !weightIn.parentElement.parentElement.style.display || weightIn.parentElement.parentElement.style.display === '') {
+            weightIn.value = opt.dataset.weight || '';
+        }
     } else {
-        unitPrice = parseFloat(priceIn.value) || 0;
+        // User entered manual price OR no animal - use the entered price
+        unitPrice = manualPrice;
     }
 
-    const count = parseInt(sharesIn.value) || 1;
-    totalIn.value = (unitPrice * count).toFixed(2);
+    // Calculate total based on mode (shares count or weight)
+    const isStandaloneMode = weightIn && (weightIn.parentElement.parentElement.style.display === '' || !weightIn.parentElement.parentElement.style.display);
+    let quantity = 1;
 
-    if (!sharesIn.readOnly) {
+    if (isStandaloneMode) {
+        // Standalone mode: quantity is weight, default to 1 if not specified
+        quantity = parseFloat(weightIn.value) || 1;
+    } else {
+        // Group mode: quantity is shares count
+        quantity = parseInt(sharesIn.value) || 1;
+    }
+
+    // Calculate and display total
+    totalIn.value = (unitPrice * quantity).toFixed(2);
+
+    if (!sharesIn.readOnly && sharesIn.parentElement.parentElement.style.display !== 'none') {
         const typeMax = SHARE_MAX[shareType] || 7;
         sharesIn.max  = typeMax;
         row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
@@ -382,20 +406,35 @@ function calcGrand() {
 }
 
 function updatePaymentSummary(total) {
-    const paid      = parseFloat(document.getElementById('paymentAmount').value) || 0;
+    const paymentAmountEl = document.getElementById('paymentAmount');
+    if (!paymentAmountEl) return; // Payment summary only on create page
+
+    const paid      = parseFloat(paymentAmountEl.value) || 0;
     const remaining = total - paid;
     const summary   = document.getElementById('paymentSummary');
+    if (!summary) return;
+
     if (total <= 0 && paid <= 0) { summary.style.display = 'none'; return; }
     summary.style.display = '';
-    document.getElementById('summaryTotal').textContent     = Number(total).toLocaleString(undefined, {minimumFractionDigits: 0}) + ' ج.م';
-    document.getElementById('summaryPaid').textContent      = Number(paid).toLocaleString(undefined, {minimumFractionDigits: 0}) + ' ج.م';
-    document.getElementById('summaryRemaining').textContent = Number(remaining).toLocaleString(undefined, {minimumFractionDigits: 0}) + ' ج.م';
+
+    const summaryTotal = document.getElementById('summaryTotal');
+    const summaryPaid = document.getElementById('summaryPaid');
+    const summaryRemaining = document.getElementById('summaryRemaining');
+
+    if (summaryTotal) summaryTotal.textContent = Number(total).toLocaleString(undefined, {minimumFractionDigits: 0}) + ' ج.م';
+    if (summaryPaid) summaryPaid.textContent = Number(paid).toLocaleString(undefined, {minimumFractionDigits: 0}) + ' ج.م';
+    if (summaryRemaining) summaryRemaining.textContent = Number(remaining).toLocaleString(undefined, {minimumFractionDigits: 0}) + ' ج.م';
 }
 
-document.getElementById('paymentAmount').addEventListener('input', function () {
-    const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/,/g, '')) || 0;
-    updatePaymentSummary(grand);
-});
+function attachPaymentAmountListener() {
+    const paymentAmountEl = document.getElementById('paymentAmount');
+    if (paymentAmountEl) {
+        paymentAmountEl.addEventListener('input', function () {
+            const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/,/g, '')) || 0;
+            updatePaymentSummary(grand);
+        });
+    }
+}
 
 /* ══════════════════════════════════
    GROUP LOCK BANNER
@@ -418,37 +457,69 @@ function hideGroupBanner() {
    GROUP FILTER LOGIC
 ══════════════════════════════════ */
 
-document.getElementById('groupFilter').addEventListener('change', function () {
-    const gid = this.value;
-    filterCustomersByGroup(gid);
-    if (gid) autoFillFromGroup(gid);
-    else     clearGroupLock();
-});
+function attachGroupFilterListener() {
+    const groupFilter = document.getElementById('groupFilter');
+    if (groupFilter) {
+        groupFilter.addEventListener('change', function () {
+            const gid = this.value;
+            filterCustomersByGroup(gid);
+            if (gid) autoFillFromGroup(gid);
+            else     clearGroupLock();
+        });
+    }
+}
 
-document.getElementById('customerSelect').addEventListener('change', function () {
-    // Always mirror value to hidden input (select may be disabled)
-    document.getElementById('customerIdHidden').value = this.value;
+function attachCustomerSelectListener() {
+    const customerSelect = document.getElementById('customerSelect');
+    if (customerSelect) {
+        customerSelect.addEventListener('change', function () {
+            // Always mirror value to hidden input (select may be disabled)
+            document.getElementById('customerIdHidden').value = this.value;
 
-    const gid = document.getElementById('groupFilter').value;
-    if (!gid) return;
-    const group  = allGroups.find(g => String(g.id) === String(gid));
-    if (!group)  return;
-    const member = group.members.find(m => String(m.customer_id) === String(this.value));
-    if (!member) return;
-    lockRowToMember(document.querySelector('.item-row'), group, member);
-});
+            // Update edit button state
+            const btn = document.getElementById('editCustomerBtn');
+            if (btn) {
+                if (this.value) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.classList.add('bg-indigo-100', 'text-indigo-600', 'hover:bg-indigo-200');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.classList.remove('bg-indigo-100', 'text-indigo-600', 'hover:bg-indigo-200');
+                }
+            }
+
+            const gid = document.getElementById('groupFilter').value;
+            if (!gid) return;
+            const group  = allGroups.find(g => String(g.id) === String(gid));
+            if (!group)  return;
+            const member = group.members.find(m => String(m.customer_id) === String(this.value));
+            if (!member) return;
+            lockRowToMember(document.querySelector('.item-row'), group, member);
+        });
+    }
+}
 
 // Snapshot before any manipulation
-const allCustomerOptions = Array.from(document.getElementById('customerSelect').options)
-    .filter(o => o.value !== '')
-    .map(o => ({ value: o.value, text: o.text, phone: o.dataset.phone || '' }));
+function captureCustomerOptions() {
+    const customerSelect = document.getElementById('customerSelect');
+    if (!customerSelect) return [];
+    return Array.from(customerSelect.options)
+        .filter(o => o.value !== '')
+        .map(o => ({ value: o.value, text: o.text, phone: o.dataset.phone || '' }));
+}
+
+let allCustomerOptions = [];
 
 function _enableCustSelect(sel) {
+    if (!sel) return;
     sel.disabled = false;
     sel.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed', 'opacity-60');
     sel.classList.add('bg-white', 'text-slate-800');
 }
 function _disableCustSelect(sel) {
+    if (!sel) return;
     sel.disabled = true;
     sel.classList.remove('bg-white', 'text-slate-800');
     sel.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed', 'opacity-60');
@@ -548,19 +619,29 @@ function lockRowToMember(row, group, member) {
 
 function clearGroupLock() {
     const row = document.querySelector('.item-row');
+    if (!row) return;
 
     _unlockShareType(row);
 
     const sharesIn  = row.querySelector('.shares-count');
-    sharesIn.readOnly = false;
-    sharesIn.classList.remove('bg-purple-50', 'text-purple-700');
-    row.querySelector('.shares-limit-label').textContent = '';
+    if (sharesIn) {
+        sharesIn.readOnly = false;
+        sharesIn.classList.remove('bg-purple-50', 'text-purple-700');
+    }
 
-    row.querySelector('.group-id-input').value = '';
-    row.querySelector('.group-info').style.display = 'none';
+    const limitsLabel = row.querySelector('.shares-limit-label');
+    if (limitsLabel) limitsLabel.textContent = '';
+
+    const groupInput = row.querySelector('.group-id-input');
+    if (groupInput) groupInput.value = '';
+
+    const groupInfo = row.querySelector('.group-info');
+    if (groupInfo) groupInfo.style.display = 'none';
 
     hideGroupBanner();
-    document.getElementById('groupMembersPanel').style.display = 'none';
+
+    const gmp = document.getElementById('groupMembersPanel');
+    if (gmp) gmp.style.display = 'none';
 }
 
 /* ══════════════════════════════════
@@ -569,19 +650,32 @@ function clearGroupLock() {
 
 function enableStandaloneMode() {
     const sel = document.getElementById('customerSelect');
+    if (!sel) return;
+
     sel.innerHTML = '';
     sel.appendChild(new Option('-- اختر العميل --', ''));
-    allCustomerOptions.forEach(o => {
-        const opt = new Option(o.text, o.value);
-        opt.dataset.phone = o.phone;
-        sel.appendChild(opt);
-    });
+
+    if (allCustomerOptions && allCustomerOptions.length > 0) {
+        allCustomerOptions.forEach(o => {
+            const opt = new Option(o.text, o.value);
+            opt.dataset.phone = o.phone;
+            sel.appendChild(opt);
+        });
+    }
     _enableCustSelect(sel);
 
-    document.getElementById('groupFilter').value              = '';
-    document.getElementById('groupMembersPanel').style.display = 'none';
-    document.getElementById('standaloneRow').style.display    = 'none';
-    document.getElementById('standaloneBadge').style.display  = '';
+    const gf = document.getElementById('groupFilter');
+    if (gf) gf.value = '';
+
+    const gmp = document.getElementById('groupMembersPanel');
+    if (gmp) gmp.style.display = 'none';
+
+    const sr = document.getElementById('standaloneRow');
+    if (sr) sr.style.display = 'none';
+
+    const sb = document.getElementById('standaloneBadge');
+    if (sb) sb.style.display = '';
+
     clearGroupLock();
 }
 
@@ -600,136 +694,255 @@ function disableStandaloneMode() {
    EVENT DELEGATION
 ══════════════════════════════════ */
 
-document.getElementById('itemsBody').addEventListener('change', function (e) {
-    const row = e.target.closest('.item-row');
-    if (row) updateRow(row);
-});
+function attachItemsBodyListeners() {
+    const itemsBody = document.getElementById('itemsBody');
+    if (!itemsBody) return;
 
-document.getElementById('itemsBody').addEventListener('input', function (e) {
-    const row = e.target.closest('.item-row');
-    if (row && (e.target.classList.contains('shares-count') || e.target.classList.contains('item-price'))) {
-        if (e.target.classList.contains('shares-count')) {
-            const max = parseInt(e.target.max) || 7;
-            if (parseInt(e.target.value) > max) e.target.value = max;
+    itemsBody.addEventListener('change', function (e) {
+        const row = e.target.closest('.item-row');
+        if (row) updateRow(row);
+    });
+
+    itemsBody.addEventListener('input', function (e) {
+        const row = e.target.closest('.item-row');
+        if (row && (e.target.classList.contains('shares-count') || e.target.classList.contains('animal-weight') || e.target.classList.contains('item-price'))) {
+            if (e.target.classList.contains('shares-count')) {
+                const max = parseInt(e.target.max) || 7;
+                if (parseInt(e.target.value) > max) e.target.value = max;
+            }
+            updateRow(row);
         }
-        updateRow(row);
+    });
+
+    itemsBody.addEventListener('click', function (e) {
+        if (e.target.closest('.remove-row')) {
+            if (document.querySelectorAll('.item-row').length > 1) {
+                const row = e.target.closest('.item-row');
+                row.style.opacity    = '0';
+                row.style.transition = 'opacity .3s';
+                setTimeout(() => { row.remove(); calcGrand(); }, 300);
+            } else {
+                alert('يجب أن يحتوي الصك على حيوان واحد على الأقل.');
+            }
+        }
+    });
+}
+
+// Initialize calculation on page load
+function initializeCalculations() {
+    const itemRows = document.querySelectorAll('.item-row');
+    if (itemRows.length > 0) {
+        itemRows.forEach(row => {
+            updateRow(row);
+        });
     }
-});
+}
+
+function initializeAllListeners() {
+    attachPaymentAmountListener();
+    attachGroupFilterListener();
+    attachCustomerSelectListener();
+    attachItemsBodyListeners();
+    attachAddRowListener();
+    attachFormSubmitListener();
+    allCustomerOptions = captureCustomerOptions();
+    initializeCalculations();
+
+    // Initialize page data after listeners are attached
+    initFromUrl();
+    initEditView();
+
+    // Attach edit customer form listener
+    attachEditCustomerFormListener();
+}
+
+function attachEditCustomerFormListener() {
+    const editCustomerForm = document.getElementById('editCustomerFormInline');
+    if (editCustomerForm) {
+        editCustomerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (!currentEditCustomerId) {
+                alert('حدث خطأ: لم يتم تحديد العميل');
+                return;
+            }
+
+            const nameInput = document.getElementById('editCustomerName');
+            const phoneInput = document.getElementById('editCustomerPhone');
+
+            if (!nameInput.value || !phoneInput.value) {
+                alert('يجب إدخال الاسم والهاتف');
+                return;
+            }
+
+            // Submit the form to update customer
+            const url = `/udhiya/customers/${currentEditCustomerId}`;
+            const formData = new FormData();
+            formData.append('_method', 'PATCH');
+            formData.append('_token', document.querySelector('input[name="_token"]').value);
+            formData.append('name', nameInput.value);
+            formData.append('phone', phoneInput.value);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json().catch(() => ({})))
+            .then(data => {
+                // Update customer select display
+                const sel = document.getElementById('customerSelect');
+                const name = nameInput.value;
+                const phone = phoneInput.value;
+                const option = sel.options[sel.selectedIndex];
+                if (option) {
+                    option.textContent = name + (phone ? ' (' + phone + ')' : '');
+                    option.setAttribute('data-phone', phone);
+                }
+
+                closeEditCustomerModal();
+                alert('تم تحديث بيانات العميل بنجاح');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('حدث خطأ في الاتصال');
+            });
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAllListeners);
+} else {
+    // Page already loaded
+    initializeAllListeners();
+}
 
 /* ══════════════════════════════════
    ADD / REMOVE ROW
 ══════════════════════════════════ */
 
-document.getElementById('addRow').addEventListener('click', function () {
-    const tpl = document.querySelector('.item-row').cloneNode(true);
+function attachAddRowListener() {
+    const addRowBtn = document.getElementById('addRow');
+    if (addRowBtn) {
+        addRowBtn.addEventListener('click', function () {
+            const tpl = document.querySelector('.item-row').cloneNode(true);
 
-    // Reset inputs
-    tpl.querySelectorAll('input:not([type=hidden])').forEach(i => {
-        i.value = i.classList.contains('shares-count') ? 1 : '';
-        i.readOnly = false;
-        i.classList.remove('bg-purple-50', 'text-purple-700');
-    });
-    tpl.querySelectorAll('select').forEach(s => {
-        s.selectedIndex = 0;
-        s.disabled = false;
-        s.classList.remove('bg-purple-50', 'text-purple-700', 'cursor-not-allowed', 'opacity-80');
-    });
+            // Reset inputs
+            tpl.querySelectorAll('input:not([type=hidden])').forEach(i => {
+                i.value = i.classList.contains('shares-count') ? 1 : '';
+                i.readOnly = false;
+                i.classList.remove('bg-purple-50', 'text-purple-700');
+            });
+            tpl.querySelectorAll('select').forEach(s => {
+                s.selectedIndex = 0;
+                s.disabled = false;
+                s.classList.remove('bg-purple-50', 'text-purple-700', 'cursor-not-allowed', 'opacity-80');
+            });
 
-    // Reset hidden group + share_type
-    const groupIn  = tpl.querySelector('.group-id-input');
-    groupIn.value  = '';
+            // Reset hidden group + share_type
+            const groupIn  = tpl.querySelector('.group-id-input');
+            groupIn.value  = '';
 
-    const shareSel    = tpl.querySelector('.share-type-select');
-    const shareHidden = tpl.querySelector('.share-type-hidden');
-    if (!shareSel.name && shareHidden.name) { shareSel.name = shareHidden.name; }
-    shareHidden.name  = '';
-    shareHidden.value = '';
+            const shareSel    = tpl.querySelector('.share-type-select');
+            const shareHidden = tpl.querySelector('.share-type-hidden');
+            if (!shareSel.name && shareHidden.name) { shareSel.name = shareHidden.name; }
+            shareHidden.name  = '';
+            shareHidden.value = '';
 
-    tpl.querySelector('.group-info').style.display = 'none';
-    tpl.querySelector('.shares-limit-label').textContent = '';
+            tpl.querySelector('.group-info').style.display = 'none';
+            tpl.querySelector('.shares-limit-label').textContent = '';
 
-    // Re-index names
-    tpl.querySelectorAll('[name]').forEach(el => {
-        el.name = el.name.replace(/items\[\d+\]/, 'items[' + rowIndex + ']');
-    });
-    // Also fix group-id-input name
-    groupIn.name = groupIn.name.replace(/items\[\d+\]/, 'items[' + rowIndex + ']');
+            // Re-index names
+            tpl.querySelectorAll('[name]').forEach(el => {
+                el.name = el.name.replace(/items\[\d+\]/, 'items[' + rowIndex + ']');
+            });
+            // Also fix group-id-input name
+            groupIn.name = groupIn.name.replace(/items\[\d+\]/, 'items[' + rowIndex + ']');
 
-    tpl.classList.add('animate-fade-in');
-    document.getElementById('itemsBody').appendChild(tpl);
-    rowIndex++;
-});
-
-document.getElementById('itemsBody').addEventListener('click', function (e) {
-    if (e.target.closest('.remove-row')) {
-        if (document.querySelectorAll('.item-row').length > 1) {
-            const row = e.target.closest('.item-row');
-            row.style.opacity    = '0';
-            row.style.transition = 'opacity .3s';
-            setTimeout(() => { row.remove(); calcGrand(); }, 300);
-        } else {
-            alert('يجب أن يحتوي الصك على حيوان واحد على الأقل.');
-        }
+            tpl.classList.add('animate-fade-in');
+            const itemsBody = document.getElementById('itemsBody');
+            if (itemsBody) itemsBody.appendChild(tpl);
+            rowIndex++;
+        });
     }
-});
+}
 
 /* ══════════════════════════════════
    AUTO-FILL FROM URL PARAMS
 ══════════════════════════════════ */
 
-(function initFromUrl() {
+function initFromUrl() {
     const params      = new URLSearchParams(window.location.search);
     const initGroupId = params.get('group_id');
     const initCustId  = params.get('customer_id');
     if (!initGroupId) return;
 
     const groupFilter = document.getElementById('groupFilter');
-    groupFilter.value = initGroupId;
-    filterCustomersByGroup(initGroupId);
-    autoFillFromGroup(initGroupId);
+    if (groupFilter) {
+        groupFilter.value = initGroupId;
+        filterCustomersByGroup(initGroupId);
+        autoFillFromGroup(initGroupId);
 
-    if (initCustId) {
-        setTimeout(function () {
-            const sel = document.getElementById('customerSelect');
-            sel.value = initCustId;
-            sel.dispatchEvent(new Event('change'));
-        }, 150);
+        if (initCustId) {
+            setTimeout(function () {
+                const sel = document.getElementById('customerSelect');
+                if (sel) {
+                    sel.value = initCustId;
+                    sel.dispatchEvent(new Event('change'));
+                }
+            }, 150);
+        }
     }
-})();
+}
 
-// Ensure hidden customer_id is always synced before submit
-document.getElementById('contractForm').addEventListener('submit', function () {
-    var sel = document.getElementById('customerSelect');
-    var hidden = document.getElementById('customerIdHidden');
-    if (sel && hidden && sel.value) {
-        hidden.value = sel.value;
+function attachFormSubmitListener() {
+    const contractForm = document.getElementById('contractForm');
+    if (contractForm) {
+        contractForm.addEventListener('submit', function () {
+            var sel = document.getElementById('customerSelect');
+            var hidden = document.getElementById('customerIdHidden');
+            if (sel && hidden && sel.value) {
+                hidden.value = sel.value;
+            }
+        });
     }
-});
+}
 
-(function initEditView() {
+function initEditView() {
     const existingContract = @json($contract);
-    
+
     // Check if it's standalone or grouped based on the first item
     const firstItem = existingContract.items[0];
-    if (firstItem && firstItem.group_id) {
-        const groupFilter = document.getElementById('groupFilter');
-        groupFilter.value = firstItem.group_id;
-        filterCustomersByGroup(firstItem.group_id);
-    } else {
-        enableStandaloneMode();
+    const groupFilter = document.getElementById('groupFilter');
+
+    if (groupFilter) {
+        if (firstItem && firstItem.group_id) {
+            groupFilter.value = firstItem.group_id;
+            filterCustomersByGroup(firstItem.group_id);
+        } else {
+            enableStandaloneMode();
+        }
+
+        // Set customer with a longer delay to ensure select is populated
+        setTimeout(() => {
+            const sel = document.getElementById('customerSelect');
+            if (sel) {
+                sel.value = existingContract.customer_id;
+                document.getElementById('customerIdHidden').value = existingContract.customer_id;
+
+                // Trigger change event to update button state and other listeners
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // initialize rows visually
+                document.querySelectorAll('.item-row').forEach(row => updateRow(row));
+                calcGrand();
+            }
+        }, 150);
     }
-    
-    // Set customer
-    setTimeout(() => {
-        const sel = document.getElementById('customerSelect');
-        sel.value = existingContract.customer_id;
-        document.getElementById('customerIdHidden').value = existingContract.customer_id;
-        
-        // initialize rows visually
-        document.querySelectorAll('.item-row').forEach(row => updateRow(row));
-        calcGrand();
-    }, 100);
-})();
+}
 
 /* ══════════════════════════════════
    EDIT CUSTOMER MODAL
@@ -766,19 +979,6 @@ function closeEditCustomerModal() {
     currentEditCustomerId = null;
 }
 
-// Enable edit button when customer is selected
-document.getElementById('customerSelect').addEventListener('change', function() {
-    const btn = document.getElementById('editCustomerBtn');
-    if (this.value) {
-        btn.disabled = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        btn.classList.add('bg-indigo-100', 'text-indigo-600', 'hover:bg-indigo-200');
-    } else {
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        btn.classList.remove('bg-indigo-100', 'text-indigo-600', 'hover:bg-indigo-200');
-    }
-});
 </script>
 
 {{-- Edit Customer Modal --}}
@@ -815,60 +1015,6 @@ document.getElementById('customerSelect').addEventListener('change', function() 
     </div>
 </div>
 
-<script>
-// Handle edit customer form submission
-document.getElementById('editCustomerFormInline').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    if (!currentEditCustomerId) {
-        alert('حدث خطأ: لم يتم تحديد العميل');
-        return;
-    }
-
-    const nameInput = document.getElementById('editCustomerName');
-    const phoneInput = document.getElementById('editCustomerPhone');
-
-    if (!nameInput.value || !phoneInput.value) {
-        alert('يجب إدخال الاسم والهاتف');
-        return;
-    }
-
-    // Submit the form to update customer
-    const url = `/udhiya/customers/${currentEditCustomerId}`;
-    const formData = new FormData();
-    formData.append('_method', 'PATCH');
-    formData.append('_token', document.querySelector('input[name="_token"]').value);
-    formData.append('name', nameInput.value);
-    formData.append('phone', phoneInput.value);
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => response.json().catch(() => ({})))
-    .then(data => {
-        // Update customer select display
-        const sel = document.getElementById('customerSelect');
-        const name = nameInput.value;
-        const phone = phoneInput.value;
-        const option = sel.options[sel.selectedIndex];
-        if (option) {
-            option.textContent = name + (phone ? ' (' + phone + ')' : '');
-            option.setAttribute('data-phone', phone);
-        }
-
-        closeEditCustomerModal();
-        alert('تم تحديث بيانات العميل بنجاح');
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        alert('حدث خطأ في الاتصال');
-    });
-});
-</script>
 
 <style>
     @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }

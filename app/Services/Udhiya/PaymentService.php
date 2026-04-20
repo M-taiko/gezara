@@ -111,4 +111,114 @@ class PaymentService
             $payment->delete();
         });
     }
+
+    public function update(Payment $payment, array $data): Payment
+    {
+        return DB::transaction(function () use ($payment, $data) {
+            $contract = $payment->contract;
+            $oldAmount = $payment->amount;
+            $newAmount = $data['amount'];
+
+            // Check if updating to a different contract
+            $newContract = null;
+            if (isset($data['contract_id']) && $data['contract_id'] != $contract->id) {
+                $newContract = Contract::findOrFail($data['contract_id']);
+            } else {
+                $newContract = $contract;
+            }
+
+            // Validate new amount doesn't exceed target contract's remaining
+            // If switching contracts, check new contract's remaining + old payment amount (since we're removing from old)
+            $maxAmount = $newContract->remaining_amount + ($newContract->id == $contract->id ? $oldAmount : 0);
+            if ($newAmount > $maxAmount) {
+                throw new \RuntimeException("المبلغ يتجاوز الحد المسموح ({$maxAmount}).");
+            }
+
+            // If amount changed or contract changed, reverse old and record new
+            $contractChanged = $newContract->id != $contract->id;
+            if ($newAmount != $oldAmount || $contractChanged) {
+                // Reverse old accounting entry
+                $this->accounting->reverseCustomerPayment($payment);
+
+                // Reverse old wallet transaction if any
+                if ($payment->wallet_id) {
+                    $wallet = Wallet::findOrFail($payment->wallet_id);
+                    $this->walletService->debit(
+                        $wallet,
+                        $oldAmount,
+                        $payment->date,
+                        Payment::class,
+                        $payment->id,
+                        'تعديل دفعة من ' . $contract->customer->name . ' — إيصال #' . $payment->receipt_number
+                    );
+                } else {
+                    Treasury::where('reference_type', Payment::class)
+                        ->where('reference_id', $payment->id)
+                        ->delete();
+                }
+
+                // Update old contract financials (remove old amount)
+                $contract->decrement('paid_amount', $oldAmount);
+                $contract->increment('remaining_amount', $oldAmount);
+
+                // Update payment with new amount, contract, and details
+                $payment->update([
+                    'contract_id'     => $newContract->id,
+                    'amount'          => $newAmount,
+                    'payment_method'  => $data['payment_method'] ?? $payment->payment_method,
+                    'date'            => $data['date'] ?? $payment->date,
+                    'notes'           => $data['notes'] ?? null,
+                    'wallet_id'       => $data['wallet_id'] ?? null,
+                    'reference_number' => $data['reference_number'] ?? $payment->reference_number,
+                ]);
+
+                // Record new accounting entry
+                $this->accounting->recordCustomerPayment($payment);
+
+                // Register new wallet transaction if provided
+                if ($data['wallet_id'] ?? null) {
+                    $wallet = Wallet::findOrFail($data['wallet_id']);
+                    $this->walletService->credit(
+                        $wallet,
+                        $newAmount,
+                        $payment->date,
+                        Payment::class,
+                        $payment->id,
+                        'دفعة من ' . $newContract->customer->name . ' — إيصال #' . $payment->receipt_number
+                    );
+                } else {
+                    Treasury::create([
+                        'type'           => 'in',
+                        'amount'         => $newAmount,
+                        'reference_type' => Payment::class,
+                        'reference_id'   => $payment->id,
+                        'description'    => 'دفعة من ' . $newContract->customer->name . ' — إيصال #' . $payment->receipt_number,
+                        'date'           => $payment->date,
+                    ]);
+                }
+
+                // Update new contract with new amount
+                $newPaid      = $newContract->paid_amount + $newAmount;
+                $newRemaining = $newContract->total_amount - $newPaid;
+                $newStatus    = $newRemaining <= 0 ? 'completed' : 'active';
+
+                $newContract->update([
+                    'paid_amount'      => $newPaid,
+                    'remaining_amount' => $newRemaining,
+                    'status'           => $newStatus,
+                ]);
+            } else {
+                // Just update non-amount, non-contract fields
+                $payment->update([
+                    'payment_method'  => $data['payment_method'] ?? $payment->payment_method,
+                    'date'            => $data['date'] ?? $payment->date,
+                    'notes'           => $data['notes'] ?? null,
+                    'wallet_id'       => $data['wallet_id'] ?? null,
+                    'reference_number' => $data['reference_number'] ?? $payment->reference_number,
+                ]);
+            }
+
+            return $payment->fresh();
+        });
+    }
 }

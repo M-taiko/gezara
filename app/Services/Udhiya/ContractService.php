@@ -122,7 +122,7 @@ class ContractService
             }
 
             // Create contract
-            $contract = Contract::create([
+            $contractData = [
                 'customer_id'      => $data['customer_id'],
                 'slaughter_day'    => $data['slaughter_day'] ?? null,
                 'slaughter_order'  => $data['slaughter_order'] ?? null,
@@ -131,7 +131,20 @@ class ContractService
                 'paid_amount'      => 0,
                 'remaining_amount' => $total,
                 'status'           => 'active',
-            ]);
+            ];
+
+            // Handle file attachments if provided
+            if (!empty($data['attachments'])) {
+                $attachmentPaths = [];
+                foreach ($data['attachments'] as $file) {
+                    $path = $file->store('contracts/' . date('Y/m/d'), 'public');
+                    $attachmentPaths[] = $path;
+                }
+                $contractData['attachment_paths'] = json_encode($attachmentPaths);
+                $contractData['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
+            }
+
+            $contract = Contract::create($contractData);
 
             // Create items and update animal statuses
             foreach ($itemsData as $itemData) {
@@ -382,8 +395,11 @@ class ContractService
             if ($contract->status === 'cancelled') {
                 throw new \RuntimeException('الصك ملغى بالفعل.');
             }
-            if ($contract->paid_amount > 0) {
-                throw new \RuntimeException('لا يمكن إلغاء صك تم دفع جزء منه.');
+
+            // Delete all payments and reverse their accounting entries
+            foreach ($contract->payments as $payment) {
+                $this->accounting->reverseCustomerPayment($payment);
+                $payment->delete();
             }
 
             // Restore animal statuses
@@ -403,6 +419,9 @@ class ContractService
                     }
                 }
             }
+
+            // Reverse contract creation accounting entry
+            $this->accounting->reverseContract($contract);
 
             $contract->update(['status' => 'cancelled']);
         });

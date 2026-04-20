@@ -12,6 +12,7 @@ class StoreContractRequest extends FormRequest
     {
         return [
             'customer_id'              => 'required|exists:customers,id',
+            'contract_number'          => 'nullable|string|unique:contracts',
             'slaughter_day'            => 'nullable|date',
             'slaughter_order'          => 'nullable|integer|min:1',
             'notes'                    => 'nullable|string',
@@ -24,6 +25,8 @@ class StoreContractRequest extends FormRequest
             'items.*.group_id'         => 'nullable|exists:slaughter_groups,id',
             'payment_amount'           => 'nullable|numeric|min:0',
             'payment_method'           => 'nullable|in:cash,bank,check',
+            'attachments'              => 'nullable|array|max:5',
+            'attachments.*'            => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ];
     }
 

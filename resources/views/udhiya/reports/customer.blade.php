@@ -245,6 +245,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     @foreach($contract->items as $item)
+                                    @if($item->animal)
                                     <tr>
                                         <td class="px-3 py-2 font-bold text-indigo-700">{{ $item->animal->code }}</td>
                                         <td class="px-3 py-2 text-slate-600">
@@ -252,6 +253,15 @@
                                         </td>
                                         <td class="px-3 py-2 font-bold text-slate-800">{{ number_format($item->total_price, 2) }}</td>
                                     </tr>
+                                    @else
+                                    <tr>
+                                        <td class="px-3 py-2 font-bold text-slate-400">(حيوان مُحذوف)</td>
+                                        <td class="px-3 py-2 text-slate-600">
+                                            {{ \App\Models\Animal::SHARE_LABELS[$item->share_type] ?? $item->share_type }}
+                                        </td>
+                                        <td class="px-3 py-2 font-bold text-slate-800">{{ number_format($item->total_price, 2) }}</td>
+                                    </tr>
+                                    @endif
                                     @endforeach
                                     <tr class="border-t-2 border-slate-200">
                                         <td colspan="2" class="px-3 py-2 font-black text-slate-700 text-xs">الإجمالي</td>

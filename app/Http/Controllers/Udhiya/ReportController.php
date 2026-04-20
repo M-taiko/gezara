@@ -21,7 +21,9 @@ class ReportController extends Controller
 
     public function animals(Request $request)
     {
-        $animals = Animal::with('product.mainCategory', 'warehouse', 'shareSetting', 'expenses', 'contractItems')
+        $animals = Animal::with('product.mainCategory', 'warehouse', 'shareSetting')
+            ->withSum('expenses as linked_expenses', 'amount')
+            ->withSum('contractItems as revenue', 'total_price')
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->get();
 
@@ -35,8 +37,8 @@ class ReportController extends Controller
 
         $animalStats = $animals->keyBy('id')->map(function ($animal) {
             $purchaseCost   = $animal->cost ?? 0;
-            $linkedExpenses = $animal->expenses->sum('amount');
-            $revenue        = $animal->contractItems->sum('total_price');
+            $linkedExpenses = $animal->linked_expenses ?? 0;
+            $revenue        = $animal->revenue ?? 0;
             $profit         = $revenue - $purchaseCost - $linkedExpenses;
             return compact('purchaseCost', 'linkedExpenses', 'revenue', 'profit');
         });
@@ -46,12 +48,19 @@ class ReportController extends Controller
 
     public function profit(Request $request)
     {
-        $contracts = Contract::with('customer', 'items.animal')
+        $contracts = Contract::with('customer')
+            ->select('id', 'contract_number', 'customer_id', 'total_amount', 'paid_amount', 'remaining_amount', 'status')
             ->whereIn('status', ['active', 'completed'])
             ->get();
 
+        // Get cost per contract via single JOIN query instead of PHP loop
+        $contractCosts = \App\Models\ContractItem::join('animals', 'contract_items.animal_id', '=', 'animals.id')
+            ->selectRaw('contract_items.contract_id, SUM(animals.cost) as total_cost')
+            ->groupBy('contract_items.contract_id')
+            ->pluck('total_cost', 'contract_id');
+
         $totalRevenue   = $contracts->sum('total_amount');
-        $totalCost      = $contracts->sum(fn($c) => $c->items->sum(fn($i) => $i->animal?->cost ?? 0));
+        $totalCost      = $contractCosts->sum();
         $totalCollected = $contracts->sum('paid_amount');
 
         // Expenses
@@ -59,32 +68,32 @@ class ReportController extends Controller
         $totalExpenses      = $expenses->sum('amount');
         $expensesByCategory = $expenses->groupBy('category')->map->sum('amount');
 
-        // Per-animal cost: purchase cost + linked expenses
-        $animals = Animal::with('product.mainCategory', 'shareSetting', 'expenses')->get();
-        $animalStats = $animals->map(function ($animal) use ($contracts) {
-            $purchaseCost    = $animal->cost ?? 0;
-            $linkedExpenses  = $animal->expenses->sum('amount');
-            $totalCost       = $purchaseCost + $linkedExpenses;
+        // Per-animal stats via DB aggregation instead of loading all relationships
+        $animalStats = Animal::with('product.mainCategory')
+            ->withSum('expenses as linked_expenses', 'amount')
+            ->withSum('contractItems as revenue', 'total_price')
+            ->get()
+            ->filter(fn($a) => ($a->revenue ?? 0) > 0 || ($a->linked_expenses ?? 0) > 0)
+            ->map(function ($animal) {
+                $purchaseCost    = $animal->cost ?? 0;
+                $linkedExpenses  = $animal->linked_expenses ?? 0;
+                $totalCost       = $purchaseCost + $linkedExpenses;
+                $revenue         = $animal->revenue ?? 0;
 
-            // Revenue from contracts for this animal
-            $revenue = $contracts->flatMap->items
-                ->where('animal_id', $animal->id)
-                ->sum('total_price');
-
-            return [
-                'animal'          => $animal,
-                'purchase_cost'   => $purchaseCost,
-                'linked_expenses' => $linkedExpenses,
-                'total_cost'      => $totalCost,
-                'revenue'         => $revenue,
-                'profit'          => $revenue - $totalCost,
-            ];
-        })->filter(fn($s) => $s['revenue'] > 0 || $s['linked_expenses'] > 0);
+                return [
+                    'animal'          => $animal,
+                    'purchase_cost'   => $purchaseCost,
+                    'linked_expenses' => $linkedExpenses,
+                    'total_cost'      => $totalCost,
+                    'revenue'         => $revenue,
+                    'profit'          => $revenue - $totalCost,
+                ];
+            });
 
         $totalProfit = $totalRevenue - $totalCost - $totalExpenses;
 
         return view('udhiya.reports.profit', compact(
-            'contracts', 'totalRevenue', 'totalCost', 'totalProfit',
+            'contracts', 'contractCosts', 'totalRevenue', 'totalCost', 'totalProfit',
             'totalCollected', 'expenses', 'totalExpenses', 'expensesByCategory',
             'animalStats'
         ));
@@ -95,10 +104,12 @@ class ReportController extends Controller
         $filter = $request->input('filter', 'all'); // all | slaughtered | pending
 
         $groups = \App\Models\SlaughterGroup::with([
-            'animal.product.mainCategory',
-            'animal.shareSetting',
-            'members.customer',
-            'members.contractItem.contract.payments',
+            'animal:id,code,status,slaughtered_at,product_id',
+            'animal.product:id,name,main_category_id',
+            'animal.product.mainCategory:id,name,code',
+            'members.customer:id,name,phone',
+            'members.contractItem:id,delivered_at,contract_id,group_member_id',
+            'members.contractItem.contract:id,paid_amount,remaining_amount',
         ])
         ->whereHas('animal')
         ->when($filter === 'slaughtered', fn($q) => $q->whereHas('animal', fn($q2) => $q2->where('status', 'slaughtered')))

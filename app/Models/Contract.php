@@ -12,10 +12,12 @@ class Contract extends Model
     protected $fillable = [
         'customer_id', 'contract_number', 'slaughter_day', 'slaughter_order',
         'notes', 'total_amount', 'paid_amount', 'remaining_amount', 'status',
+        'attachments', 'attachment_paths',
     ];
     protected $casts = [
         'slaughter_day' => 'date',
         'total_amount' => 'float', 'paid_amount' => 'float', 'remaining_amount' => 'float',
+        'attachments' => 'array',
     ];
 
     // ─── Auto-generate contract_number ──────────────────────────────────────

@@ -325,15 +325,17 @@
 
                                     {{-- Delete Member --}}
                                     @if(!$member->contract_item_id)
-                                        <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')" style="display: inline;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm"
-                                                    title="حذف العضو">
-                                                🗑
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="openDeleteMemberModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}')"
+                                                class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                                title="حذف العضو">
+                                            🗑
+                                        </button>
                                     @else
-                                        <span class="text-slate-300 text-sm" title="مرتبط بصك">🔒</span>
+                                        <button type="button" onclick="openDeleteMemberWithContractModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->contractItem->contract_id }})"
+                                                class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                                title="حذف العضو والصك">
+                                            🗑
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -495,17 +497,24 @@
         {{-- Tab 1: Existing Customer --}}
         <div id="tab-existing" class="space-y-4">
             <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">البحث عن عميل</label>
+                <input type="text" id="customerSearch" placeholder="ابحث باسم أو رقم الهاتف..."
+                       class="w-full rounded-lg border border-slate-300 bg-white text-slate-800 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 mb-3">
+            </div>
+            <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">العميل</label>
-                <select name="customer_id" class="w-full rounded-lg border border-slate-300 bg-white text-slate-800 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                <select id="customerSelect" name="customer_id" class="w-full rounded-lg border border-slate-300 bg-white text-slate-800 p-2.5 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                     <option value="">-- اختر عميلاً --</option>
                     @foreach($customers as $customer)
-                        <option value="{{ $customer->id }}">{{ $customer->name }}
+                        <option value="{{ $customer->id }}" data-name="{{ strtolower($customer->name) }}" data-phone="{{ strtolower($customer->phone ?? '') }}">
+                            {{ $customer->name }}
                             @if($customer->phone)
                                 ({{ $customer->phone }})
                             @endif
                         </option>
                     @endforeach
                 </select>
+                <p id="noResults" class="text-sm text-rose-600 mt-2" style="display: none;">لا توجد نتائج مطابقة</p>
             </div>
         </div>
 
@@ -562,6 +571,46 @@ function showTab(tab) {
     });
     event.target.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-700');
     event.target.classList.remove('border-b-2', 'border-transparent', 'text-slate-600', 'hover:text-slate-800');
+
+    // Clear search when switching tabs
+    if (tab === 'existing') {
+        document.getElementById('customerSearch').value = '';
+        filterCustomers('');
+    }
+}
+
+// Customer search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('customerSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterCustomers(this.value);
+        });
+    }
+});
+
+function filterCustomers(query) {
+    const select = document.getElementById('customerSelect');
+    const noResults = document.getElementById('noResults');
+    const searchText = query.toLowerCase().trim();
+
+    let visibleCount = 0;
+
+    Array.from(select.options).forEach(option => {
+        if (option.value === '') {
+            option.style.display = 'block';
+            return;
+        }
+
+        const name = option.getAttribute('data-name') || '';
+        const phone = option.getAttribute('data-phone') || '';
+        const matches = name.includes(searchText) || phone.includes(searchText);
+
+        option.style.display = matches ? 'block' : 'none';
+        if (matches) visibleCount++;
+    });
+
+    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
 }
 
 function openEditMemberModal(memberId, memberName, sharesCount, notes) {
@@ -587,7 +636,130 @@ function openEditCustomerModal(customerId, customerName, customerPhone, customer
 
     document.getElementById('editCustomerModal').showModal();
 }
+
+function openDeleteMemberModal(memberId, memberName) {
+    const modal = document.getElementById('deleteMemberModal');
+    const form = document.getElementById('deleteMemberForm');
+    const nameDisplay = document.getElementById('deleteMemberNameDisplay');
+
+    if (!modal || !form || !nameDisplay) {
+        console.error('Modal elements not found');
+        return;
+    }
+
+    nameDisplay.textContent = memberName;
+    form.action = `{{ route('udhiya.groups.members.remove', [$group, ':memberId']) }}`.replace(':memberId', memberId);
+    modal.showModal();
+}
+
+function openDeleteMemberWithContractModal(memberId, memberName, contractId) {
+    const modal = document.getElementById('deleteMemberWithContractModal');
+    const form = document.getElementById('deleteMemberDeleteContractForm');
+    const nameDisplay = document.getElementById('deleteMemberWithContractNameDisplay');
+
+    if (!modal || !form || !nameDisplay) {
+        console.error('Modal elements not found:', {
+            modal: !!modal,
+            form: !!form,
+            nameDisplay: !!nameDisplay
+        });
+        return;
+    }
+
+    nameDisplay.textContent = memberName;
+    form.action = `{{ route('udhiya.groups.members.remove', [$group, ':memberId']) }}`.replace(':memberId', memberId);
+    modal.showModal();
+}
+
+// Ensure all functions are available
+window.openDeleteMemberModal = openDeleteMemberModal;
+window.openDeleteMemberWithContractModal = openDeleteMemberWithContractModal;
+window.openEditMemberModal = openEditMemberModal;
+window.openEditCustomerModal = openEditCustomerModal;
+window.showTab = showTab;
 </script>
+
+{{-- ===== DELETE MEMBER MODAL (No Contract) ===== --}}
+<dialog id="deleteMemberModal" class="rounded-2xl shadow-2xl max-w-md backdrop:bg-black/40 w-full">
+    <div class="px-8 py-6 border-b border-slate-100 bg-rose-50">
+        <h3 class="text-lg font-black text-rose-900">🗑️ حذف العضو</h3>
+    </div>
+    <div class="p-8 space-y-6">
+        <p class="text-slate-700">هل تريد حذف العميل <strong id="deleteMemberNameDisplay"></strong> من المجموعة؟</p>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p class="text-sm text-blue-800">سيتم حذف العضو فقط من المجموعة، ولن يتأثر أي صك أو حساب.</p>
+        </div>
+
+        <div class="flex gap-3">
+            <form id="deleteMemberForm" method="POST" class="flex-1">
+                @csrf @method('DELETE')
+                <button type="submit" class="w-full px-4 py-2.5 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-700 transition-all">
+                    ✓ تأكيد الحذف
+                </button>
+            </form>
+            <button type="button" onclick="document.getElementById('deleteMemberModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </div>
+</dialog>
+
+{{-- ===== DELETE MEMBER WITH CONTRACT MODAL ===== --}}
+<dialog id="deleteMemberWithContractModal" class="rounded-2xl shadow-2xl max-w-2xl backdrop:bg-black/40 w-full">
+    <form id="deleteMemberDeleteContractForm" method="POST" class="flex flex-col h-full">
+        @csrf @method('DELETE')
+
+        <div class="px-8 py-6 border-b border-slate-100 bg-rose-50">
+            <h3 class="text-lg font-black text-rose-900">🗑️ حذف العضو والصك</h3>
+        </div>
+
+        <div class="p-8 space-y-6 flex-1 overflow-y-auto">
+            <p class="text-slate-700">العميل <strong id="deleteMemberWithContractNameDisplay"></strong> لديه صك مرتبط. اختر كيفية التعامل معه:</p>
+
+            <div class="space-y-4">
+                {{-- Option 1: Delete contract --}}
+                <div class="border-2 border-rose-200 rounded-xl p-5 bg-rose-50/50 hover:bg-rose-50 cursor-pointer transition-colors" onclick="document.getElementById('deleteContractRadio').click()">
+                    <div class="flex items-start gap-3">
+                        <input type="radio" id="deleteContractRadio" name="delete_option" value="delete_contract" class="mt-1">
+                        <div class="flex-1">
+                            <label for="deleteContractRadio" class="font-bold text-slate-800 cursor-pointer block">
+                                🗑️ حذف الصك والعضو من المجموعة
+                            </label>
+                            <p class="text-xs text-slate-600 mt-1">سيتم حذف الصك نهائياً وإرجاع جميع المبالغ المحاسبية والرصيد من الحسابات</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Option 2: Create separate contract --}}
+                <div class="border-2 border-indigo-200 rounded-xl p-5 bg-indigo-50/50 hover:bg-indigo-50 cursor-pointer transition-colors" onclick="document.getElementById('separateContractRadio').click()">
+                    <div class="flex items-start gap-3">
+                        <input type="radio" id="separateContractRadio" name="delete_option" value="separate_contract" class="mt-1" checked>
+                        <div class="flex-1">
+                            <label for="separateContractRadio" class="font-bold text-slate-800 cursor-pointer block">
+                                📋 إنشاء صك منفصل للعميل
+                            </label>
+                            <p class="text-xs text-slate-600 mt-1">سيتم حذف العضو من المجموعة وتحويل صكه إلى صك منفصل بشكل تلقائي، مع الحفاظ على جميع البيانات والمبالغ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p class="text-sm text-amber-800"><strong>⚠️ ملاحظة هامة:</strong> اختر بحذر — الخيار الأول سيؤثر على الحسابات المالية والأرصدة.</p>
+            </div>
+        </div>
+
+        <div class="px-8 py-6 border-t border-slate-100 bg-slate-50 flex gap-3">
+            <button type="submit" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-700 transition-all">
+                ✓ تأكيد
+            </button>
+            <button type="button" onclick="document.getElementById('deleteMemberWithContractModal').close()" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                إلغاء
+            </button>
+        </div>
+    </form>
+</dialog>
 
 @endsection
 
