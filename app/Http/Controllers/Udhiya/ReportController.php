@@ -108,7 +108,7 @@ class ReportController extends Controller
             'animal.product:id,name,main_category_id',
             'animal.product.mainCategory:id,name,code',
             'members.customer:id,name,phone',
-            'members.contractItem:id,delivered_at,contract_id,group_member_id',
+            'members.contractItem:id,delivered_at,contract_id',
             'members.contractItem.contract:id,paid_amount,remaining_amount',
         ])
         ->whereHas('animal')
