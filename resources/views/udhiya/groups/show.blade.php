@@ -303,13 +303,11 @@
                             <td class="px-6 py-4 flex gap-1.5">
                                 <div class="flex gap-1.5">
                                     {{-- Edit Member Shares --}}
-                                    @if(!$member->contract_item_id)
-                                        <button type="button" onclick="openEditMemberModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
-                                                class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm"
-                                                title="تعديل عدد الأنصبة">
-                                            ✏️
-                                        </button>
-                                    @endif
+                                    <button type="button" onclick="openEditMemberModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
+                                            class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                            title="تعديل عدد الأنصبة{{ $member->contract_item_id ? ' (سيتم تحديث الصك تلقائياً)' : '' }}">
+                                        ✏️
+                                    </button>
 
                                     {{-- Edit Customer --}}
                                     @if($member->customer)
@@ -402,9 +400,9 @@
 
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">عدد الأنصبة</label>
-            <input type="number" name="shares_count" id="editSharesCount" min="1" max="{{ $total }}" required
+            <input type="number" name="shares_count" id="editSharesCount" min="1" required
                    class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
-            <p class="text-xs text-slate-500 mt-1">الحد الأقصى: {{ $remaining }} أنصبة متاحة</p>
+            <p id="sharesHint" class="text-xs text-slate-500 mt-1">الحد الأقصى: <span id="maxSharesCount"></span> أنصبة</p>
         </div>
 
         <div>
@@ -614,6 +612,15 @@ function openEditMemberModal(memberId, memberName, sharesCount, notes) {
     document.getElementById('memberNameDisplay').textContent = memberName;
     document.getElementById('editSharesCount').value = sharesCount;
     document.getElementById('editNotes').value = notes;
+
+    // Calculate max shares: total slots + current member's shares (since we're replacing theirs)
+    // totalSlots = {{ $total }}, usedSlots = {{ $used }}, currentShares = sharesCount
+    const totalSlots = {{ $total }};
+    const usedSlots = {{ $used }};
+    const maxShares = totalSlots - (usedSlots - sharesCount);
+
+    document.getElementById('editSharesCount').max = maxShares;
+    document.getElementById('maxSharesCount').textContent = maxShares;
 
     const form = document.getElementById('editMemberForm');
     form.action = `{{ route('udhiya.groups.members.update', [$group, ':memberId']) }}`.replace(':memberId', memberId);

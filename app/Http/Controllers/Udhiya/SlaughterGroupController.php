@@ -308,10 +308,6 @@ class SlaughterGroupController extends Controller
 
     public function updateMember(Request $request, SlaughterGroup $group, SlaughterGroupMember $member)
     {
-        if ($member->contract_item_id) {
-            return back()->with('toast_error', 'لا يمكن تعديل عضو مربوط بصك');
-        }
-
         $data = $request->validate([
             'shares_count' => 'required|integer|min:1',
             'notes' => 'nullable|string',
@@ -321,14 +317,46 @@ class SlaughterGroupController extends Controller
         $newShares = $data['shares_count'];
         $shareDiff = $newShares - $oldShares;
 
-        // Check if remaining slots allow the new share count
-        if ($shareDiff > 0 && $group->remainingSlots() < $shareDiff) {
-            return back()->with('toast_error', "لا تتوفر {$shareDiff} أنصبة إضافية في المجموعة");
+        // Check if remaining slots allow the new share count (only if increasing)
+        if ($shareDiff > 0) {
+            $availableSlots = $group->remainingSlots() + $oldShares; // Include the current member's shares
+            if ($newShares > $availableSlots) {
+                return back()->with('toast_error', "لا تتوفر أنصبة كافية. الحد الأقصى: {$availableSlots} أنصبة");
+            }
         }
 
+        // If member has a contract, update the contract item and contract amounts
+        if ($member->contract_item_id) {
+            $contractItem = $member->contractItem;
+            $contract = $contractItem->contract;
+            $group->load('animal');
+
+            // Calculate price per share
+            $priceField = 'price_' . $group->share_type;
+            $pricePerShare = (float) ($group->animal->{$priceField} ?? 0);
+
+            // Calculate old and new totals
+            $oldTotal = $contractItem->total_price;
+            $newTotal = $pricePerShare * $newShares;
+            $priceDiff = $newTotal - $oldTotal;
+
+            // Update contract item
+            $contractItem->update([
+                'shares_count' => $newShares,
+                'total_price' => $newTotal,
+            ]);
+
+            // Update contract totals
+            $contract->update([
+                'total_amount' => $contract->total_amount + $priceDiff,
+                'remaining_amount' => ($contract->total_amount + $priceDiff) - $contract->paid_amount,
+            ]);
+        }
+
+        // Update member shares count and notes
         $member->update($data);
 
-        return back()->with('toast_success', "تم تحديث بيانات العضو");
+        return back()->with('toast_success', "تم تحديث بيانات العضو والصك");
     }
 
     public function removeMember(Request $request, SlaughterGroup $group, SlaughterGroupMember $member)

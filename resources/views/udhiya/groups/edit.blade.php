@@ -186,13 +186,11 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 flex gap-1.5">
-                                @if(!$member->contractItem)
-                                    <button type="button" onclick="openEditMemberEditModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
-                                            class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm"
-                                            title="تعديل">
-                                        ✏️
-                                    </button>
-                                @endif
+                                <button type="button" onclick="openEditMemberEditModal({{ $member->id }}, '{{ addslashes($member->customer?->name) }}', {{ $member->shares_count }}, '{{ addslashes($member->notes ?? '') }}')"
+                                        class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all text-sm"
+                                        title="تعديل{{ $member->contractItem ? ' (سيتم تحديث الصك تلقائياً)' : '' }}">
+                                    ✏️
+                                </button>
                                 @if(!$member->contractItem)
                                     <form action="{{ route('udhiya.groups.members.remove', [$group, $member]) }}" method="POST" onsubmit="return confirm('حذف العضو؟')" style="display: inline;">
                                         @csrf @method('DELETE')
@@ -201,8 +199,6 @@
                                             🗑
                                         </button>
                                     </form>
-                                @else
-                                    <span class="text-slate-300 text-sm" title="مرتبط بصك">🔒</span>
                                 @endif
                             </td>
                         </tr>
@@ -422,9 +418,9 @@
 
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">عدد الأنصبة</label>
-            <input type="number" name="shares_count" id="editSharesCountEdit" min="1" max="{{ $group->totalSlots() }}" required
+            <input type="number" name="shares_count" id="editSharesCountEdit" min="1" required
                    class="w-full rounded-lg border border-slate-300 p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
-            <p class="text-xs text-slate-500 mt-1">الحد الأقصى: {{ $group->remainingSlots() }} أنصبة متاحة</p>
+            <p id="sharesHintEdit" class="text-xs text-slate-500 mt-1">الحد الأقصى: <span id="maxSharesCountEdit"></span> أنصبة</p>
         </div>
 
         <div>
@@ -474,6 +470,15 @@ function openEditMemberEditModal(memberId, memberName, sharesCount, notes) {
     document.getElementById('memberNameEditDisplay').textContent = memberName;
     document.getElementById('editSharesCountEdit').value = sharesCount;
     document.getElementById('editNotesEdit').value = notes;
+
+    // Calculate max shares: total slots + current member's shares (since we're replacing theirs)
+    // totalSlots = {{ $group->totalSlots() }}, usedSlots = {{ $group->usedSlots() }}, currentShares = sharesCount
+    const totalSlots = {{ $group->totalSlots() }};
+    const usedSlots = {{ $group->usedSlots() }};
+    const maxShares = totalSlots - (usedSlots - sharesCount);
+
+    document.getElementById('editSharesCountEdit').max = maxShares;
+    document.getElementById('maxSharesCountEdit').textContent = maxShares;
 
     const form = document.getElementById('editMemberEditForm');
     form.action = `{{ route('udhiya.groups.members.update', [$group, ':memberId']) }}`.replace(':memberId', memberId);
