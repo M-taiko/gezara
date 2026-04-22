@@ -198,11 +198,8 @@
                 <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-xl">👥</div>
                 <div>
                     <h6 class="text-lg font-black text-slate-800 m-0">أعضاء المجموعة</h6>
-                    <p class="text-xs text-slate-500 mt-0.5">{{ $group->members->count() }} عضو</p>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ $group->members->count() }} عضو — {{ number_format($group->members->sum('shares_count'), 0) }} نصيب</p>
                 </div>
-            </div>
-            <div class="text-right">
-                <p class="text-lg font-black text-indigo-700">{{ number_format($group->members->sum('shares_count'), 0) }} نصيب</p>
             </div>
         </div>
 

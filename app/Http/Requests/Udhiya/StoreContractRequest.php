@@ -26,7 +26,7 @@ class StoreContractRequest extends FormRequest
             'payment_amount'           => 'nullable|numeric|min:0',
             'payment_method'           => 'nullable|in:cash,bank,check',
             'attachments'              => 'nullable|array|max:5',
-            'attachments.*'            => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
+            'attachments.*'            => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ];
     }
 

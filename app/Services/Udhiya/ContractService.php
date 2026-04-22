@@ -137,11 +137,15 @@ class ContractService
             if (!empty($data['attachments'])) {
                 $attachmentPaths = [];
                 foreach ($data['attachments'] as $file) {
-                    $path = $file->store('contracts/' . date('Y/m/d'), 'public');
-                    $attachmentPaths[] = $path;
+                    if ($file) {
+                        $path = $file->store('contracts/' . date('Y/m/d'), 'public');
+                        $attachmentPaths[] = $path;
+                    }
                 }
-                $contractData['attachment_paths'] = json_encode($attachmentPaths);
-                $contractData['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
+                if (!empty($attachmentPaths)) {
+                    $contractData['attachment_paths'] = json_encode($attachmentPaths);
+                    $contractData['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
+                }
             }
 
             $contract = Contract::create($contractData);
