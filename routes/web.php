@@ -151,6 +151,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
 
     // Customers (Modal CRUD)
     Route::resource('customers', CustomerController::class)->except(['show', 'create', 'edit']);
+    Route::get('customers/{customer}/statement', [CustomerController::class, 'statement'])->name('customers.statement');
 
     // Contracts
     Route::post('contracts/quick', [ContractController::class, 'storeQuick'])->name('contracts.quick');

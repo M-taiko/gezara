@@ -51,4 +51,11 @@ class CustomerController extends Controller
         return redirect()->route('udhiya.customers.index')
             ->with('toast_success', 'تم حذف العميل.');
     }
+
+    public function statement(Customer $customer)
+    {
+        $customer->load(['contracts.animal.product', 'contracts.payments', 'slaughterGroupMembers.slaughterGroup.animal.product']);
+
+        return view('udhiya.customers.statement', compact('customer'));
+    }
 }
