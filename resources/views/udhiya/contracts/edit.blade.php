@@ -107,6 +107,11 @@
                 <h6 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">تفاصيل إضافية</h6>
                 <div class="space-y-4">
                     <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الصك <span class="text-slate-400 font-normal">(اختياري)</span></label>
+                        <input type="text" name="contract_number" placeholder="سيتم إنشاء رقم تلقائي إن تركته فارغاً" value="{{ $contract->contract_number }}"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">تاريخ الذبح</label>
                         <input type="date" name="slaughter_day" value="{{ $contract->slaughter_day ? \Carbon\Carbon::parse($contract->slaughter_day)->format('Y-m-d') : '' }}"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
@@ -121,8 +126,40 @@
                         <textarea name="notes" rows="3" placeholder="مثال: يود استلام الثلث..."
                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none">{{ $contract->notes }}</textarea>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">📎 مرفقات الصك</label>
+                        <input type="file" name="attachments[]" multiple
+                               accept="image/*,.pdf"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1">صورة الإيصال أو المستند (JPG, PNG, PDF) — اختياري</p>
+                    </div>
                 </div>
             </div>
+
+            {{-- Current Attachments (if any) --}}
+            @if($contract->attachments && count($contract->attachments) > 0)
+            <div class="px-6 py-5 border-t border-slate-100 bg-slate-50/40">
+                <h6 class="text-xs font-bold text-slate-600 mb-3">📎 المرفقات الحالية</h6>
+                <div class="space-y-2">
+                    @foreach($contract->attachments as $idx => $attachment)
+                    <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <span class="text-sm text-indigo-600 flex-shrink-0">📄</span>
+                            <a href="{{ asset('storage/' . ($contract->attachment_paths ? json_decode($contract->attachment_paths)[$idx] : '')) }}"
+                               target="_blank"
+                               class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline truncate">
+                                {{ $attachment }}
+                            </a>
+                        </div>
+                        <label class="flex items-center gap-1.5 cursor-pointer flex-shrink-0">
+                            <input type="checkbox" name="remove_attachments[]" value="{{ $idx }}" class="w-4 h-4">
+                            <span class="text-xs text-slate-400">حذف</span>
+                        </label>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
 
             {{-- Submit --}}
 <div class="px-6 py-5 bg-slate-50/80 space-y-3">

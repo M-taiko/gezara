@@ -336,14 +336,46 @@ class ContractService
                 throw new \RuntimeException("المبلغ المدفوع ({$contract->paid_amount}) أكبر من إجمالي الصك الجديد ({$total}). يرجى تسوية المبالغ أولاً.");
             }
 
-            $contract->update([
+            // Handle file attachments if provided
+            $attachmentPaths = $contract->attachment_paths ? json_decode($contract->attachment_paths, true) : [];
+
+            // Remove selected attachments
+            if (!empty($data['remove_attachments'])) {
+                $indicesToRemove = array_flip($data['remove_attachments']);
+                $attachmentPaths = array_diff_key($attachmentPaths, $indicesToRemove);
+                // Re-index array
+                $attachmentPaths = array_values($attachmentPaths);
+            }
+
+            // Add new attachments
+            if (!empty($data['attachments'])) {
+                foreach ($data['attachments'] as $file) {
+                    if ($file) {
+                        $path = $file->store('contracts/' . date('Y/m/d'), 'public');
+                        $attachmentPaths[] = $path;
+                    }
+                }
+            }
+
+            $updateData = [
                 'customer_id'      => $data['customer_id'],
                 'slaughter_day'    => $data['slaughter_day'] ?? null,
                 'slaughter_order'  => $data['slaughter_order'] ?? null,
                 'notes'            => $data['notes'] ?? null,
                 'total_amount'     => $total,
                 'remaining_amount' => $total - $contract->paid_amount,
-            ]);
+            ];
+
+            // Add attachments to update data if any
+            if (!empty($attachmentPaths)) {
+                $updateData['attachment_paths'] = json_encode($attachmentPaths);
+                $updateData['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
+            } else {
+                $updateData['attachment_paths'] = null;
+                $updateData['attachments'] = null;
+            }
+
+            $contract->update($updateData);
 
             foreach ($itemsData as $itemData) {
                 $contractItem = ContractItem::create([
@@ -427,7 +459,12 @@ class ContractService
             // Reverse contract creation accounting entry
             $this->accounting->reverseContract($contract);
 
-            $contract->update(['status' => 'cancelled']);
+            // Reset contract amounts when cancelled
+            $contract->update([
+                'paid_amount' => 0,
+                'remaining_amount' => 0,
+                'status' => 'cancelled'
+            ]);
         });
     }
 }

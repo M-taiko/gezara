@@ -27,7 +27,7 @@
                 <h6 class="text-base font-black text-amber-900 m-0">✏️ تعديل الدفعة</h6>
                 <p class="text-xs text-amber-600 mt-1">إيصال: <strong>{{ $payment->receipt_number }}</strong></p>
             </div>
-            <form action="{{ route('udhiya.collections.update', $payment) }}" method="POST">
+            <form action="{{ route('udhiya.collections.update', $payment) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="px-6 py-5 space-y-4">
@@ -115,12 +115,17 @@
                         @if($payment->attachments && count($payment->attachments) > 0)
                         <div class="mt-3 space-y-2">
                             <p class="text-xs font-bold text-slate-600">المرفقات الحالية:</p>
+                            @php $paths = $payment->attachment_paths ? json_decode($payment->attachment_paths, true) : []; @endphp
                             @foreach($payment->attachments as $index => $attachment)
                             <div class="flex items-center justify-between gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
-                                <a href="{{ asset('storage/' . $attachment) }}" target="_blank"
+                                @if(isset($paths[$index]))
+                                <a href="{{ asset('storage/' . $paths[$index]) }}" target="_blank"
                                    class="text-xs text-indigo-600 hover:underline truncate flex-1">
-                                    📄 {{ basename($attachment) }}
+                                    📄 {{ $attachment }}
                                 </a>
+                                @else
+                                <span class="text-xs text-slate-600 truncate flex-1">📄 {{ $attachment }}</span>
+                                @endif
                                 <label class="flex items-center gap-1 text-xs cursor-pointer">
                                     <input type="checkbox" name="remove_attachments[]" value="{{ $index }}"
                                            class="rounded">
@@ -139,9 +144,13 @@
                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none">{{ $payment->notes }}</textarea>
                     </div>
 
-                    {{-- Receipt Number (read-only) --}}
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <p class="text-xs text-slate-600"><strong>رقم الإيصال:</strong> <span class="font-mono font-bold text-slate-800">{{ $payment->receipt_number }}</span></p>
+                    {{-- Receipt Number (editable) --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الإيصال <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                        <input type="text" name="reference_number" placeholder="RCP-2026-0001"
+                               value="{{ $payment->reference_number }}"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1">الرقم التسلسلي للإيصال (مثال: RCP-2026-0001)</p>
                     </div>
 
                     {{-- Original Payment Date --}}
