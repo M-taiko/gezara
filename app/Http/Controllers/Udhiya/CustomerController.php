@@ -54,7 +54,11 @@ class CustomerController extends Controller
 
     public function statement(Customer $customer)
     {
-        $customer->load(['contracts.animal.product', 'contracts.payments', 'slaughterGroupMembers.slaughterGroup.animal.product']);
+        $customer->load([
+            'contracts.items.animal.product',
+            'contracts.payments',
+            'groupMembers.group.animal.product'
+        ]);
 
         return view('udhiya.customers.statement', compact('customer'));
     }

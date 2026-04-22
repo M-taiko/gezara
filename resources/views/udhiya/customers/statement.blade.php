@@ -33,11 +33,11 @@
 </div>
 
 {{-- Groups Section --}}
-@if($customer->slaughterGroupMembers->count() > 0)
+@if($customer->groupMembers->count() > 0)
 <div class="section-header">📦 المجموعات المشترك فيها</div>
 <div style="margin-bottom: 20px;">
-    @foreach($customer->slaughterGroupMembers->groupBy('slaughter_group_id') as $groupMembers)
-        @php $group = $groupMembers->first()->slaughterGroup; @endphp
+    @foreach($customer->groupMembers->groupBy('group_id') as $groupMembers)
+        @php $group = $groupMembers->first()->group; @endphp
         <div class="group-item">
             <strong>{{ $group->animal->code ?? 'مجموعة #' . $group->id }}</strong>
             <span class="badge">{{ $groupMembers->sum('shares_count') }} أنصبة</span>
@@ -59,6 +59,10 @@
 <div class="section-header alt">📋 الصكوك والدفعات</div>
 
 @forelse($customer->contracts as $contract)
+    @php
+        // Get animals from contract items
+        $animals = $contract->items->pluck('animal')->filter()->unique('id');
+    @endphp
     <table>
         <thead>
             <tr>
@@ -71,9 +75,12 @@
             <tr style="background: #f0f7ff;">
                 <td><strong>🐑 نوع الذبيحة</strong></td>
                 <td style="text-align: left; font-weight: 600;">
-                    @if($contract->animal_id)
-                        {{ $contract->animal->product->name ?? '—' }}
-                        <span style="color: #666; font-size: 11px;">({{ $contract->animal->code }})</span>
+                    @if($animals->count() > 0)
+                        @foreach($animals as $animal)
+                            {{ $animal->product->name ?? '—' }}
+                            <span style="color: #666; font-size: 11px;">({{ $animal->code }})</span>
+                            @if(!$loop->last)<br/>@endif
+                        @endforeach
                     @else
                         <span style="color: #e74c3c;">❌ لم يحدد ذبيحة بعد</span>
                     @endif
