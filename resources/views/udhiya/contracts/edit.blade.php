@@ -84,21 +84,69 @@
                         </span>
                     </h6>
                 </div>
+
+                {{-- Customer Info Display --}}
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between items-start">
+                            <span class="text-blue-700 font-semibold">الاسم:</span>
+                            <span class="text-blue-900 font-black" id="customerNameDisplay">{{ $contract->customer->name }}</span>
+                        </div>
+                        @if($contract->customer->phone)
+                        <div class="flex justify-between items-start">
+                            <span class="text-blue-700 font-semibold">الهاتف:</span>
+                            <span class="text-blue-900 font-mono" dir="ltr" id="customerPhoneDisplay">{{ $contract->customer->phone }}</span>
+                        </div>
+                        @endif
+                        @if($contract->customer->address)
+                        <div class="flex justify-between items-start">
+                            <span class="text-blue-700 font-semibold">العنوان:</span>
+                            <span class="text-blue-900 text-xs" id="customerAddressDisplay">{{ $contract->customer->address }}</span>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
                 {{-- Hidden input carries customer_id when select is disabled --}}
                 <input type="hidden" id="customerIdHidden" name="customer_id" value="">
-                <div class="flex gap-2 mb-3">
-                    <select id="customerSelect" disabled
-                            class="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 px-3 text-sm font-semibold text-slate-400 appearance-none cursor-not-allowed opacity-60 transition-all">
-                        <option value="">— اختر مجموعة أولاً —</option>
-                        @foreach($customers as $c)
-                        <option value="{{ $c->id }}" data-phone="{{ $c->phone }}" data-customer-id="{{ $c->id }}">{{ $c->name }}{{ $c->phone ? ' ('.$c->phone.')' : '' }}</option>
-                        @endforeach
-                    </select>
-                    <button type="button" id="editCustomerBtn" onclick="openEditCustomerModal()" disabled
-                            class="w-10 h-10 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center transition-colors cursor-not-allowed disabled:opacity-50"
+                <div class="flex gap-2">
+                    <button type="button" id="editCustomerBtn" onclick="openEditCustomerModal()"
+                            class="flex-1 w-10 h-10 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 flex items-center justify-center transition-colors font-bold text-sm"
                             title="تعديل بيانات العميل">
-                        ✏️
+                        ✏️ تعديل العميل
                     </button>
+                </div>
+            </div>
+
+            {{-- Financial Summary --}}
+            <div class="px-6 py-5 border-b border-emerald-100 bg-gradient-to-b from-emerald-50 to-white"
+                 data-current-total="{{ $contract->total_amount }}"
+                 data-current-paid="{{ $contract->paid_amount }}">
+                <h6 class="text-base font-black text-emerald-900 m-0 mb-4">الملخص المالي</h6>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500 font-semibold">إجمالي الصك</span>
+                        <span class="font-black text-slate-800">{{ number_format($contract->total_amount, 2) }} <span class="text-xs text-slate-400">ج.م</span></span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-y border-emerald-100">
+                        <span class="text-slate-500 font-semibold">المحصّل</span>
+                        <span class="font-black text-emerald-600">{{ number_format($contract->paid_amount, 2) }} <span class="text-xs text-emerald-400">ج.م</span></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500 font-semibold">المتبقي</span>
+                        <span class="font-black {{ $contract->remaining_amount > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                            {{ number_format($contract->remaining_amount, 2) }} <span class="text-xs {{ $contract->remaining_amount > 0 ? 'text-rose-400' : 'text-emerald-400' }}">ج.م</span>
+                        </span>
+                    </div>
+                    <div class="pt-2">
+                        <div class="flex justify-between text-xs font-bold text-slate-400 mb-1.5">
+                            <span>الحالة</span>
+                            <span id="contractStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-black
+                                {{ $contract->status === 'active' ? 'bg-amber-100 text-amber-700' : ($contract->status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700') }}">
+                                {{ ['active' => 'نشط', 'completed' => 'مكتمل', 'cancelled' => 'ملغى'][$contract->status] ?? $contract->status }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -432,6 +480,7 @@ function updateRow(row) {
 
     updateGroupInfo(row);
     calcGrand();
+    updateFinancialSummary();
 }
 
 function calcGrand() {
@@ -440,6 +489,30 @@ function calcGrand() {
     document.getElementById('grandTotal').textContent =
         Number(grand).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     updatePaymentSummary(grand);
+    updateFinancialSummary();
+}
+
+function updateFinancialSummary() {
+    // Get current contract data from page load
+    const currentPaid = parseFloat(document.querySelector('[data-current-paid]')?.getAttribute('data-current-paid') || 0);
+    const currentTotal = parseFloat(document.querySelector('[data-current-total]')?.getAttribute('data-current-total') || 0);
+
+    // Calculate remaining based on sidebar financial summary
+    const remaining = currentTotal - currentPaid;
+
+    // Determine status: if remaining <= 0, "مكتمل", else "نشط"
+    const statusEl = document.getElementById('contractStatusBadge');
+    if (remaining <= 0) {
+        if (statusEl) {
+            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700';
+            statusEl.textContent = 'مكتمل';
+        }
+    } else {
+        if (statusEl) {
+            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-700';
+            statusEl.textContent = 'نشط';
+        }
+    }
 }
 
 function updatePaymentSummary(total) {
