@@ -550,6 +550,25 @@ function openCustomerModal() {
 function closeCustomerModal() {
     document.getElementById('customerModal').classList.add('hidden');
 }
+
+// Real-time total calculation in item edit modal
+document.addEventListener('DOMContentLoaded', function() {
+    const unitPriceInput = document.getElementById('itemUnitPrice');
+    const sharesCountInput = document.getElementById('itemSharesCount');
+
+    if (unitPriceInput && sharesCountInput) {
+        const updateTotal = () => {
+            const unitPrice = parseFloat(unitPriceInput.value) || 0;
+            const sharesCount = parseInt(sharesCountInput.value) || 1;
+            const total = unitPrice * sharesCount;
+            // Visual feedback (optional: add a span to show total)
+            console.log('Total: ' + total.toFixed(2) + ' ج.م');
+        };
+
+        unitPriceInput.addEventListener('input', updateTotal);
+        sharesCountInput.addEventListener('input', updateTotal);
+    }
+});
 </script>
 
 @endsection

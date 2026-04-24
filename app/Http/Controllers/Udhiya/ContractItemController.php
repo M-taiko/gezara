@@ -16,9 +16,15 @@ class ContractItemController extends Controller
             'shares_count' => 'required|integer|min:1',
         ]);
 
+        // Calculate price difference for accounting
+        $oldTotalPrice = $item->total_price;
+        $newTotalPrice = $data['unit_price'] * $data['shares_count'];
+        $priceDiff = $newTotalPrice - $oldTotalPrice;
+
+        // Update item
         $item->unit_price = $data['unit_price'];
         $item->shares_count = $data['shares_count'];
-        $item->total_price = $item->unit_price * $item->shares_count;
+        $item->total_price = $newTotalPrice;
         $item->save();
 
         // Update corresponding group member if exists
@@ -26,13 +32,19 @@ class ContractItemController extends Controller
             $item->groupMember->update(['shares_count' => $data['shares_count']]);
         }
 
-        // Recalculate contract total
+        // Recalculate contract totals
         $contract = $item->contract;
+        $newTotalAmount = $contract->items()->sum('total_price');
+
+        // Update remaining: new_total - paid_amount
+        $newRemainingAmount = $newTotalAmount - $contract->paid_amount;
+
         $contract->update([
-            'total_amount' => $contract->items()->sum('total_price')
+            'total_amount' => $newTotalAmount,
+            'remaining_amount' => $newRemainingAmount
         ]);
 
-        return back()->with('toast_success', 'تم تحديث العنصر بنجاح.');
+        return back()->with('toast_success', 'تم تحديث العنصر بنجاح. تم تحديث إجمالي الصك تلقائياً.');
     }
 
     public function destroy(ContractItem $item)
@@ -59,11 +71,15 @@ class ContractItemController extends Controller
         // Delete the item
         $item->delete();
 
-        // Recalculate contract total
+        // Recalculate contract totals
+        $newTotalAmount = $contract->items()->sum('total_price');
+        $newRemainingAmount = $newTotalAmount - $contract->paid_amount;
+
         $contract->update([
-            'total_amount' => $contract->items()->sum('total_price')
+            'total_amount' => $newTotalAmount,
+            'remaining_amount' => $newRemainingAmount
         ]);
 
-        return back()->with('toast_success', 'تم حذف العنصر بنجاح.');
+        return back()->with('toast_success', 'تم حذف العنصر بنجاح. تم تحديث إجمالي الصك تلقائياً.');
     }
 }
