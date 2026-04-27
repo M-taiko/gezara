@@ -493,22 +493,47 @@ function calcGrand() {
 }
 
 function updateFinancialSummary() {
-    // Get current contract data from page load
-    const currentPaid = parseFloat(document.querySelector('[data-current-paid]')?.getAttribute('data-current-paid') || 0);
-    const currentTotal = parseFloat(document.querySelector('[data-current-total]')?.getAttribute('data-current-total') || 0);
+    // Get current contract data from attributes
+    const summaryEl = document.querySelector('[data-current-paid]');
+    if (!summaryEl) return;
 
-    // Calculate remaining based on sidebar financial summary
+    const currentPaid = parseFloat(summaryEl.getAttribute('data-current-paid') || 0);
+    const currentTotal = parseFloat(summaryEl.getAttribute('data-current-total') || 0);
+
+    // Calculate remaining
     const remaining = currentTotal - currentPaid;
 
-    // Determine status: if remaining <= 0, "مكتمل", else "نشط"
+    // Update all financial summary elements
+    const totalEl = summaryEl.querySelector('div:nth-child(1) span:last-child') ||
+                   document.querySelector('[data-current-total] + div .space-y-3 div:nth-child(1) span:last-child');
+    const paidEl = summaryEl.querySelector('div:nth-child(2) span:last-child') ||
+                  document.querySelector('[data-current-total] + div .space-y-3 div:nth-child(2) span:last-child');
+    const remainingEl = summaryEl.querySelector('div:nth-child(3) span:last-child') ||
+                       document.querySelector('[data-current-total] + div .space-y-3 div:nth-child(3) span:last-child');
     const statusEl = document.getElementById('contractStatusBadge');
-    if (remaining <= 0) {
-        if (statusEl) {
+
+    // Format numbers with thousand separators
+    const formatNumber = (num) => Number(num).toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    // Update display values
+    if (totalEl) {
+        totalEl.innerHTML = `${formatNumber(currentTotal)} <span class="text-xs text-slate-400">ج.م</span>`;
+    }
+    if (paidEl) {
+        paidEl.innerHTML = `${formatNumber(currentPaid)} <span class="text-xs text-emerald-400">ج.م</span>`;
+    }
+    if (remainingEl) {
+        remainingEl.innerHTML = `${formatNumber(remaining)} <span class="text-xs ${remaining > 0 ? 'text-rose-400' : 'text-emerald-400'}">ج.م</span>`;
+        remainingEl.parentElement.className = remaining > 0 ? 'flex justify-between items-center' : 'flex justify-between items-center';
+        remainingEl.classList = remaining > 0 ? 'font-black text-rose-600' : 'font-black text-emerald-600';
+    }
+
+    // Update status badge
+    if (statusEl) {
+        if (remaining <= 0) {
             statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700';
             statusEl.textContent = 'مكتمل';
-        }
-    } else {
-        if (statusEl) {
+        } else {
             statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-700';
             statusEl.textContent = 'نشط';
         }
@@ -1049,6 +1074,9 @@ function initEditView() {
                 // initialize rows visually
                 document.querySelectorAll('.item-row').forEach(row => updateRow(row));
                 calcGrand();
+
+                // Initialize financial summary display
+                updateFinancialSummary();
             }
         }, 150);
     }
