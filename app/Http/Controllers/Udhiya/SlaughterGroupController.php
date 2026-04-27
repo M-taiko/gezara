@@ -520,18 +520,21 @@ class SlaughterGroupController extends Controller
     {
         // Can only delete if not slaughtered
         if ($group->isSlaughtered()) {
-            return back()->with('toast_error', '❌ لا يمكن حذف مجموعة تم ذبح حيوانها');
+            return redirect()->route('udhiya.groups.index')
+                ->with('toast_error', '❌ لا يمكن حذف مجموعة تم ذبح حيوانها');
         }
 
         // Can only delete if has no members
         if ($group->members()->count() > 0) {
-            return back()->with('toast_error', '❌ لا يمكن حذف مجموعة بها أعضاء — أزل الأعضاء أولاً');
+            return redirect()->route('udhiya.groups.index')
+                ->with('toast_error', '❌ لا يمكن حذف مجموعة بها أعضاء — أزل الأعضاء أولاً');
         }
 
         $groupName = $group->name;
         $group->delete();
 
-        return back()->with('toast_success', "✅ تم حذف المجموعة \"{$groupName}\" بنجاح");
+        return redirect()->route('udhiya.groups.index')
+            ->with('toast_success', "✅ تم حذف المجموعة \"{$groupName}\" بنجاح");
     }
 
     /**
