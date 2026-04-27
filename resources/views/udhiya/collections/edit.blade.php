@@ -147,10 +147,19 @@
                     {{-- Receipt Number (editable) --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الإيصال <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
-                        <input type="text" name="reference_number" placeholder="RCP-2026-0001"
+                        <input type="text" name="receipt_number" placeholder="RCP-2026-0001"
+                               value="{{ $payment->receipt_number }}"
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1">إذا غيّرت الرقم، استخدم الجديد. إذا تركته فارغاً، سيتم إنشاء رقم جديد</p>
+                    </div>
+
+                    {{-- Reference Number (optional) --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم مرجعي <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                        <input type="text" name="reference_number" placeholder="REF-2026-0001"
                                value="{{ $payment->reference_number }}"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
-                        <p class="text-xs text-slate-500 mt-1">الرقم التسلسلي للإيصال (مثال: RCP-2026-0001)</p>
+                        <p class="text-xs text-slate-500 mt-1">رقم مرجعي من العميل أو البنك (اختياري)</p>
                     </div>
 
                     {{-- Original Payment Date --}}

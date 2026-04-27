@@ -194,6 +194,15 @@
             </div>
 
             <div class="px-6 py-6 space-y-5">
+                {{-- Receipt Number --}}
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">رقم الإيصال (اختياري)</label>
+                    <input type="text" name="receipt_number" placeholder="سيتم إنشاء رقم تلقائي..."
+                           value="{{ old('receipt_number') }}"
+                           class="w-full rounded-xl border border-slate-200 bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <p class="text-xs text-slate-500 mt-1.5">إذا لم تكتب رقم، سيتم إنشاء رقم تلقائي (RCP-2026-0001)</p>
+                </div>
+
                 {{-- Reference Number --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-widest">رقم مرجعي (اختياري)</label>
