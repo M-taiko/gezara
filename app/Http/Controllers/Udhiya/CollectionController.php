@@ -130,6 +130,7 @@ class CollectionController extends Controller
             'wallet_id'   => 'nullable|exists:wallets,id',
             'date'        => 'required|date',
             'notes'       => 'nullable|string',
+            'receipt_number' => 'nullable|string|max:100',
             'reference_number' => 'nullable|string|max:100',
             'attachments' => 'nullable|array|max:5',
             'attachments.*' => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
@@ -153,6 +154,7 @@ class CollectionController extends Controller
                 'wallet_id'       => $data['wallet_id'] ?? null,
                 'date'            => $data['date'],
                 'notes'           => $data['notes'] ?? null,
+                'receipt_number'  => $data['receipt_number'] ?? null,
                 'reference_number' => $data['reference_number'] ?? null,
             ]);
 

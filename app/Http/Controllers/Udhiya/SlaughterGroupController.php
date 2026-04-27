@@ -372,7 +372,7 @@ class SlaughterGroupController extends Controller
         $contractService = app(ContractService::class);
 
         try {
-            DB::transaction(function () use ($member, $deleteOption, $contractService) {
+            $result = DB::transaction(function () use ($member, $deleteOption, $contractService) {
                 $contract = $member->contractItem->contract;
                 $contractItem = $member->contractItem;
 
@@ -384,6 +384,11 @@ class SlaughterGroupController extends Controller
 
                     // Cancel the contract (this reverses all accounting entries)
                     $contractService->cancel($contract);
+
+                    // For delete_contract option, remove member after cancellation
+                    $member->delete();
+
+                    return 'delete_contract';
 
                 } elseif ($deleteOption === 'separate_contract') {
                     // Option 2: Convert to separate contract
@@ -405,18 +410,19 @@ class SlaughterGroupController extends Controller
                     // Delete the member from group
                     $member->delete();
 
-                    return;
+                    return 'separate_contract';
                 }
 
-                // For delete_contract option, remove member after cancellation
-                $member->delete();
+                return null;
             });
 
-            if ($deleteOption === 'delete_contract') {
+            if ($result === 'delete_contract') {
                 return back()->with('toast_success', 'تم حذف الصك والعضو من المجموعة وإرجاع جميع المبالغ المحاسبية');
-            } else {
+            } elseif ($result === 'separate_contract') {
                 return back()->with('toast_success', 'تم تحويل الصك إلى صك منفصل وحذف العضو من المجموعة');
             }
+
+            return back()->with('toast_success', 'تمت العملية بنجاح');
         } catch (\Throwable $e) {
             return back()->with('toast_error', $e->getMessage());
         }

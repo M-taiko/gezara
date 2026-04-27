@@ -29,6 +29,11 @@ class ContractService
             $itemsData = [];
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
+                    // Standalone item: cannot have group_id
+                    if (!empty($item['group_id'])) {
+                        throw new \RuntimeException('لا يمكن إضافة حيوان إلى مجموعة بدون اختيار الحيوان أولاً.');
+                    }
+
                     // Standalone item: use weight if provided, otherwise use shares_count
                     $weight = isset($item['weight']) ? (float) $item['weight'] : null;
                     $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
@@ -44,7 +49,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => null,
                     ];
 
                     $total += $totalPrice;
@@ -241,6 +246,11 @@ class ContractService
             $itemsData = [];
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
+                    // Standalone item: cannot have group_id
+                    if (!empty($item['group_id'])) {
+                        throw new \RuntimeException('لا يمكن إضافة حيوان إلى مجموعة بدون اختيار الحيوان أولاً.');
+                    }
+
                     $weight = isset($item['weight']) ? (float) $item['weight'] : null;
                     $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
                     $quantity = $weight ?? $sharesCount;
@@ -255,7 +265,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => null,
                     ];
 
                     $total += $totalPrice;
@@ -359,6 +369,7 @@ class ContractService
 
             $updateData = [
                 'customer_id'      => $data['customer_id'],
+                'contract_number'  => $data['contract_number'] ?? $contract->contract_number,
                 'slaughter_day'    => $data['slaughter_day'] ?? null,
                 'slaughter_order'  => $data['slaughter_order'] ?? null,
                 'notes'            => $data['notes'] ?? null,

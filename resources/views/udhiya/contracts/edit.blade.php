@@ -150,6 +150,35 @@
                 </div>
             </div>
 
+            {{-- Payments --}}
+            @if($contract->payments && count($contract->payments) > 0)
+            <div class="px-6 py-5 border-b border-cyan-100 bg-gradient-to-b from-cyan-50 to-white">
+                <h6 class="text-base font-black text-cyan-900 m-0 mb-4">الدفعات المسجلة</h6>
+                <div class="space-y-3">
+                    @foreach($contract->payments as $payment)
+                    <div class="bg-white border border-cyan-200 rounded-xl p-3 flex items-center justify-between hover:shadow-sm transition-all">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-bold text-cyan-700 mb-1">
+                                {{ \Carbon\Carbon::parse($payment->date)->format('Y-m-d') }} — {{ number_format($payment->amount, 2) }} ج.م
+                            </div>
+                            @if($payment->receipt_number)
+                            <div class="text-xs text-cyan-600 font-mono">رقم الايصال: {{ $payment->receipt_number }}</div>
+                            @endif
+                            @if($payment->reference_number)
+                            <div class="text-xs text-slate-500">المرجع: {{ $payment->reference_number }}</div>
+                            @endif
+                        </div>
+                        <a href="{{ route('udhiya.collections.edit', $payment) }}"
+                           class="text-xs font-black text-cyan-600 hover:text-cyan-800 whitespace-nowrap mr-3"
+                           title="تعديل الدفعة">
+                            ✏️
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             {{-- Step 3: Details --}}
             <div class="px-6 py-5 border-b border-slate-100">
                 <h6 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">تفاصيل إضافية</h6>
@@ -407,11 +436,20 @@ function updateGroupInfo(row) {
     const bar       = row.querySelector('.group-progress-bar');
     const label     = row.querySelector('.group-slots-label');
     const sharesIn  = row.querySelector('.shares-count');
+    const animalSel = row.querySelector('.animal-select');
 
     if (!gid) { infoDiv.style.display = 'none'; return; }
 
     const g = allGroups.find(x => String(x.id) === String(gid));
     if (!g)  { infoDiv.style.display = 'none'; return; }
+
+    // Validate that animal matches group's animal
+    const selectedAnimalId = animalSel.value;
+    if (selectedAnimalId && g.animal_id && String(selectedAnimalId) !== String(g.animal_id)) {
+        infoDiv.style.display = 'none';
+        console.warn('⚠️ الحيوان المختار غير مطابق للمجموعة');
+        return;
+    }
 
     const pct = g.total > 0 ? Math.round((g.used / g.total) * 100) : 0;
     bar.style.width  = pct + '%';
@@ -662,6 +700,31 @@ function _disableCustSelect(sel) {
 
 function filterCustomersByGroup(gid) {
     const sel = document.getElementById('customerSelect');
+    // On edit page, customerSelect doesn't exist - just handle members panel
+    if (!sel) {
+        // Edit page only shows members panel
+        const panel = document.getElementById('groupMembersPanel');
+        const list  = document.getElementById('groupMembersList');
+
+        if (!gid || !panel || !list) return;
+
+        const group = allGroups.find(g => String(g.id) === String(gid));
+        if (!group) return;
+
+        panel.style.display = '';
+        const freeMembers = group.members.filter(m => !m.has_contract);
+        list.innerHTML = freeMembers.length
+            ? freeMembers.map(m =>
+                `<div class="flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-purple-50 transition-colors" data-cid="${m.customer_id}">
+                    <span class="font-bold text-slate-700">${m.customer_name}${m.customer_phone ? '<span class="font-normal text-slate-400 mr-1"> ' + m.customer_phone + '</span>' : ''}</span>
+                    <span class="font-black text-purple-600">${m.shares_count} نصيب</span>
+                </div>`
+              ).join('')
+            : `<div class="px-3 py-4 text-xs text-center text-slate-400 font-semibold">✅ تم إصدار صكوك لجميع أعضاء المجموعة</div>`;
+        return;
+    }
+
+    // Create page logic (with customer select)
     sel.innerHTML = '';
 
     if (!gid) {
@@ -723,13 +786,18 @@ function autoFillFromGroup(gid) {
     if (!group) return;
     const row = document.querySelector('.item-row');
 
+    // Check if group has an animal
+    if (!group.animal_id) {
+        alert('⚠️ المجموعة المختارة بدون حيوان محدد. يرجى اختيار حيوان أولاً.');
+        document.getElementById('groupFilter').value = '';
+        return;
+    }
+
     // Lock share type immediately
     _lockShareType(row, group.share_type);
 
     // Set animal
-    if (group.animal_id) {
-        row.querySelector('.animal-select').value = group.animal_id;
-    }
+    row.querySelector('.animal-select').value = group.animal_id;
 
     // Set group id
     row.querySelector('.group-id-input').value = group.id;
@@ -816,6 +884,8 @@ function enableStandaloneMode() {
 
 function disableStandaloneMode() {
     const sel = document.getElementById('customerSelect');
+    if (!sel) return;
+
     sel.innerHTML = '';
     sel.appendChild(new Option('— اختر مجموعة أولاً —', ''));
     _disableCustSelect(sel);
@@ -1039,8 +1109,18 @@ function attachFormSubmitListener() {
         contractForm.addEventListener('submit', function () {
             var sel = document.getElementById('customerSelect');
             var hidden = document.getElementById('customerIdHidden');
-            if (sel && hidden && sel.value) {
-                hidden.value = sel.value;
+
+            if (hidden) {
+                if (sel && sel.value) {
+                    // Create page: get from dropdown
+                    hidden.value = sel.value;
+                } else {
+                    // Edit page: get from existing contract
+                    const contractData = @json($contract);
+                    if (contractData && contractData.customer_id) {
+                        hidden.value = contractData.customer_id;
+                    }
+                }
             }
         });
     }
@@ -1089,18 +1169,30 @@ let currentEditCustomerId = null;
 
 function openEditCustomerModal() {
     const sel = document.getElementById('customerSelect');
-    const customerId = sel.value;
+    let customerId, customerName, customerPhone;
 
-    if (!customerId) {
-        alert('اختر عميلاً أولاً');
-        return;
+    if (sel) {
+        // Create page: get from dropdown
+        customerId = sel.value;
+        if (!customerId) {
+            alert('اختر عميلاً أولاً');
+            return;
+        }
+        const selectedOption = sel.options[sel.selectedIndex];
+        const fullText = selectedOption.textContent;
+        customerName = fullText.split('(')[0].trim();
+        customerPhone = selectedOption.getAttribute('data-phone') || '';
+    } else {
+        // Edit page: get from display
+        const nameEl = document.getElementById('customerNameDisplay');
+        const phoneEl = document.getElementById('customerPhoneDisplay');
+        if (!nameEl) return;
+        customerId = @json($contract->customer_id ?? null);
+        customerName = nameEl.textContent;
+        customerPhone = phoneEl ? phoneEl.textContent : '';
     }
 
     currentEditCustomerId = customerId;
-    const selectedOption = sel.options[sel.selectedIndex];
-    const fullText = selectedOption.textContent;
-    const customerName = fullText.split('(')[0].trim();
-    const customerPhone = selectedOption.getAttribute('data-phone') || '';
 
     // Open modal with customer data
     const modal = document.getElementById('editCustomerModal');

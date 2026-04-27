@@ -200,7 +200,7 @@ class ContractController extends Controller
 
     public function edit(Contract $contract)
     {
-        $contract->load('customer', 'items.animal.product.mainCategory', 'items.animal.shareSetting');
+        $contract->load('customer', 'items.animal.product.mainCategory', 'items.animal.shareSetting', 'payments');
 
         $customers = Customer::orderBy('name')->get();
         // Get animals that are available, partially allocated, OR already part of this contract

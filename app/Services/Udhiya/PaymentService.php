@@ -169,6 +169,7 @@ class PaymentService
                     'date'            => $data['date'] ?? $payment->date,
                     'notes'           => $data['notes'] ?? null,
                     'wallet_id'       => $data['wallet_id'] ?? null,
+                    'receipt_number'  => $data['receipt_number'] ?? $payment->receipt_number,
                     'reference_number' => $data['reference_number'] ?? $payment->reference_number,
                 ]);
 
@@ -214,6 +215,7 @@ class PaymentService
                     'date'            => $data['date'] ?? $payment->date,
                     'notes'           => $data['notes'] ?? null,
                     'wallet_id'       => $data['wallet_id'] ?? null,
+                    'receipt_number'  => $data['receipt_number'] ?? $payment->receipt_number,
                     'reference_number' => $data['reference_number'] ?? $payment->reference_number,
                 ]);
             }
