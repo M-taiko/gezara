@@ -73,7 +73,7 @@ class SlaughterGroupController extends Controller
         $request->validate([
             'contract_ids' => 'required|array|min:1',
             'contract_ids.*' => 'exists:contracts,id',
-            'group_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
         ]);
 
         $contracts = \App\Models\Contract::with('items')->whereIn('id', $request->contract_ids)->get();
