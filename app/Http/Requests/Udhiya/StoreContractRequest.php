@@ -38,6 +38,9 @@ class StoreContractRequest extends FormRequest
             'items.*.unit_price.required' => 'يجب تحديد سعر الوحدة أو اختيار حيوان.',
             'items.*.share_type.required' => 'يجب تحديد نوع الحصة.',
             'items.*.share_type.in'       => 'نوع الحصة غير صحيح.',
+            'attachments.*.file'          => 'المرفق يجب أن يكون ملف صحيح.',
+            'attachments.*.mimes'         => 'المرفق يجب أن يكون من نوع: PDF, JPG, PNG, GIF.',
+            'attachments.*.max'           => 'حجم المرفق يجب ألا يتجاوز 5 ميجابايت.',
         ];
     }
 }

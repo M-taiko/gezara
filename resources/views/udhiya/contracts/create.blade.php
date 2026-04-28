@@ -221,7 +221,7 @@
                     <table class="w-full text-right" id="itemsTable">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
-                                <th class="px-4 py-3 min-w-[200px]">الحيوان</th>
+                                <th class="px-4 py-3 min-w-[200px]">الذبيحة <span class="text-slate-400 font-normal">(اختياري)</span></th>
                                 <th class="px-4 py-3 w-36 share-type-header">نوع الحصة</th>
                                 <th class="px-4 py-3 w-24 count-header">العدد</th>
                                 <th class="px-4 py-3 w-24 weight-header" style="display:none;">الوزن (كجم)</th>
@@ -236,7 +236,7 @@
                                 <td class="px-4 py-3">
                                     <select name="items[0][animal_id]"
                                             class="animal-select w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm font-bold text-slate-800 transition-colors">
-                                        <option value="">-- اختر الحيوان --</option>
+                                        <option value="">-- لم يحدد ذبيحة بعد --</option>
                                         @foreach($animals as $animal)
                                         <option value="{{ $animal->id }}"
                                             data-grouped="{{ $animal->is_grouped ? 1 : 0 }}"

@@ -29,12 +29,7 @@ class ContractService
             $itemsData = [];
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
-                    // Standalone item: cannot have group_id
-                    if (!empty($item['group_id'])) {
-                        throw new \RuntimeException('لا يمكن إضافة حيوان إلى مجموعة بدون اختيار الحيوان أولاً.');
-                    }
-
-                    // Standalone item: use weight if provided, otherwise use shares_count
+                    // Item without animal: can still have group_id (will add animal later)
                     $weight = isset($item['weight']) ? (float) $item['weight'] : null;
                     $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
                     $quantity = $weight ?? $sharesCount;
@@ -49,7 +44,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => null,
+                        'group_id'     => $item['group_id'] ?? null,
                     ];
 
                     $total += $totalPrice;
@@ -246,11 +241,7 @@ class ContractService
             $itemsData = [];
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
-                    // Standalone item: cannot have group_id
-                    if (!empty($item['group_id'])) {
-                        throw new \RuntimeException('لا يمكن إضافة حيوان إلى مجموعة بدون اختيار الحيوان أولاً.');
-                    }
-
+                    // Item without animal: can still have group_id (will add animal later)
                     $weight = isset($item['weight']) ? (float) $item['weight'] : null;
                     $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
                     $quantity = $weight ?? $sharesCount;
@@ -265,7 +256,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => null,
+                        'group_id'     => $item['group_id'] ?? null,
                     ];
 
                     $total += $totalPrice;

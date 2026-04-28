@@ -286,7 +286,7 @@
                     <table class="w-full text-right" id="itemsTable">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold">
-                                <th class="px-4 py-3 min-w-[200px]">الحيوان</th>
+                                <th class="px-4 py-3 min-w-[200px]">الذبيحة <span class="text-slate-400 font-normal">(اختياري)</span></th>
                                 <th class="px-4 py-3 w-36">نوع الحصة</th>
                                 <th class="px-4 py-3 w-24">العدد</th>
                                 <th class="px-4 py-3 w-28 text-center">سعر الوحدة</th>
@@ -300,7 +300,7 @@
         <td class="px-4 py-3">
             <select name="items[{{ $i }}][animal_id]"
                     class="animal-select w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-3 text-sm font-bold text-slate-800 transition-colors">
-                <option value="">-- اختر الحيوان --</option>
+                <option value="">-- لم يحدد ذبيحة بعد --</option>
                 @foreach($animals as $animal)
                 <option value="{{ $animal->id }}"
                     {{ $cItem->animal_id == $animal->id ? 'selected' : '' }}
@@ -786,18 +786,13 @@ function autoFillFromGroup(gid) {
     if (!group) return;
     const row = document.querySelector('.item-row');
 
-    // Check if group has an animal
-    if (!group.animal_id) {
-        alert('⚠️ المجموعة المختارة بدون حيوان محدد. يرجى اختيار حيوان أولاً.');
-        document.getElementById('groupFilter').value = '';
-        return;
-    }
-
     // Lock share type immediately
     _lockShareType(row, group.share_type);
 
-    // Set animal
-    row.querySelector('.animal-select').value = group.animal_id;
+    // Set animal if group has one
+    if (group.animal_id) {
+        row.querySelector('.animal-select').value = group.animal_id;
+    }
 
     // Set group id
     row.querySelector('.group-id-input').value = group.id;
