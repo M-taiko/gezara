@@ -25,6 +25,7 @@ class StoreContractRequest extends FormRequest
             'items.*.group_id'         => 'nullable|exists:slaughter_groups,id',
             'payment_amount'           => 'nullable|numeric|min:0',
             'payment_method'           => 'nullable|in:cash,bank,check',
+            'payment_wallet_id'        => 'nullable|exists:wallets,id',
             'attachments'              => 'nullable|array|max:5',
             'attachments.*'            => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ];

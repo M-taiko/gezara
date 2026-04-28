@@ -21,6 +21,7 @@ class ContractController extends Controller
         $filterShare = $request->input('filter_share');
 
         $query = Contract::with('customer', 'items.animal.product', 'items.group')
+            ->whereIn('status', ['active', 'completed'])
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('customer', function ($q2) use ($search) {
                     $q2->where('name', 'like', "%{$search}%")
@@ -66,6 +67,7 @@ class ContractController extends Controller
         $animals   = Animal::with('product.mainCategory', 'shareSetting')
             ->whereIn('status', ['available', 'partially_allocated'])
             ->get();
+        $wallets = \App\Models\Wallet::where('is_active', true)->orderBy('name')->get();
         $groupsJson = SlaughterGroup::with('members.customer', 'animal')->get()->map(function ($g) {
             $priceField    = 'price_' . $g->share_type;
             $pricePerShare = $g->animal ? (float) ($g->animal->$priceField ?? 0) : 0;
@@ -89,7 +91,7 @@ class ContractController extends Controller
             ];
         })->values()->toArray();
 
-        return view('udhiya.contracts.create', compact('customers', 'animals', 'groupsJson'));
+        return view('udhiya.contracts.create', compact('customers', 'animals', 'wallets', 'groupsJson'));
     }
 
     public function store(StoreContractRequest $request)
@@ -251,9 +253,11 @@ class ContractController extends Controller
     public function destroy(Contract $contract)
     {
         try {
+            $contractNumber = $contract->contract_number;
+            $totalAmount = $contract->total_amount;
             $this->service->cancel($contract);
             return redirect()->route('udhiya.contracts.index')
-                ->with('toast_success', 'تم إلغاء الصك.');
+                ->with('toast_success', "تم إلغاء الصك #{$contractNumber} — تم استرجاع المبالغ من الحسابات والتحصيلات (ج.م {$totalAmount})");
         } catch (\Throwable $e) {
             return back()->with('toast_error', $e->getMessage());
         }

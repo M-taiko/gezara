@@ -21,6 +21,7 @@ class ContractService
     {
         $paymentAmount = isset($data['payment_amount']) ? (float) $data['payment_amount'] : 0;
         $paymentMethod = $data['payment_method'] ?? 'cash';
+        $paymentWalletId = $data['payment_wallet_id'] ?? null;
 
         $contract = DB::transaction(function () use ($data) {
             $total = 0;
@@ -202,6 +203,7 @@ class ContractService
             $this->payments->store($contract, [
                 'amount'         => $paymentAmount,
                 'payment_method' => $paymentMethod,
+                'wallet_id'      => $paymentWalletId,
                 'date'           => Carbon::today()->toDateString(),
                 'notes'          => 'دفعة عند إصدار الصك',
             ]);
@@ -436,8 +438,7 @@ class ContractService
 
             // Delete all payments and reverse their accounting entries
             foreach ($contract->payments as $payment) {
-                $this->accounting->reverseCustomerPayment($payment);
-                $payment->delete();
+                $this->payments->delete($payment);
             }
 
             // Restore animal statuses

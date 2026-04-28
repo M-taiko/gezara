@@ -21,17 +21,18 @@ class DashboardController extends Controller
             'animals_available' => Animal::where('status', 'available')->count(),
             'animals_allocated' => Animal::whereIn('status', ['partially_allocated', 'fully_allocated'])->count(),
             'contracts_active'  => Contract::where('status', 'active')->count(),
-            'contracts_total'   => Contract::count(),
+            'contracts_total'   => Contract::whereIn('status', ['active', 'completed'])->count(),
             'customers_total'   => Customer::count(),
             'suppliers_total'   => Supplier::count(),
             'purchases_total'   => Purchase::count(),
-            'revenue_total'     => Contract::sum('total_amount'),
-            'collected_total'   => Contract::sum('paid_amount'),
-            'remaining_total'   => Contract::sum('remaining_amount'),
+            'revenue_total'     => Contract::whereIn('status', ['active', 'completed'])->sum('total_amount'),
+            'collected_total'   => Contract::whereIn('status', ['active', 'completed'])->sum('paid_amount'),
+            'remaining_total'   => Contract::whereIn('status', ['active', 'completed'])->sum('remaining_amount'),
             'treasury_balance'  => Wallet::sum('balance') ?: (Treasury::where('type', 'in')->sum('amount') - Treasury::where('type', 'out')->sum('amount')),
         ];
 
         $recentContracts = Contract::with('customer')
+            ->whereIn('status', ['active', 'completed'])
             ->latest()
             ->take(5)
             ->get();

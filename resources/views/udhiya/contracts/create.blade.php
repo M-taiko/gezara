@@ -150,6 +150,17 @@
                             <option value="check">شيك</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">الخزينة <span class="text-slate-400 font-normal">(اختياري)</span></label>
+                        <select name="payment_wallet_id"
+                                class="w-full rounded-xl border border-slate-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                            <option value="">— بدون خزينة —</option>
+                            @foreach($wallets as $w)
+                            <option value="{{ $w->id }}">{{ $w->getTypeLabel() }} — {{ $w->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1.5">اختر الخزينة التي ستسجل عليها الفلوس</p>
+                    </div>
                     {{-- Live summary --}}
                     <div id="paymentSummary" style="display:none;"
                          class="bg-white rounded-xl border border-emerald-200 p-3 text-xs space-y-1">
