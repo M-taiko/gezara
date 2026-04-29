@@ -8,6 +8,19 @@ class StoreContractRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
+    protected function prepareForValidation(): void
+    {
+        // إذا لم يتم تحديد أي ملفات، أزل attachments من البيانات
+        if (empty($this->attachments) || !is_array($this->attachments) ||
+            (count($this->attachments) === 1 && empty($this->attachments[0]))) {
+            $this->merge(['attachments' => null]);
+        } else {
+            // صفّي الملفات الفارغة من المصفوفة
+            $attachments = array_filter($this->attachments, fn($file) => !empty($file) && $file !== '');
+            $this->merge(['attachments' => !empty($attachments) ? $attachments : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -27,7 +40,7 @@ class StoreContractRequest extends FormRequest
             'payment_method'           => 'nullable|in:cash,bank,check',
             'payment_wallet_id'        => 'nullable|exists:wallets,id',
             'attachments'              => 'nullable|array|max:5',
-            'attachments.*'            => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
+            'attachments.*'            => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ];
     }
 
