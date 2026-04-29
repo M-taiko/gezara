@@ -27,15 +27,18 @@ class StoreContractRequest extends FormRequest
                 }
             }
 
-            // Validate that each item has either share_type or weight
+            // Validate that each item has either (share_type + shares_count) or weight
             if ($this->has('items') && is_array($this->items)) {
                 foreach ($this->items as $idx => $item) {
                     if (empty($item['animal_id'])) {
-                        // Standalone item: must have weight
-                        if (empty($item['weight']) && empty($item['shares_count'])) {
+                        // Standalone item: must have either shares or weight
+                        $hasShares = !empty($item['share_type']) && !empty($item['shares_count']);
+                        $hasWeight = !empty($item['weight']);
+
+                        if (!$hasShares && !$hasWeight) {
                             $validator->errors()->add(
                                 "items.{$idx}.weight",
-                                'يجب تحديد الوزن (بالكيلوجرام) للصك المنفرد.'
+                                'يجب تحديد إما (نوع الحصة + عدد الحصص) أو الوزن بالكيلوجرام.'
                             );
                         }
                     }

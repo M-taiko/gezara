@@ -350,6 +350,16 @@
                     </svg>
                     إضافة حيوان آخر
                 </button>
+
+                {{-- Standalone mode info --}}
+                <div id="standaloneInfo" style="display:none;" class="mt-5 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-xs font-bold text-amber-900 mb-2">✓ في الصك المنفرد، اختر:</p>
+                    <div class="text-xs text-amber-800 space-y-1">
+                        <div><strong>الخيار 1:</strong> نوع الحصة + عدد الأنصبة (لتجميع الصكوك في مجموعة ذبح)</div>
+                        <div><strong>الخيار 2:</strong> الوزن (كجم) - للصكوك المفردة</div>
+                        <div style="margin-top: 8px; border-top: 1px solid amber-200; padding-top: 8px;">بعد الحفظ، يمكنك تجميع عدة صكوك منفردة وإضافتها إلى مجموعة ذبح واحدة</div>
+                    </div>
+                </div>
             </div>
 
             {{-- Grand total --}}
@@ -450,7 +460,7 @@ function updateRow(row) {
         priceIn.value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
 
         // In standalone mode, populate weight from animal
-        if (weightIn && !weightIn.parentElement.parentElement.style.display || weightIn.parentElement.parentElement.style.display === '') {
+        if (weightIn && (weightIn.parentElement.parentElement.style.display === '' || !weightIn.parentElement.parentElement.style.display)) {
             weightIn.value = opt.dataset.weight || '';
         }
     } else {
@@ -458,16 +468,23 @@ function updateRow(row) {
         unitPrice = manualPrice;
     }
 
-    // Calculate total based on mode (shares count or weight)
-    const isStandaloneMode = weightIn && (weightIn.parentElement.parentElement.style.display === '' || !weightIn.parentElement.parentElement.style.display);
+    // Calculate total based on what's filled in
+    // In standalone mode: check if weight or shares are filled
+    // In group mode: always use shares count
     let quantity = 1;
+    const weightValue = parseFloat(weightIn.value) || 0;
+    const sharesValue = parseInt(sharesIn.value) || 0;
 
-    if (isStandaloneMode) {
-        // Standalone mode: quantity is weight, default to 1 if not specified
-        quantity = parseFloat(weightIn.value) || 1;
+    // Determine which value to use for quantity
+    if (weightValue > 0) {
+        // Weight is filled - use it
+        quantity = weightValue;
+    } else if (sharesValue > 0) {
+        // Shares count is filled - use it
+        quantity = sharesValue;
     } else {
-        // Group mode: quantity is shares count
-        quantity = parseInt(sharesIn.value) || 1;
+        // Default to 1 if nothing is filled
+        quantity = 1;
     }
 
     // Calculate and display total
@@ -692,6 +709,7 @@ function enableStandaloneMode() {
     document.getElementById('groupMembersPanel').style.display = 'none';
     document.getElementById('standaloneRow').style.display    = 'none';
     document.getElementById('standaloneBadge').style.display  = '';
+    document.getElementById('standaloneInfo').style.display   = '';
 
     // Switch to weight/standalone mode
     switchToStandaloneMode();
@@ -699,15 +717,16 @@ function enableStandaloneMode() {
 }
 
 function switchToStandaloneMode() {
-    // Hide share type and count columns, show weight column
+    // In standalone mode, show both share type/count AND weight
+    // User can choose either weight OR shares
     document.querySelectorAll('.share-type-header, .count-header, .share-type-cell, .count-cell').forEach(el => {
-        el.style.display = 'none';
+        el.style.display = '';
     });
     document.querySelectorAll('.weight-header, .weight-cell').forEach(el => {
         el.style.display = '';
     });
 
-    // Populate weight from animal if selected, make unit_price free input
+    // Populate weight from animal if selected
     const row = document.querySelector('.item-row');
     if (row) {
         const animalSel = row.querySelector('.animal-select');
@@ -737,6 +756,7 @@ function disableStandaloneMode() {
     document.getElementById('standaloneRow').style.display   = '';
     document.getElementById('standaloneBadge').style.display = 'none';
     document.getElementById('groupMembersPanel').style.display = 'none';
+    document.getElementById('standaloneInfo').style.display  = 'none';
 
     // Switch back to group mode
     switchToGroupMode();
