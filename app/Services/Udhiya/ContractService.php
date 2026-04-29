@@ -9,6 +9,7 @@ use App\Models\ContractItem;
 use App\Models\SlaughterGroupMember;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ContractService
 {
@@ -19,11 +20,23 @@ class ContractService
 
     public function store(array $data): Contract
     {
-        $paymentAmount = isset($data['payment_amount']) ? (float) $data['payment_amount'] : 0;
+        // Type casting and validation
+        $paymentAmount = isset($data['payment_amount']) && !empty($data['payment_amount']) ? (float) $data['payment_amount'] : 0;
         $paymentMethod = $data['payment_method'] ?? 'cash';
-        $paymentWalletId = $data['payment_wallet_id'] ?? null;
+        if (empty($paymentMethod) || !is_string($paymentMethod)) {
+            $paymentMethod = 'cash';
+        }
+        $paymentWalletId = !empty($data['payment_wallet_id']) ? (int) $data['payment_wallet_id'] : null;
 
-        $contract = DB::transaction(function () use ($data) {
+        // Log for debugging
+        Log::debug('ContractService::store called', [
+            'paymentAmount' => $paymentAmount,
+            'paymentMethod' => $paymentMethod,
+            'paymentWalletId' => $paymentWalletId,
+            'itemsCount' => count($data['items'] ?? []),
+        ]);
+
+        $contract = DB::transaction(function () use ($data, $paymentWalletId, $paymentMethod, $paymentAmount) {
             $total = 0;
 
             // Lock and validate all animals first (prevent race conditions)
@@ -200,14 +213,21 @@ class ContractService
 
         // Record initial payment outside the main transaction to avoid nesting
         if ($paymentAmount > 0) {
-            $this->payments->store($contract, [
-                'amount'         => $paymentAmount,
-                'payment_method' => $paymentMethod,
-                'wallet_id'      => $paymentWalletId,
-                'date'           => Carbon::today()->toDateString(),
-                'notes'          => 'دفعة عند إصدار الصك',
-            ]);
-            $contract->refresh();
+            try {
+                $this->payments->store($contract, [
+                    'amount'         => (float) $paymentAmount,
+                    'payment_method' => (string) $paymentMethod,
+                    'wallet_id'      => $paymentWalletId ? (int) $paymentWalletId : null,
+                    'receipt_number' => $data['payment_receipt_number'] ?? null,
+                    'reference_number' => $data['payment_reference_number'] ?? null,
+                    'date'           => Carbon::today()->toDateString(),
+                    'notes'          => 'دفعة عند إصدار الصك',
+                ]);
+                $contract->refresh();
+            } catch (\Exception $e) {
+                Log::error('Payment creation error: ' . $e->getMessage());
+                throw $e;
+            }
         }
 
         return $contract;

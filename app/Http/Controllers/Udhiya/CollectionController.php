@@ -55,9 +55,10 @@ class CollectionController extends Controller
             'amount'            => 'required|numeric|min:0.01',
             'payment_method'    => 'required|in:cash,bank,transfer',
             'wallet_id'         => 'nullable|exists:wallets,id',
+            'receipt_number'    => 'nullable|string|max:100',
+            'reference_number'  => 'nullable|string|max:100',
             'date'              => 'required|date',
             'notes'             => 'nullable|string',
-            'reference_number'  => 'nullable|string|max:100',
             'attachments'       => 'nullable|array|max:5',
             'attachments.*'     => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
         ]);
@@ -78,11 +79,13 @@ class CollectionController extends Controller
             // Use PaymentService to create payment with all accounting logic
             $paymentService = app(PaymentService::class);
             $payment = $paymentService->store($contract, [
-                'amount'         => $data['amount'],
-                'payment_method' => $data['payment_method'],
-                'date'           => $data['date'],
-                'notes'          => $data['notes'] ?? null,
-                'wallet_id'      => $data['wallet_id'] ?? null,
+                'amount'           => $data['amount'],
+                'payment_method'   => $data['payment_method'],
+                'receipt_number'   => $data['receipt_number'] ?? null,
+                'reference_number' => $data['reference_number'] ?? null,
+                'date'             => $data['date'],
+                'notes'            => $data['notes'] ?? null,
+                'wallet_id'        => $data['wallet_id'] ?? null,
             ]);
 
             // Handle file attachments after payment is created

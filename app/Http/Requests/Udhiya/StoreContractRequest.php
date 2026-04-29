@@ -8,17 +8,41 @@ class StoreContractRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
-    protected function prepareForValidation(): void
+    public function withValidator($validator)
     {
-        // إذا لم يتم تحديد أي ملفات، أزل attachments من البيانات
-        if (empty($this->attachments) || !is_array($this->attachments) ||
-            (count($this->attachments) === 1 && empty($this->attachments[0]))) {
-            $this->merge(['attachments' => null]);
-        } else {
-            // صفّي الملفات الفارغة من المصفوفة
-            $attachments = array_filter($this->attachments, fn($file) => !empty($file) && $file !== '');
-            $this->merge(['attachments' => !empty($attachments) ? $attachments : null]);
-        }
+        $validator->after(function ($validator) {
+            // Validate attachments
+            if ($this->has('attachments') && is_array($this->attachments)) {
+                $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
+                foreach ($this->attachments as $idx => $file) {
+                    if ($file && is_object($file)) {
+                        $ext = strtolower($file->getClientOriginalExtension());
+                        if (!in_array($ext, $allowed)) {
+                            $validator->errors()->add(
+                                'attachments.' . $idx,
+                                'المرفق يجب أن يكون من نوع: PDF, JPG, PNG, GIF.'
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Validate that each item has either share_type or weight
+            if ($this->has('items') && is_array($this->items)) {
+                foreach ($this->items as $idx => $item) {
+                    if (empty($item['animal_id'])) {
+                        // Standalone item: must have weight
+                        if (empty($item['weight']) && empty($item['shares_count'])) {
+                            $validator->errors()->add(
+                                "items.{$idx}.weight",
+                                'يجب تحديد الوزن (بالكيلوجرام) للصك المنفرد.'
+                            );
+                        }
+                    }
+                }
+            }
+        });
+        return $validator;
     }
 
     public function rules(): array
@@ -39,8 +63,10 @@ class StoreContractRequest extends FormRequest
             'payment_amount'           => 'nullable|numeric|min:0',
             'payment_method'           => 'nullable|in:cash,bank,check',
             'payment_wallet_id'        => 'nullable|exists:wallets,id',
+            'payment_receipt_number'   => 'nullable|string|max:100',
+            'payment_reference_number' => 'nullable|string|max:100',
             'attachments'              => 'nullable|array|max:5',
-            'attachments.*'            => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
+            'attachments.*'            => 'nullable|max:5120',
         ];
     }
 
@@ -52,8 +78,6 @@ class StoreContractRequest extends FormRequest
             'items.*.unit_price.required' => 'يجب تحديد سعر الوحدة أو اختيار حيوان.',
             'items.*.share_type.required' => 'يجب تحديد نوع الحصة.',
             'items.*.share_type.in'       => 'نوع الحصة غير صحيح.',
-            'attachments.*.file'          => 'المرفق يجب أن يكون ملف صحيح.',
-            'attachments.*.mimes'         => 'المرفق يجب أن يكون من نوع: PDF, JPG, PNG, GIF.',
             'attachments.*.max'           => 'حجم المرفق يجب ألا يتجاوز 5 ميجابايت.',
         ];
     }

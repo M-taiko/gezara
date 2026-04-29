@@ -14,6 +14,12 @@ class PaymentService
 
     public function store(Contract $contract, array $data): Payment
     {
+        \Illuminate\Support\Facades\Log::debug('PaymentService::store called', [
+            'contract_id' => $contract->id,
+            'amount' => $data['amount'] ?? null,
+            'payment_method' => $data['payment_method'] ?? null,
+        ]);
+
         return DB::transaction(function () use ($contract, $data) {
             if (round($data['amount'], 2) > round($contract->remaining_amount, 2)) {
                 throw new \RuntimeException(
@@ -21,13 +27,21 @@ class PaymentService
                 );
             }
 
+            // Ensure payment_method is valid string
+            $method = $data['payment_method'] ?? 'cash';
+            if (empty($method) || !is_string($method)) {
+                $method = 'cash';
+            }
+
             $payment = Payment::create([
-                'contract_id'    => $contract->id,
-                'amount'         => $data['amount'],
-                'payment_method' => $data['payment_method'] ?? 'cash',
-                'date'           => $data['date'],
-                'notes'          => $data['notes'] ?? null,
-                'wallet_id'      => $data['wallet_id'] ?? null,
+                'contract_id'      => $contract->id,
+                'amount'           => (float) $data['amount'],
+                'payment_method'   => $method,
+                'receipt_number'   => $data['receipt_number'] ?? null,
+                'reference_number' => $data['reference_number'] ?? null,
+                'date'             => $data['date'],
+                'notes'            => $data['notes'] ?? null,
+                'wallet_id'        => !empty($data['wallet_id']) ? (int) $data['wallet_id'] : null,
             ]);
 
             // Update contract financials
@@ -162,10 +176,15 @@ class PaymentService
                 $contract->increment('remaining_amount', $oldAmount);
 
                 // Update payment with new amount, contract, and details
+                $method = $data['payment_method'] ?? $payment->payment_method;
+                if (empty($method) || !is_string($method)) {
+                    $method = $payment->payment_method ?? 'cash';
+                }
+
                 $payment->update([
                     'contract_id'     => $newContract->id,
                     'amount'          => $newAmount,
-                    'payment_method'  => $data['payment_method'] ?? $payment->payment_method,
+                    'payment_method'  => $method,
                     'date'            => $data['date'] ?? $payment->date,
                     'notes'           => $data['notes'] ?? null,
                     'wallet_id'       => $data['wallet_id'] ?? null,
@@ -210,8 +229,13 @@ class PaymentService
                 ]);
             } else {
                 // Just update non-amount, non-contract fields
+                $method = $data['payment_method'] ?? $payment->payment_method;
+                if (empty($method) || !is_string($method)) {
+                    $method = $payment->payment_method ?? 'cash';
+                }
+
                 $payment->update([
-                    'payment_method'  => $data['payment_method'] ?? $payment->payment_method,
+                    'payment_method'  => $method,
                     'date'            => $data['date'] ?? $payment->date,
                     'notes'           => $data['notes'] ?? null,
                     'wallet_id'       => $data['wallet_id'] ?? null,

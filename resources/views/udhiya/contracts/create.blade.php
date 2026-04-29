@@ -161,6 +161,18 @@
                         </select>
                         <p class="text-xs text-slate-500 mt-1.5">اختر الخزينة التي ستسجل عليها الفلوس</p>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الإيصال <span class="text-slate-400 font-normal">(اختياري)</span></label>
+                        <input type="text" name="payment_receipt_number" placeholder="سيتم إنشاء رقم تلقائي إن تركته فارغاً"
+                               class="w-full rounded-xl border border-emerald-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1.5">إذا لم تكتب رقم، سيتم إنشاء رقم تلقائي (RCP-2026-0001)</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">الرقم المرجعي <span class="text-slate-400 font-normal">(اختياري)</span></label>
+                        <input type="text" name="payment_reference_number" placeholder="مثال: CHQ-123 أو TRF-456"
+                               class="w-full rounded-xl border border-emerald-200 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                        <p class="text-xs text-slate-500 mt-1.5">رقم الحوالة أو الشيك أو أي مرجعية أخرى</p>
+                    </div>
                     {{-- Live summary --}}
                     <div id="paymentSummary" style="display:none;"
                          class="bg-white rounded-xl border border-emerald-200 p-3 text-xs space-y-1">
