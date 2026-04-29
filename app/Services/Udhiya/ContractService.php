@@ -44,21 +44,21 @@ class ContractService
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
                     // Item without animal: can still have group_id (will add animal later)
-                    $weight = isset($item['weight']) ? (float) $item['weight'] : null;
-                    $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
+                    $weight = isset($item['weight']) && !empty($item['weight']) ? (float) $item['weight'] : null;
+                    $sharesCount = isset($item['shares_count']) && !empty($item['shares_count']) ? (int) $item['shares_count'] : 1;
                     $quantity = $weight ?? $sharesCount;
                     $unitPrice   = (float) $item['unit_price'];
                     $totalPrice  = $unitPrice * $quantity;
 
                     $itemsData[] = [
                         'animal'       => null,
-                        'share_type'   => $item['share_type'] ?? 'full',
+                        'share_type'   => !empty($item['share_type']) ? $item['share_type'] : 'full',
                         'shares_count' => $sharesCount,
                         'weight'       => $weight,
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => !empty($item['group_id']) ? $item['group_id'] : null,
                     ];
 
                     $total += $totalPrice;
@@ -82,7 +82,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => !empty($item['group_id']) ? (int) $item['group_id'] : null,
                     ];
 
                     $total += $totalPrice;
@@ -128,7 +128,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => $setting,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => !empty($item['group_id']) ? (int) $item['group_id'] : null,
                     ];
 
                     $total += $totalPrice;
@@ -138,9 +138,9 @@ class ContractService
             // Create contract
             $contractData = [
                 'customer_id'      => $data['customer_id'],
-                'slaughter_day'    => $data['slaughter_day'] ?? null,
-                'slaughter_order'  => $data['slaughter_order'] ?? null,
-                'notes'            => $data['notes'] ?? null,
+                'slaughter_day'    => !empty($data['slaughter_day']) ? $data['slaughter_day'] : null,
+                'slaughter_order'  => !empty($data['slaughter_order']) ? (int) $data['slaughter_order'] : null,
+                'notes'            => !empty($data['notes']) ? $data['notes'] : null,
                 'total_amount'     => $total,
                 'paid_amount'      => 0,
                 'remaining_amount' => $total,
@@ -264,21 +264,21 @@ class ContractService
             foreach ($data['items'] as $item) {
                 if (empty($item['animal_id'])) {
                     // Item without animal: can still have group_id (will add animal later)
-                    $weight = isset($item['weight']) ? (float) $item['weight'] : null;
-                    $sharesCount = isset($item['shares_count']) ? (int) $item['shares_count'] : 1;
+                    $weight = isset($item['weight']) && !empty($item['weight']) ? (float) $item['weight'] : null;
+                    $sharesCount = isset($item['shares_count']) && !empty($item['shares_count']) ? (int) $item['shares_count'] : 1;
                     $quantity = $weight ?? $sharesCount;
                     $unitPrice   = (float) $item['unit_price'];
                     $totalPrice  = $unitPrice * $quantity;
 
                     $itemsData[] = [
                         'animal'       => null,
-                        'share_type'   => $item['share_type'] ?? 'full',
+                        'share_type'   => !empty($item['share_type']) ? $item['share_type'] : 'full',
                         'shares_count' => $sharesCount,
                         'weight'       => $weight,
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => !empty($item['group_id']) ? $item['group_id'] : null,
                     ];
 
                     $total += $totalPrice;
@@ -302,7 +302,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => null,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => !empty($item['group_id']) ? (int) $item['group_id'] : null,
                     ];
 
                     $total += $totalPrice;
@@ -348,7 +348,7 @@ class ContractService
                         'unit_price'   => $unitPrice,
                         'total_price'  => $totalPrice,
                         'setting'      => $setting,
-                        'group_id'     => $item['group_id'] ?? null,
+                        'group_id'     => !empty($item['group_id']) ? (int) $item['group_id'] : null,
                     ];
 
                     $total += $totalPrice;
@@ -383,9 +383,9 @@ class ContractService
             $updateData = [
                 'customer_id'      => $data['customer_id'],
                 'contract_number'  => $data['contract_number'] ?? $contract->contract_number,
-                'slaughter_day'    => $data['slaughter_day'] ?? null,
-                'slaughter_order'  => $data['slaughter_order'] ?? null,
-                'notes'            => $data['notes'] ?? null,
+                'slaughter_day'    => !empty($data['slaughter_day']) ? $data['slaughter_day'] : null,
+                'slaughter_order'  => !empty($data['slaughter_order']) ? (int) $data['slaughter_order'] : null,
+                'notes'            => !empty($data['notes']) ? $data['notes'] : null,
                 'total_amount'     => $total,
                 'remaining_amount' => $total - $contract->paid_amount,
             ];

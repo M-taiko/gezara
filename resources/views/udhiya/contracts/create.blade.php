@@ -15,7 +15,7 @@
 @section('content')
 <script>const allGroups = @json($groupsJson);</script>
 
-<form action="{{ route('udhiya.contracts.store') }}" method="POST" id="contractForm"
+<form action="{{ route('udhiya.contracts.store') }}" method="POST" enctype="multipart/form-data" id="contractForm"
       class="flex flex-col lg:flex-row gap-6 pb-16">
     @csrf
 
