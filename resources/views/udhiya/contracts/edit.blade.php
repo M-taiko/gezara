@@ -344,7 +344,7 @@
         <td class="px-4 py-3">
             <input type="number" name="items[{{ $i }}][shares_count]"
                    class="shares-count w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-2 text-sm font-bold text-center text-slate-800 transition-colors"
-                   min="1" max="7" value="{{ $cItem->shares_count }}" required>
+                   min="1" max="{{ max(7, $cItem->shares_count ?? 1) }}" value="{{ $cItem->shares_count ?? 1 }}" required>
             <div class="shares-limit-label text-xs font-bold text-slate-400 mt-1 text-center"></div>
         </td>
         <td class="px-4 py-3 text-center">
@@ -510,10 +510,17 @@ function updateRow(row) {
     // Calculate and display total
     totalIn.value = (unitPrice * quantity).toFixed(2);
 
-    if (!sharesIn.readOnly && sharesIn.parentElement.parentElement.style.display !== 'none') {
-        const typeMax = SHARE_MAX[shareType] || 7;
-        sharesIn.max  = typeMax;
-        row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
+    if (sharesIn.parentElement.parentElement.style.display !== 'none') {
+        if (!sharesIn.readOnly) {
+            // Only unlock shares - can change max
+            const typeMax = SHARE_MAX[shareType] || 7;
+            sharesIn.max  = typeMax;
+            row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
+        } else {
+            // Locked shares - keep current value as max (don't change it)
+            sharesIn.max = Math.max(7, parseInt(sharesIn.value) || 1);
+            row.querySelector('.shares-limit-label').textContent = '🔒 محدد من المجموعة';
+        }
     }
 
     updateGroupInfo(row);
