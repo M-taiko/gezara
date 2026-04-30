@@ -460,6 +460,7 @@ function updateGroupInfo(row) {
 
     if (!sharesIn.readOnly) {
         const maxAllowed = Math.min(SHARE_MAX[_getShareType(row)] || 7, g.remaining);
+        sharesIn.min = 1;
         sharesIn.max = maxAllowed;
         row.querySelector('.shares-limit-label').textContent = 'الحد: ' + maxAllowed;
         if (parseInt(sharesIn.value) > maxAllowed) {
@@ -467,7 +468,9 @@ function updateGroupInfo(row) {
         }
     } else {
         // For locked shares, preserve the current value and set max to current value
-        sharesIn.max = Math.max(7, parseInt(sharesIn.value) || 1);
+        const currentValue = parseInt(sharesIn.value) || 1;
+        sharesIn.min = currentValue;
+        sharesIn.max = currentValue;
     }
 }
 
@@ -519,11 +522,14 @@ function updateRow(row) {
         if (!sharesIn.readOnly) {
             // Only unlock shares - can change max
             const typeMax = SHARE_MAX[shareType] || 7;
-            sharesIn.max  = typeMax;
+            sharesIn.min = 1;
+            sharesIn.max = typeMax;
             row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
         } else {
-            // Locked shares - keep current value as max (don't change it)
-            sharesIn.max = Math.max(7, parseInt(sharesIn.value) || 1);
+            // Locked shares - keep current value as both min and max (don't change it)
+            const currentValue = parseInt(sharesIn.value) || 1;
+            sharesIn.min = currentValue;
+            sharesIn.max = currentValue;
             row.querySelector('.shares-limit-label').textContent = '🔒 محدد من المجموعة';
         }
     }
@@ -1170,7 +1176,9 @@ function initEditView() {
                                 m.has_contract
                             );
                             if (member) {
+                                // lockRowToMember() includes updateRow() call
                                 lockRowToMember(row, g, member);
+                                return;
                             }
                         }
                     }
