@@ -39,9 +39,10 @@ class StorePaymentRequest extends FormRequest
         return [
             'contract_id'       => 'required|exists:contracts,id',
             'amount'            => "required|numeric|min:0.01|max:{$maxAmount}",
-            'payment_method'    => 'required|in:cash,bank,transfer',
+            'payment_method'    => 'required|in:cash,bank,check,transfer',
             'date'              => 'required|date',
             'notes'             => 'nullable|string',
+            'receipt_number'    => 'nullable|string|max:100',
             'reference_number'  => 'nullable|string|max:100',
             'wallet_id'         => 'nullable|exists:wallets,id',
             'attachments'       => 'nullable|array|max:5',

@@ -214,7 +214,7 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
             <div class="px-6 py-5 border-b border-emerald-100 bg-gradient-to-b from-emerald-50 to-white">
                 <h6 class="text-base font-black text-emerald-900 m-0">💰 تسجيل دفعة</h6>
             </div>
-            <form action="{{ route('udhiya.payments.store') }}" method="POST">
+            <form action="{{ route('udhiya.payments.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="contract_id" value="{{ $contract->id }}">
                 <div class="px-6 py-5 space-y-4">
@@ -253,6 +253,18 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                             @endforeach
                         </select>
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الإيصال <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                            <input type="text" name="receipt_number" placeholder="سيتم إنشاء رقم تلقائي"
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1.5">الرقم المرجعي <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                            <input type="text" name="reference_number" placeholder="مثال: فاتورة رقم..."
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors">
+                        </div>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">التاريخ <span class="text-rose-500">*</span></label>
                         <input type="date" name="date" required value="{{ date('Y-m-d') }}"
@@ -262,6 +274,15 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات</label>
                         <textarea name="notes" rows="2"
                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm font-bold text-slate-800 transition-colors resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">
+                            المرفقات <span class="text-slate-400 font-normal text-xs">(PDF, JPG, PNG, GIF — حد أقصى 5 ملفات)</span>
+                        </label>
+                        <div class="relative">
+                            <input type="file" name="attachments[]" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,application/pdf,image/*"
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 py-2.5 px-3 text-sm text-slate-600 transition-colors file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                        </div>
                     </div>
                     <button type="submit"
                             class="w-full inline-flex justify-center items-center gap-2 px-5 py-3 text-sm font-black rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200/60 transition-all">
