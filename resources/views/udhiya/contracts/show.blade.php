@@ -407,7 +407,8 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         @foreach($contract->payments as $payment)
-                        <tr class="hover:bg-emerald-50/30 transition-colors">
+                        <tr class="hover:bg-emerald-50/30 transition-colors cursor-pointer"
+                            onclick="openPaymentModal('payment-modal-{{ $payment->id }}')">
                             <td class="px-5 py-4">
                                 <span class="text-xs font-black text-slate-600 font-mono bg-slate-100 px-2 py-1 rounded-lg">
                                     {{ $payment->receipt_number }}
@@ -437,13 +438,131 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                             <td class="px-5 py-4 text-sm text-slate-500">
                                 {{ $payment->notes ?? '—' }}
                             </td>
-                            <td class="px-5 py-4 text-center">
+                            <td class="px-5 py-4 text-center" onclick="event.stopPropagation()">
                                 <a href="{{ route('udhiya.payments.print', $payment) }}" target="_blank"
                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-colors text-xs">
                                     🖨️
                                 </a>
                             </td>
                         </tr>
+
+                        {{-- Payment Details Modal --}}
+                        <div id="payment-modal-{{ $payment->id }}" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                             onclick="if(event.target === this) closePaymentModal('payment-modal-{{ $payment->id }}')">
+                            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                                 onclick="event.stopPropagation()">
+                                {{-- Modal Header --}}
+                                <div class="sticky top-0 bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5 flex items-center justify-between border-b border-emerald-600">
+                                    <h3 class="text-xl font-black text-white flex items-center gap-2">
+                                        💳 تفاصيل الدفعة {{ $payment->receipt_number }}
+                                    </h3>
+                                    <button type="button" onclick="closePaymentModal('payment-modal-{{ $payment->id }}')"
+                                            class="text-white hover:bg-emerald-700 p-2 rounded-lg transition-colors">
+                                        ✕
+                                    </button>
+                                </div>
+
+                                {{-- Modal Body --}}
+                                <div class="p-6 space-y-6">
+                                    {{-- Payment Info Grid --}}
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-slate-50 rounded-xl p-4">
+                                            <p class="text-xs font-bold text-slate-500 mb-1">رقم الإيصال</p>
+                                            <p class="text-lg font-black text-slate-800">{{ $payment->receipt_number }}</p>
+                                        </div>
+                                        <div class="bg-slate-50 rounded-xl p-4">
+                                            <p class="text-xs font-bold text-slate-500 mb-1">التاريخ</p>
+                                            <p class="text-lg font-black text-slate-800">{{ \Carbon\Carbon::parse($payment->date)->format('d/m/Y') }}</p>
+                                        </div>
+                                        <div class="bg-slate-50 rounded-xl p-4">
+                                            <p class="text-xs font-bold text-slate-500 mb-1">المبلغ</p>
+                                            <p class="text-lg font-black text-emerald-600">{{ number_format($payment->amount, 2) }} ج.م</p>
+                                        </div>
+                                        <div class="bg-slate-50 rounded-xl p-4">
+                                            <p class="text-xs font-bold text-slate-500 mb-1">طريقة الدفع</p>
+                                            <p class="text-sm font-black text-slate-800">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black
+                                                    {{ $payment->payment_method === 'cash' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }}">
+                                                    {{ $methodLabels[$payment->payment_method] ?? $payment->payment_method }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Additional Fields --}}
+                                    @if($payment->reference_number || $payment->wallet)
+                                    <div class="border-t border-slate-200 pt-4 space-y-4">
+                                        @if($payment->reference_number)
+                                        <div>
+                                            <p class="text-xs font-bold text-slate-500 mb-2">الرقم المرجعي</p>
+                                            <p class="text-sm font-semibold text-slate-700 bg-slate-50 rounded-lg px-3 py-2">
+                                                {{ $payment->reference_number }}
+                                            </p>
+                                        </div>
+                                        @endif
+                                        @if($payment->wallet)
+                                        <div>
+                                            <p class="text-xs font-bold text-slate-500 mb-2">الخزينة</p>
+                                            <p class="text-sm font-semibold text-slate-700 bg-slate-50 rounded-lg px-3 py-2">
+                                                {{ $payment->wallet->getTypeLabel() }} — {{ $payment->wallet->name }}
+                                            </p>
+                                        </div>
+                                        @endif
+                                    </div>
+                                    @endif
+
+                                    {{-- Notes --}}
+                                    @if($payment->notes)
+                                    <div class="border-t border-slate-200 pt-4">
+                                        <p class="text-xs font-bold text-slate-500 mb-2">ملاحظات</p>
+                                        <p class="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+                                            {{ $payment->notes }}
+                                        </p>
+                                    </div>
+                                    @endif
+
+                                    {{-- Attachments --}}
+                                    @if($payment->attachments && count($payment->attachments) > 0)
+                                    <div class="border-t border-slate-200 pt-4">
+                                        <p class="text-xs font-bold text-slate-500 mb-3">المرفقات</p>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            @foreach($payment->attachments as $index => $filename)
+                                            @php
+                                                $paths = json_decode($payment->attachment_paths);
+                                                $fullPath = $paths[$index] ?? null;
+                                            @endphp
+                                            @if($fullPath)
+                                            <a href="{{ asset('storage/' . $fullPath) }}" target="_blank"
+                                               class="flex items-center gap-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors group">
+                                                <span class="text-xl">📄</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-bold text-slate-700 truncate group-hover:text-emerald-600">
+                                                        {{ $filename }}
+                                                    </p>
+                                                    <p class="text-xs text-slate-400">{{ filesize(storage_path('app/public/' . $fullPath)) ? round(filesize(storage_path('app/public/' . $fullPath)) / 1024, 1) . ' KB' : '—' }}</p>
+                                                </div>
+                                                <span class="text-slate-400 group-hover:text-emerald-600">↓</span>
+                                            </a>
+                                            @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                {{-- Modal Footer --}}
+                                <div class="border-t border-slate-200 bg-slate-50 px-6 py-4 flex gap-3 justify-end">
+                                    <button type="button" onclick="closePaymentModal('payment-modal-{{ $payment->id }}')"
+                                            class="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 transition-colors">
+                                        إغلاق
+                                    </button>
+                                    <a href="{{ route('udhiya.payments.print', $payment) }}" target="_blank"
+                                       class="px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                                        🖨️ طباعة الإيصال
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                         @endforeach
                     </tbody>
                 </table>
@@ -573,6 +692,34 @@ function closeCustomerModal() {
 }
 
 // Real-time total calculation in item edit modal
+// Payment Modal Functions
+function openPaymentModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closePaymentModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('[id^="payment-modal-"]:not(.hidden)');
+        modals.forEach(modal => {
+            const modalId = modal.id;
+            closePaymentModal(modalId);
+        });
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const unitPriceInput = document.getElementById('itemUnitPrice');
     const sharesCountInput = document.getElementById('itemSharesCount');
