@@ -33,7 +33,7 @@ class PaymentService
                 $method = 'cash';
             }
 
-            $payment = Payment::create([
+            $paymentData = [
                 'contract_id'      => $contract->id,
                 'amount'           => (float) $data['amount'],
                 'payment_method'   => $method,
@@ -42,7 +42,17 @@ class PaymentService
                 'date'             => $data['date'],
                 'notes'            => $data['notes'] ?? null,
                 'wallet_id'        => !empty($data['wallet_id']) ? (int) $data['wallet_id'] : null,
-            ]);
+            ];
+
+            // Handle attachment paths if provided
+            if (!empty($data['attachment_paths'])) {
+                $paymentData['attachment_paths'] = json_encode($data['attachment_paths']);
+                $paymentData['attachments'] = collect($data['attachment_paths'])
+                    ->map(fn($p) => basename($p))
+                    ->toArray();
+            }
+
+            $payment = Payment::create($paymentData);
 
             // Update contract financials
             $newPaid      = $contract->paid_amount + $data['amount'];
@@ -181,7 +191,7 @@ class PaymentService
                     $method = $payment->payment_method ?? 'cash';
                 }
 
-                $payment->update([
+                $updateData = [
                     'contract_id'     => $newContract->id,
                     'amount'          => $newAmount,
                     'payment_method'  => $method,
@@ -190,7 +200,17 @@ class PaymentService
                     'wallet_id'       => $data['wallet_id'] ?? null,
                     'receipt_number'  => $data['receipt_number'] ?? $payment->receipt_number,
                     'reference_number' => $data['reference_number'] ?? $payment->reference_number,
-                ]);
+                ];
+
+                // Handle attachment updates
+                if (!empty($data['attachment_paths'])) {
+                    $updateData['attachment_paths'] = json_encode($data['attachment_paths']);
+                    $updateData['attachments'] = collect($data['attachment_paths'])
+                        ->map(fn($p) => basename($p))
+                        ->toArray();
+                }
+
+                $payment->update($updateData);
 
                 // Record new accounting entry
                 $this->accounting->recordCustomerPayment($payment);
@@ -234,14 +254,24 @@ class PaymentService
                     $method = $payment->payment_method ?? 'cash';
                 }
 
-                $payment->update([
+                $updateData = [
                     'payment_method'  => $method,
                     'date'            => $data['date'] ?? $payment->date,
                     'notes'           => $data['notes'] ?? null,
                     'wallet_id'       => $data['wallet_id'] ?? null,
                     'receipt_number'  => $data['receipt_number'] ?? $payment->receipt_number,
                     'reference_number' => $data['reference_number'] ?? $payment->reference_number,
-                ]);
+                ];
+
+                // Handle attachment updates
+                if (!empty($data['attachment_paths'])) {
+                    $updateData['attachment_paths'] = json_encode($data['attachment_paths']);
+                    $updateData['attachments'] = collect($data['attachment_paths'])
+                        ->map(fn($p) => basename($p))
+                        ->toArray();
+                }
+
+                $payment->update($updateData);
             }
 
             return $payment->fresh();

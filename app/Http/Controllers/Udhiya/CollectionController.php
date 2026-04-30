@@ -60,7 +60,7 @@ class CollectionController extends Controller
             'date'              => 'required|date',
             'notes'             => 'nullable|string',
             'attachments'       => 'nullable|array|max:5',
-            'attachments.*'     => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
+            'attachments.*'     => 'nullable|max:5120',
         ]);
 
         try {
@@ -76,9 +76,18 @@ class CollectionController extends Controller
                 return back()->with('toast_error', 'المبلغ يتجاوز المتبقي من الصك');
             }
 
+            // Handle file attachments upfront
+            $attachmentPaths = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('payments/' . date('Y/m/d'), 'public');
+                    $attachmentPaths[] = $path;
+                }
+            }
+
             // Use PaymentService to create payment with all accounting logic
             $paymentService = app(PaymentService::class);
-            $payment = $paymentService->store($contract, [
+            $paymentData = [
                 'amount'           => $data['amount'],
                 'payment_method'   => $data['payment_method'],
                 'receipt_number'   => $data['receipt_number'] ?? null,
@@ -86,20 +95,14 @@ class CollectionController extends Controller
                 'date'             => $data['date'],
                 'notes'            => $data['notes'] ?? null,
                 'wallet_id'        => $data['wallet_id'] ?? null,
-            ]);
+            ];
 
-            // Handle file attachments after payment is created
-            $attachmentPaths = [];
-            if ($request->hasFile('attachments')) {
-                foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('payments/' . date('Y/m/d'), 'public');
-                    $attachmentPaths[] = $path;
-                }
-                $payment->update([
-                    'attachment_paths' => json_encode($attachmentPaths),
-                    'attachments' => collect($attachmentPaths)->map(fn($p) => basename($p))->toArray(),
-                ]);
+            // Pass attachment paths to PaymentService
+            if (!empty($attachmentPaths)) {
+                $paymentData['attachment_paths'] = $attachmentPaths;
             }
+
+            $payment = $paymentService->store($contract, $paymentData);
 
             return back()->with('toast_success', 'تم تسجيل الدفعة بنجاح — رقم الإيصال: ' . $payment->receipt_number);
         } catch (\Throwable $e) {
@@ -136,7 +139,7 @@ class CollectionController extends Controller
             'receipt_number' => 'nullable|string|max:100',
             'reference_number' => 'nullable|string|max:100',
             'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
+            'attachments.*' => 'nullable|max:5120',
             'remove_attachments' => 'nullable|array',
         ]);
 
@@ -148,21 +151,14 @@ class CollectionController extends Controller
                 return back()->with('toast_error', 'الصك لا ينتمي لنفس العميل');
             }
 
-            // Use PaymentService to update payment with accounting logic
-            $paymentService = app(PaymentService::class);
-            $payment = $paymentService->update($payment, [
-                'contract_id'     => $data['contract_id'],
-                'amount'          => $data['amount'],
-                'payment_method'  => $data['payment_method'],
-                'wallet_id'       => $data['wallet_id'] ?? null,
-                'date'            => $data['date'],
-                'notes'           => $data['notes'] ?? null,
-                'receipt_number'  => $data['receipt_number'] ?? null,
-                'reference_number' => $data['reference_number'] ?? null,
-            ]);
+            // Handle file attachments upfront
+            $attachmentPaths = [];
 
-            // Handle file attachments after payment is updated
-            $attachmentPaths = $payment->attachments ? (array) $payment->attachments : [];
+            // Get existing attachment paths
+            if ($payment->attachment_paths) {
+                $existingPaths = json_decode($payment->attachment_paths, true);
+                $attachmentPaths = is_array($existingPaths) ? $existingPaths : [];
+            }
 
             // Remove selected attachments
             if ($request->has('remove_attachments')) {
@@ -178,17 +174,25 @@ class CollectionController extends Controller
                 }
             }
 
+            // Use PaymentService to update payment with accounting logic
+            $paymentService = app(PaymentService::class);
+            $paymentData = [
+                'contract_id'     => $data['contract_id'],
+                'amount'          => $data['amount'],
+                'payment_method'  => $data['payment_method'],
+                'wallet_id'       => $data['wallet_id'] ?? null,
+                'date'            => $data['date'],
+                'notes'           => $data['notes'] ?? null,
+                'receipt_number'  => $data['receipt_number'] ?? null,
+                'reference_number' => $data['reference_number'] ?? null,
+            ];
+
+            // Pass updated attachment paths to PaymentService
             if (!empty($attachmentPaths)) {
-                $payment->update([
-                    'attachment_paths' => json_encode($attachmentPaths),
-                    'attachments' => collect($attachmentPaths)->map(fn($p) => basename($p))->toArray(),
-                ]);
-            } else {
-                $payment->update([
-                    'attachment_paths' => null,
-                    'attachments' => null,
-                ]);
+                $paymentData['attachment_paths'] = $attachmentPaths;
             }
+
+            $payment = $paymentService->update($payment, $paymentData);
 
             return redirect()->route('udhiya.collections.index')
                 ->with('toast_success', 'تم تعديل الدفعة بنجاح — إيصال #' . $payment->receipt_number);

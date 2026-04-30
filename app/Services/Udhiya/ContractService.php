@@ -38,6 +38,17 @@ class ContractService
 
         $contract = DB::transaction(function () use ($data, $paymentWalletId, $paymentMethod, $paymentAmount) {
             $total = 0;
+            $attachmentPaths = [];
+
+            // Handle file attachments if provided
+            if (!empty($data['attachments'])) {
+                foreach ($data['attachments'] as $file) {
+                    if ($file) {
+                        $path = $file->store('contracts/' . date('Y/m/d'), 'public');
+                        $attachmentPaths[] = $path;
+                    }
+                }
+            }
 
             // Lock and validate all animals first (prevent race conditions)
             $itemsData = [];
@@ -138,6 +149,7 @@ class ContractService
             // Create contract
             $contractData = [
                 'customer_id'      => $data['customer_id'],
+                'contract_number'  => !empty($data['contract_number']) ? $data['contract_number'] : null,
                 'slaughter_day'    => !empty($data['slaughter_day']) ? $data['slaughter_day'] : null,
                 'slaughter_order'  => !empty($data['slaughter_order']) ? (int) $data['slaughter_order'] : null,
                 'notes'            => !empty($data['notes']) ? $data['notes'] : null,
@@ -147,19 +159,10 @@ class ContractService
                 'status'           => 'active',
             ];
 
-            // Handle file attachments if provided
-            if (!empty($data['attachments'])) {
-                $attachmentPaths = [];
-                foreach ($data['attachments'] as $file) {
-                    if ($file) {
-                        $path = $file->store('contracts/' . date('Y/m/d'), 'public');
-                        $attachmentPaths[] = $path;
-                    }
-                }
-                if (!empty($attachmentPaths)) {
-                    $contractData['attachment_paths'] = json_encode($attachmentPaths);
-                    $contractData['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
-                }
+            // Add attachment paths to contract
+            if (!empty($attachmentPaths)) {
+                $contractData['attachment_paths'] = json_encode($attachmentPaths);
+                $contractData['attachments'] = collect($attachmentPaths)->map(fn($p) => basename($p))->toArray();
             }
 
             $contract = Contract::create($contractData);
@@ -214,7 +217,7 @@ class ContractService
         // Record initial payment outside the main transaction to avoid nesting
         if ($paymentAmount > 0) {
             try {
-                $this->payments->store($contract, [
+                $paymentData = [
                     'amount'         => (float) $paymentAmount,
                     'payment_method' => (string) $paymentMethod,
                     'wallet_id'      => $paymentWalletId ? (int) $paymentWalletId : null,
@@ -222,7 +225,14 @@ class ContractService
                     'reference_number' => $data['payment_reference_number'] ?? null,
                     'date'           => Carbon::today()->toDateString(),
                     'notes'          => 'دفعة عند إصدار الصك',
-                ]);
+                ];
+
+                // Pass attachment paths to payment
+                if (!empty($attachmentPaths)) {
+                    $paymentData['attachment_paths'] = $attachmentPaths;
+                }
+
+                $this->payments->store($contract, $paymentData);
                 $contract->refresh();
             } catch (\Exception $e) {
                 Log::error('Payment creation error: ' . $e->getMessage());

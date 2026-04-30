@@ -9,6 +9,28 @@ class StorePaymentRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Validate attachments
+            if ($this->has('attachments') && is_array($this->attachments)) {
+                $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
+                foreach ($this->attachments as $idx => $file) {
+                    if ($file && is_object($file)) {
+                        $ext = strtolower($file->getClientOriginalExtension());
+                        if (!in_array($ext, $allowed)) {
+                            $validator->errors()->add(
+                                'attachments.' . $idx,
+                                'المرفق يجب أن يكون من نوع: PDF, JPG, PNG, GIF.'
+                            );
+                        }
+                    }
+                }
+            }
+        });
+        return $validator;
+    }
+
     public function rules(): array
     {
         $contract = Contract::find($this->input('contract_id'));
@@ -23,7 +45,7 @@ class StorePaymentRequest extends FormRequest
             'reference_number'  => 'nullable|string|max:100',
             'wallet_id'         => 'nullable|exists:wallets,id',
             'attachments'       => 'nullable|array|max:5',
-            'attachments.*'     => 'file|mimes:pdf,jpg,jpeg,png,gif|max:5120',
+            'attachments.*'     => 'nullable|max:5120',
         ];
     }
 
