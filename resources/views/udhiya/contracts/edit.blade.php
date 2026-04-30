@@ -462,7 +462,12 @@ function updateGroupInfo(row) {
         const maxAllowed = Math.min(SHARE_MAX[_getShareType(row)] || 7, g.remaining);
         sharesIn.max = maxAllowed;
         row.querySelector('.shares-limit-label').textContent = 'الحد: ' + maxAllowed;
-        if (parseInt(sharesIn.value) > maxAllowed) sharesIn.value = maxAllowed;
+        if (parseInt(sharesIn.value) > maxAllowed) {
+            sharesIn.value = maxAllowed > 0 ? maxAllowed : parseInt(sharesIn.value);
+        }
+    } else {
+        // For locked shares, preserve the current value and set max to current value
+        sharesIn.max = Math.max(7, parseInt(sharesIn.value) || 1);
     }
 }
 
@@ -1154,7 +1159,23 @@ function initEditView() {
                 sel.dispatchEvent(new Event('change', { bubbles: true }));
 
                 // initialize rows visually
-                document.querySelectorAll('.item-row').forEach(row => updateRow(row));
+                document.querySelectorAll('.item-row').forEach((row, idx) => {
+                    const itemData = existingContract.items[idx];
+                    if (itemData && itemData.group_id) {
+                        // Find the group and member for this item
+                        const g = allGroups.find(x => String(x.id) === String(itemData.group_id));
+                        if (g) {
+                            const member = g.members.find(m =>
+                                String(m.customer_id) === String(existingContract.customer_id) &&
+                                m.has_contract
+                            );
+                            if (member) {
+                                lockRowToMember(row, g, member);
+                            }
+                        }
+                    }
+                    updateRow(row);
+                });
                 calcGrand();
 
                 // Initialize financial summary display
