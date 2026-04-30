@@ -459,18 +459,22 @@ function updateGroupInfo(row) {
     infoDiv.style.display = '';
 
     if (!sharesIn.readOnly) {
-        const maxAllowed = Math.min(SHARE_MAX[_getShareType(row)] || 7, g.remaining);
+        // For unlocked (new) shares: can use remaining slots or share_type max
+        const typeMax = SHARE_MAX[_getShareType(row)] || 7;
+        const maxAllowed = Math.min(typeMax, g.remaining);
         sharesIn.min = 1;
-        sharesIn.max = maxAllowed;
-        row.querySelector('.shares-limit-label').textContent = 'الحد: ' + maxAllowed;
-        if (parseInt(sharesIn.value) > maxAllowed) {
-            sharesIn.value = maxAllowed > 0 ? maxAllowed : parseInt(sharesIn.value);
+        sharesIn.max = Math.max(1, maxAllowed);  // At least 1, even if no remaining
+        row.querySelector('.shares-limit-label').textContent =
+            g.remaining > 0 ? 'الحد: ' + maxAllowed : 'المجموعة ممتلئة - لا توجد أماكن متاحة';
+        if (parseInt(sharesIn.value) > maxAllowed && maxAllowed > 0) {
+            sharesIn.value = maxAllowed;
         }
     } else {
-        // For locked shares, preserve the current value and set max to current value
+        // For locked shares (customer's existing allocation): preserve exactly what they have
         const currentValue = parseInt(sharesIn.value) || 1;
         sharesIn.min = currentValue;
         sharesIn.max = currentValue;
+        row.querySelector('.shares-limit-label').textContent = '🔒 محجوز للعميل: ' + currentValue + ' نصيب';
     }
 }
 
@@ -520,17 +524,17 @@ function updateRow(row) {
 
     if (sharesIn.parentElement.parentElement.style.display !== 'none') {
         if (!sharesIn.readOnly) {
-            // Only unlock shares - can change max
+            // Unlocked shares - set min/max based on share type
             const typeMax = SHARE_MAX[shareType] || 7;
             sharesIn.min = 1;
-            sharesIn.max = typeMax;
+            sharesIn.max = Math.max(1, typeMax);
             row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
         } else {
             // Locked shares - keep current value as both min and max (don't change it)
             const currentValue = parseInt(sharesIn.value) || 1;
             sharesIn.min = currentValue;
             sharesIn.max = currentValue;
-            row.querySelector('.shares-limit-label').textContent = '🔒 محدد من المجموعة';
+            row.querySelector('.shares-limit-label').textContent = '🔒 محجوز للعميل: ' + currentValue + ' نصيب';
         }
     }
 
