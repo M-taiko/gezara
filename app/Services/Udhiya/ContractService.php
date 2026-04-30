@@ -118,6 +118,9 @@ class ContractService
                         ]);
                         $animal->update(['is_grouped' => true]);
                         $animal->refresh();
+                    } else {
+                        // Refresh setting to get latest values after old items are restored
+                        $setting->refresh();
                     }
 
                     $sharesCount = $item['shares_count'] ?? 1;
@@ -337,6 +340,9 @@ class ContractService
                         ]);
                         $animal->update(['is_grouped' => true]);
                         $animal->refresh();
+                    } else {
+                        // Refresh setting to get latest values after old items are restored
+                        $setting->refresh();
                     }
 
                     $sharesCount = $item['shares_count'] ?? 1;
