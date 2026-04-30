@@ -50,9 +50,14 @@ class StoreContractRequest extends FormRequest
 
     public function rules(): array
     {
+        // Get the contract ID from route if updating
+        $contractId = $this->route('contract')?->id;
+
         return [
             'customer_id'              => 'required|exists:customers,id',
-            'contract_number'          => 'nullable|string|unique:contracts',
+            'contract_number'          => $contractId
+                ? "nullable|string|unique:contracts,contract_number,{$contractId}"
+                : 'nullable|string|unique:contracts',
             'slaughter_day'            => 'nullable|date',
             'slaughter_order'          => 'nullable|integer|min:1',
             'notes'                    => 'nullable|string',
