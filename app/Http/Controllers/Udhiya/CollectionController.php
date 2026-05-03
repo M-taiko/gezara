@@ -104,6 +104,18 @@ class CollectionController extends Controller
 
             $payment = $paymentService->store($contract, $paymentData);
 
+            // Sync new attachments to the contract as well
+            if (!empty($attachmentPaths)) {
+                $contractPaths = $contract->attachment_paths
+                    ? json_decode($contract->attachment_paths, true)
+                    : [];
+                $contractPaths = array_values(array_unique(array_merge($contractPaths, $attachmentPaths)));
+                $contract->update([
+                    'attachment_paths' => json_encode($contractPaths),
+                    'attachments'      => collect($contractPaths)->map(fn($p) => basename($p))->toArray(),
+                ]);
+            }
+
             return back()->with('toast_success', 'تم تسجيل الدفعة بنجاح — رقم الإيصال: ' . $payment->receipt_number);
         } catch (\Throwable $e) {
             return back()->with('toast_error', 'خطأ عند تسجيل الدفعة: ' . $e->getMessage());
@@ -152,47 +164,70 @@ class CollectionController extends Controller
             }
 
             // Handle file attachments upfront
-            $attachmentPaths = [];
+            $oldPaths = $payment->attachment_paths
+                ? (json_decode($payment->attachment_paths, true) ?? [])
+                : [];
 
-            // Get existing attachment paths
-            if ($payment->attachment_paths) {
-                $existingPaths = json_decode($payment->attachment_paths, true);
-                $attachmentPaths = is_array($existingPaths) ? $existingPaths : [];
-            }
+            // Determine paths to remove
+            $removedIndices = array_map('intval', $request->input('remove_attachments', []));
+            $removedPaths   = array_values(array_intersect_key($oldPaths, array_flip($removedIndices)));
 
-            // Remove selected attachments
-            if ($request->has('remove_attachments')) {
-                $indicesToRemove = array_flip($request->input('remove_attachments', []));
-                $attachmentPaths = array_diff_key($attachmentPaths, $indicesToRemove);
-            }
+            // Build updated payment paths (remove selected)
+            $attachmentPaths = array_values(array_diff_key($oldPaths, array_flip($removedIndices)));
 
-            // Add new attachments
+            // Add newly uploaded files
+            $newPaths = [];
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('payments/' . date('Y/m/d'), 'public');
-                    $attachmentPaths[] = $path;
+                    if ($file && $file->isValid()) {
+                        $path          = $file->store('payments/' . date('Y/m/d'), 'public');
+                        $attachmentPaths[] = $path;
+                        $newPaths[]    = $path;
+                    }
                 }
             }
+            $attachmentPaths = array_values($attachmentPaths);
 
             // Use PaymentService to update payment with accounting logic
             $paymentService = app(PaymentService::class);
             $paymentData = [
-                'contract_id'     => $data['contract_id'],
-                'amount'          => $data['amount'],
-                'payment_method'  => $data['payment_method'],
-                'wallet_id'       => $data['wallet_id'] ?? null,
-                'date'            => $data['date'],
-                'notes'           => $data['notes'] ?? null,
-                'receipt_number'  => $data['receipt_number'] ?? null,
+                'contract_id'      => $data['contract_id'],
+                'amount'           => $data['amount'],
+                'payment_method'   => $data['payment_method'],
+                'wallet_id'        => $data['wallet_id'] ?? null,
+                'date'             => $data['date'],
+                'notes'            => $data['notes'] ?? null,
+                'receipt_number'   => $data['receipt_number'] ?? null,
                 'reference_number' => $data['reference_number'] ?? null,
+                'attachment_paths' => $attachmentPaths,
             ];
 
-            // Pass updated attachment paths to PaymentService
-            if (!empty($attachmentPaths)) {
-                $paymentData['attachment_paths'] = $attachmentPaths;
+            $payment = $paymentService->update($payment, $paymentData);
+
+            // Sync attachment changes to the linked contract
+            $contractPaths = $contract->attachment_paths
+                ? (json_decode($contract->attachment_paths, true) ?? [])
+                : [];
+
+            // Remove from contract any paths deleted from the payment
+            if (!empty($removedPaths)) {
+                $contractPaths = array_values(array_filter(
+                    $contractPaths,
+                    fn($p) => !in_array($p, $removedPaths)
+                ));
             }
 
-            $payment = $paymentService->update($payment, $paymentData);
+            // Add new paths to contract (avoid duplicates)
+            if (!empty($newPaths)) {
+                $contractPaths = array_values(array_unique(array_merge($contractPaths, $newPaths)));
+            }
+
+            $contract->update([
+                'attachment_paths' => !empty($contractPaths) ? json_encode($contractPaths) : null,
+                'attachments'      => !empty($contractPaths)
+                    ? collect($contractPaths)->map(fn($p) => basename($p))->toArray()
+                    : null,
+            ]);
 
             return redirect()->route('udhiya.collections.index')
                 ->with('toast_success', 'تم تعديل الدفعة بنجاح — إيصال #' . $payment->receipt_number);
