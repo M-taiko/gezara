@@ -211,9 +211,15 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
         {{-- Add Payment Form --}}
         @if($contract->status === 'active' && $contract->remaining_amount > 0)
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-emerald-100 bg-gradient-to-b from-emerald-50 to-white">
+            <div class="px-6 py-5 border-b border-emerald-100 bg-gradient-to-b from-emerald-50 to-white flex items-center justify-between">
                 <h6 class="text-base font-black text-emerald-900 m-0">💰 تسجيل دفعة</h6>
+                <button type="button" onclick="togglePaymentForm()"
+                        id="togglePaymentBtn"
+                        class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">
+                    ＋ إضافة دفعة
+                </button>
             </div>
+            <div id="paymentFormBody" class="hidden">
             <form action="{{ route('udhiya.payments.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="contract_id" value="{{ $contract->id }}">
@@ -290,6 +296,7 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                     </button>
                 </div>
             </form>
+            </div>{{-- end #paymentFormBody --}}
         </div>
         @endif
 
@@ -665,6 +672,18 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
 </div>
 
 <script>
+function togglePaymentForm() {
+    const body = document.getElementById('paymentFormBody');
+    const btn  = document.getElementById('togglePaymentBtn');
+    if (!body) return;
+    const isHidden = body.classList.contains('hidden');
+    body.classList.toggle('hidden');
+    btn.textContent = isHidden ? '✕ إخفاء' : '＋ إضافة دفعة';
+    btn.className   = isHidden
+        ? 'text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors'
+        : 'text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors';
+}
+
 function openItemEditModal(itemId, unitPrice, sharesCount) {
     const form = document.getElementById('itemEditForm');
     form.action = `/udhiya/contract-items/${itemId}`;
