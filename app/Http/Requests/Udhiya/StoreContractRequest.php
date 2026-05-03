@@ -75,6 +75,9 @@ class StoreContractRequest extends FormRequest
             'payment_reference_number' => 'nullable|string|max:100',
             'attachments'              => 'nullable|array|max:5',
             'attachments.*'            => 'nullable|max:5120',
+            'remove_attachments'       => 'nullable|array',
+            'remove_attachments.*'     => 'nullable|integer|min:0',
+            'replace_attachments'      => 'nullable|in:0,1',
         ];
     }
 

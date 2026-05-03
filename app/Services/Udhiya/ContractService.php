@@ -375,21 +375,27 @@ class ContractService
                 throw new \RuntimeException("المبلغ المدفوع ({$contract->paid_amount}) أكبر من إجمالي الصك الجديد ({$total}). يرجى تسوية المبالغ أولاً.");
             }
 
-            // Handle file attachments if provided
-            $attachmentPaths = $contract->attachment_paths ? json_decode($contract->attachment_paths, true) : [];
+            // Handle file attachments
+            $replaceAll = !empty($data['replace_attachments']) && $data['replace_attachments'] == '1';
 
-            // Remove selected attachments
-            if (!empty($data['remove_attachments'])) {
-                $indicesToRemove = array_flip($data['remove_attachments']);
-                $attachmentPaths = array_diff_key($attachmentPaths, $indicesToRemove);
-                // Re-index array
-                $attachmentPaths = array_values($attachmentPaths);
+            if ($replaceAll) {
+                // Replace mode: discard all existing attachments
+                $attachmentPaths = [];
+            } else {
+                // Append mode: start from existing attachments
+                $attachmentPaths = $contract->attachment_paths ? json_decode($contract->attachment_paths, true) : [];
+
+                // Remove individually checked attachments
+                if (!empty($data['remove_attachments'])) {
+                    $indicesToRemove = array_flip(array_map('intval', $data['remove_attachments']));
+                    $attachmentPaths = array_values(array_diff_key($attachmentPaths, $indicesToRemove));
+                }
             }
 
             // Add new attachments
             if (!empty($data['attachments'])) {
                 foreach ($data['attachments'] as $file) {
-                    if ($file) {
+                    if ($file && method_exists($file, 'store')) {
                         $path = $file->store('contracts/' . date('Y/m/d'), 'public');
                         $attachmentPaths[] = $path;
                     }

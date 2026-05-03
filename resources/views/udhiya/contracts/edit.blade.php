@@ -205,10 +205,28 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">📎 مرفقات الصك <span class="text-slate-400 font-normal">(اختياري)</span></label>
-                        <input type="file" name="attachments[]" multiple
+                        <input type="file" name="attachments[]" id="newAttachmentsInput" multiple
                                accept="image/*,.pdf"
-                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm text-slate-800 transition-colors">
-                        <p class="text-xs text-slate-500 mt-1">صورة الإيصال أو المستند — JPG, PNG, PDF (اختياري)</p>
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm text-slate-800 transition-colors"
+                               onchange="onNewFilesSelected(this)">
+                        <p class="text-xs text-slate-500 mt-1">JPG, PNG, PDF — حد أقصى 5 ميجابايت لكل ملف</p>
+
+                        {{-- Replace/Append choice — shown only after selecting files AND existing attachments exist --}}
+                        @if($contract->attachments && count($contract->attachments) > 0)
+                        <div id="replaceChoiceBox" class="hidden mt-3 p-3 rounded-xl border border-amber-200 bg-amber-50 space-y-2">
+                            <p class="text-xs font-bold text-amber-800">يوجد مرفقات حالية — ماذا تريد؟</p>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="replace_attachments" value="0" checked class="accent-indigo-600">
+                                <span class="text-xs font-semibold text-slate-700">إضافة المرفقات الجديدة مع الحالية</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="replace_attachments" value="1" class="accent-rose-600">
+                                <span class="text-xs font-semibold text-rose-700">استبدال جميع المرفقات بالملفات الجديدة</span>
+                            </label>
+                        </div>
+                        @else
+                        <input type="hidden" name="replace_attachments" value="0">
+                        @endif
                     </div>
                 </div>
             </div>
@@ -217,24 +235,26 @@
             @if($contract->attachments && count($contract->attachments) > 0)
             <div class="px-6 py-5 border-t border-slate-100 bg-slate-50/40">
                 <h6 class="text-xs font-bold text-slate-600 mb-3">📎 المرفقات الحالية</h6>
-                <div class="space-y-2">
+                <div class="space-y-2" id="currentAttachmentsList">
                     @foreach($contract->attachments as $idx => $attachment)
-                    <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200">
+                    <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200" id="attach-row-{{ $idx }}">
                         <div class="flex items-center gap-2 flex-1 min-w-0">
                             <span class="text-sm text-indigo-600 flex-shrink-0">📄</span>
-                            <a href="{{ asset('storage/' . ($contract->attachment_paths ? json_decode($contract->attachment_paths)[$idx] : '')) }}"
+                            <a href="{{ asset('storage/' . (json_decode($contract->attachment_paths, true)[$idx] ?? '')) }}"
                                target="_blank"
                                class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline truncate">
                                 {{ $attachment }}
                             </a>
                         </div>
-                        <label class="flex items-center gap-1.5 cursor-pointer flex-shrink-0">
-                            <input type="checkbox" name="remove_attachments[]" value="{{ $idx }}" class="w-4 h-4">
-                            <span class="text-xs text-slate-400">حذف</span>
-                        </label>
+                        <button type="button"
+                                onclick="markRemoveAttachment({{ $idx }}, this)"
+                                class="text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors flex-shrink-0 mr-2">
+                            🗑 حذف
+                        </button>
                     </div>
                     @endforeach
                 </div>
+                <div id="removedAttachmentsInputs"></div>
             </div>
             @endif
 
@@ -1242,6 +1262,45 @@ function closeEditCustomerModal() {
     const modal = document.getElementById('editCustomerModal');
     if (modal) modal.classList.add('hidden');
     currentEditCustomerId = null;
+}
+
+/* ══════════════════════════════════
+   ATTACHMENT HELPERS
+══════════════════════════════════ */
+function onNewFilesSelected(input) {
+    const box = document.getElementById('replaceChoiceBox');
+    if (box) {
+        box.classList.toggle('hidden', input.files.length === 0);
+    }
+}
+
+const _removedIndices = new Set();
+
+function markRemoveAttachment(idx, btn) {
+    const row = document.getElementById('attach-row-' + idx);
+    const container = document.getElementById('removedAttachmentsInputs');
+
+    if (_removedIndices.has(idx)) {
+        // Undo removal
+        _removedIndices.delete(idx);
+        row.classList.remove('opacity-40', 'line-through');
+        btn.textContent = '🗑 حذف';
+        btn.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors flex-shrink-0 mr-2';
+        const existing = container.querySelector(`input[value="${idx}"]`);
+        if (existing) existing.remove();
+    } else {
+        // Mark for removal
+        _removedIndices.add(idx);
+        row.classList.add('opacity-40');
+        row.querySelector('a').classList.add('line-through');
+        btn.textContent = '↩ تراجع';
+        btn.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors flex-shrink-0 mr-2';
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'remove_attachments[]';
+        input.value = idx;
+        container.appendChild(input);
+    }
 }
 
 </script>
