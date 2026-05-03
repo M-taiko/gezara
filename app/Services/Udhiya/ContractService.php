@@ -393,11 +393,13 @@ class ContractService
             }
 
             // Add new attachments
+            $newPaths = [];
             if (!empty($data['attachments'])) {
                 foreach ($data['attachments'] as $file) {
                     if ($file && method_exists($file, 'store')) {
                         $path = $file->store('contracts/' . date('Y/m/d'), 'public');
                         $attachmentPaths[] = $path;
+                        $newPaths[] = $path;
                     }
                 }
             }
@@ -422,6 +424,21 @@ class ContractService
             }
 
             $contract->update($updateData);
+
+            // Sync new contract attachments to the first payment as well
+            if (!empty($newPaths)) {
+                $firstPayment = $contract->payments()->orderBy('id')->first();
+                if ($firstPayment) {
+                    $paymentPaths = $firstPayment->attachment_paths
+                        ? json_decode($firstPayment->attachment_paths, true)
+                        : [];
+                    $paymentPaths = array_values(array_unique(array_merge($paymentPaths, $newPaths)));
+                    $firstPayment->update([
+                        'attachment_paths' => json_encode($paymentPaths),
+                        'attachments'      => collect($paymentPaths)->map(fn($p) => basename($p))->toArray(),
+                    ]);
+                }
+            }
 
             foreach ($itemsData as $itemData) {
                 $contractItem = ContractItem::create([

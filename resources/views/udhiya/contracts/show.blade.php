@@ -154,18 +154,33 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                 @endif
 
                 @if($contract->attachments && count($contract->attachments) > 0)
+                @php $attachPaths = json_decode($contract->attachment_paths, true) ?? []; @endphp
                 <div class="py-2 border-t border-slate-100">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-2">📎 المرفقات</span>
-                    <div class="space-y-1.5">
-                        @foreach($contract->attachments as $index => $attachment)
-                        <a href="{{ asset('storage/' . ($contract->attachment_paths ? json_decode($contract->attachment_paths, true)[$index] ?? '' : '')) }}"
-                           target="_blank"
-                           class="flex items-center gap-2 text-xs text-indigo-600 hover:text-indigo-700 hover:underline">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                            </svg>
-                            {{ $attachment }}
-                        </a>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-2">📎 المرفقات ({{ count($contract->attachments) }})</span>
+                    <div class="space-y-2">
+                        @foreach($contract->attachments as $index => $filename)
+                        @php
+                            $filePath = $attachPaths[$index] ?? '';
+                            $fullPath = storage_path('app/public/' . $filePath);
+                            $fileSize = file_exists($fullPath) ? round(filesize($fullPath) / 1024, 1) . ' KB' : '';
+                            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                            $icon = in_array($ext, ['jpg','jpeg','png','gif']) ? '🖼' : '📄';
+                        @endphp
+                        <div class="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-base flex-shrink-0">{{ $icon }}</span>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold text-slate-700 truncate m-0">{{ $filename }}</p>
+                                    @if($fileSize)
+                                    <p class="text-xs text-slate-400 m-0">{{ $fileSize }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <a href="{{ asset('storage/' . $filePath) }}" target="_blank" download
+                               class="flex-shrink-0 mr-2 text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors">
+                                ⬇ تحميل
+                            </a>
+                        </div>
                         @endforeach
                     </div>
                 </div>
