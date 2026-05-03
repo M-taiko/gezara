@@ -323,11 +323,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     {{-- Attachments --}}
                     <td class="px-5 py-4 text-center hidden md:table-cell">
                         @if($contract->attachments && count($contract->attachments) > 0)
+                        @if(count($contract->attachments) === 1)
+                        @php $fp0 = (json_decode($contract->attachment_paths, true) ?? [])[0] ?? ''; @endphp
                         <button type="button"
-                                onclick="openAttachModal('attach-modal-{{ $contract->id }}')"
+                                onclick="gzLightboxOpen('{{ asset('storage/'.$fp0) }}','{{ addslashes($contract->attachments[0]) }}')"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors text-xs font-bold">
+                            📎 1
+                        </button>
+                        @else
+                        <button type="button"
+                                onclick="document.getElementById('attach-list-{{ $contract->id }}').classList.remove('hidden')"
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors text-xs font-bold">
                             📎 {{ count($contract->attachments) }}
                         </button>
+                        @endif
                         @else
                         <span class="text-slate-300 text-xs">—</span>
                         @endif
@@ -399,41 +408,37 @@ document.addEventListener('DOMContentLoaded', function() {
             </tbody>
         </table>
 
-        {{-- Attachment Modals --}}
+        {{-- Attachment quick-view popovers (per contract) --}}
         @foreach($contracts as $contract)
         @if($contract->attachments && count($contract->attachments) > 0)
         @php $attachPaths = json_decode($contract->attachment_paths, true) ?? []; @endphp
-        <div id="attach-modal-{{ $contract->id }}"
+        <div id="attach-list-{{ $contract->id }}"
              class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-             onclick="if(event.target===this) closeAttachModal('attach-modal-{{ $contract->id }}')">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                    <h6 class="font-black text-slate-800 text-sm m-0">📎 مرفقات الصك #{{ $contract->contract_number }}</h6>
-                    <button onclick="closeAttachModal('attach-modal-{{ $contract->id }}')"
-                            class="text-slate-400 hover:text-slate-700 text-lg font-bold leading-none">✕</button>
+             onclick="if(event.target===this) document.getElementById('attach-list-{{ $contract->id }}').classList.add('hidden')">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                    <h6 class="font-black text-slate-800 text-sm m-0">📎 مرفقات #{{ $contract->contract_number }}</h6>
+                    <button onclick="document.getElementById('attach-list-{{ $contract->id }}').classList.add('hidden')"
+                            class="text-slate-400 hover:text-slate-700 text-base font-bold">✕</button>
                 </div>
-                <div class="px-5 py-4 space-y-2">
+                <div class="px-4 py-3 space-y-2">
                     @foreach($contract->attachments as $idx => $filename)
                     @php
-                        $filePath = $attachPaths[$idx] ?? '';
-                        $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                        $icon     = in_array($ext, ['jpg','jpeg','png','gif']) ? '🖼' : '📄';
-                        $fullPath = storage_path('app/public/' . $filePath);
-                        $size     = file_exists($fullPath) ? round(filesize($fullPath)/1024,1).' KB' : '';
+                        $fp   = $attachPaths[$idx] ?? '';
+                        $ext  = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                        $ico  = in_array($ext, ['jpg','jpeg','png','gif']) ? '🖼' : '📄';
+                        $sz   = $fp && file_exists(storage_path('app/public/'.$fp)) ? round(filesize(storage_path('app/public/'.$fp))/1024,1).' KB' : '';
                     @endphp
-                    <div class="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="text-base flex-shrink-0">{{ $icon }}</span>
-                            <div class="min-w-0">
-                                <p class="text-xs font-semibold text-slate-700 truncate m-0">{{ $filename }}</p>
-                                @if($size)<p class="text-xs text-slate-400 m-0">{{ $size }}</p>@endif
-                            </div>
+                    <button type="button"
+                            onclick="document.getElementById('attach-list-{{ $contract->id }}').classList.add('hidden'); gzLightboxOpen('{{ asset('storage/'.$fp) }}','{{ addslashes($filename) }}')"
+                            class="w-full flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 rounded-xl px-3 py-2.5 border border-slate-100 hover:border-indigo-200 transition-colors text-right group">
+                        <span class="text-lg flex-shrink-0">{{ $ico }}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 truncate m-0">{{ $filename }}</p>
+                            @if($sz)<p class="text-xs text-slate-400 m-0">{{ $sz }}</p>@endif
                         </div>
-                        <a href="{{ asset('storage/' . $filePath) }}" target="_blank" download
-                           class="flex-shrink-0 mr-2 text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors">
-                            ⬇
-                        </a>
-                    </div>
+                        <span class="text-xs text-slate-300 group-hover:text-indigo-400 flex-shrink-0">👁</span>
+                    </button>
                     @endforeach
                 </div>
             </div>
@@ -498,15 +503,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function openAttachModal(id) {
-    document.getElementById(id)?.classList.remove('hidden');
-}
-function closeAttachModal(id) {
-    document.getElementById(id)?.classList.add('hidden');
-}
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        document.querySelectorAll('[id^="attach-modal-"]').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('[id^="attach-list-"]').forEach(m => m.classList.add('hidden'));
     }
 });
 </script>

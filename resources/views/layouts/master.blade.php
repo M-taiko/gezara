@@ -66,6 +66,78 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @stack('js')
 
+    {{-- ══ Global Attachment Lightbox ══ --}}
+    <div id="gz-lightbox" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+         onclick="if(event.target===this)gzLightboxClose()">
+        <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+             style="max-width:92vw;max-height:90vh;min-width:320px;">
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
+                <span id="gz-lb-title" class="text-sm font-bold text-slate-700 truncate max-w-xs"></span>
+                <div class="flex items-center gap-2 mr-3">
+                    <a id="gz-lb-download" href="#" download target="_blank"
+                       class="text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors">
+                        ⬇ تحميل
+                    </a>
+                    <button onclick="gzLightboxClose()"
+                            class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-700 hover:text-white transition-colors text-lg font-bold leading-none flex items-center justify-center">
+                        ✕
+                    </button>
+                </div>
+            </div>
+            {{-- Body --}}
+            <div id="gz-lb-body" class="flex-1 overflow-auto flex items-center justify-center bg-slate-50 p-2"
+                 style="min-height:200px;">
+                {{-- filled by JS --}}
+            </div>
+        </div>
+    </div>
+    <script>
+    function gzLightboxOpen(url, filename) {
+        const ext   = filename.split('.').pop().toLowerCase();
+        const body  = document.getElementById('gz-lb-body');
+        const title = document.getElementById('gz-lb-title');
+        const dl    = document.getElementById('gz-lb-download');
+
+        title.textContent  = filename;
+        dl.href            = url;
+        dl.setAttribute('download', filename);
+        body.innerHTML     = '';
+
+        if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
+            const img = document.createElement('img');
+            img.src   = url;
+            img.alt   = filename;
+            img.style.cssText = 'max-width:100%;max-height:75vh;border-radius:8px;object-fit:contain;';
+            body.appendChild(img);
+        } else if (ext === 'pdf') {
+            const iframe = document.createElement('iframe');
+            iframe.src   = url + '#toolbar=1&navpanes=0';
+            iframe.style.cssText = 'width:80vw;height:75vh;border:none;border-radius:8px;';
+            body.appendChild(iframe);
+        } else {
+            body.innerHTML = `
+                <div class="text-center p-8">
+                    <div class="text-5xl mb-4">📄</div>
+                    <p class="text-sm font-semibold text-slate-600 mb-4">${filename}</p>
+                    <a href="${url}" target="_blank" download="${filename}"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors">
+                        ⬇ تحميل الملف
+                    </a>
+                </div>`;
+        }
+
+        document.getElementById('gz-lightbox').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function gzLightboxClose() {
+        document.getElementById('gz-lightbox').classList.add('hidden');
+        document.getElementById('gz-lb-body').innerHTML = '';
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') gzLightboxClose(); });
+    </script>
+
     {{-- Toast Notifications --}}
     @if(session('toast_success') || session('toast_error') || session('toast_warning') || session('toast_info') || $errors->any())
     <div id="toast-container" style="position:fixed;bottom:24px;left:24px;z-index:99999;min-width:320px;max-width:420px;">

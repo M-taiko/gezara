@@ -213,27 +213,16 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                     $isImage  = in_array($ext, ['jpg','jpeg','png','gif']);
                     $icon     = $isImage ? '🖼' : '📄';
                 @endphp
-                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100 gap-2">
-                    <div class="flex items-center gap-2 min-w-0 flex-1">
-                        <span class="text-base flex-shrink-0">{{ $icon }}</span>
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold text-slate-700 truncate m-0">{{ $filename }}</p>
-                            @if($fileSize)<p class="text-xs text-slate-400 m-0">{{ $fileSize }}</p>@endif
-                        </div>
+                <button type="button"
+                        onclick="gzLightboxOpen('{{ asset('storage/' . $filePath) }}', '{{ addslashes($filename) }}')"
+                        class="w-full flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 rounded-xl px-3 py-2.5 border border-slate-100 hover:border-indigo-200 transition-colors text-right group">
+                    <span class="text-xl flex-shrink-0">{{ $icon }}</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 truncate m-0">{{ $filename }}</p>
+                        @if($fileSize)<p class="text-xs text-slate-400 m-0">{{ $fileSize }}</p>@endif
                     </div>
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        @if($isImage)
-                        <a href="{{ asset('storage/' . $filePath) }}" target="_blank"
-                           class="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-colors">
-                            👁
-                        </a>
-                        @endif
-                        <a href="{{ asset('storage/' . $filePath) }}" target="_blank" download
-                           class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors">
-                            ⬇ تحميل
-                        </a>
-                    </div>
-                </div>
+                    <span class="text-xs text-slate-300 group-hover:text-indigo-400 flex-shrink-0">👁 عرض</span>
+                </button>
                 @endforeach
             </div>
         </div>
@@ -561,26 +550,28 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
 
                                     {{-- Attachments --}}
                                     @if($payment->attachments && count($payment->attachments) > 0)
+                                    @php $pPaths = json_decode($payment->attachment_paths, true) ?? []; @endphp
                                     <div class="border-t border-slate-200 pt-4">
-                                        <p class="text-xs font-bold text-slate-500 mb-3">المرفقات</p>
-                                        <div class="grid grid-cols-2 gap-3">
+                                        <p class="text-xs font-bold text-slate-500 mb-3">المرفقات ({{ count($payment->attachments) }})</p>
+                                        <div class="space-y-2">
                                             @foreach($payment->attachments as $index => $filename)
                                             @php
-                                                $paths = json_decode($payment->attachment_paths);
-                                                $fullPath = $paths[$index] ?? null;
+                                                $fp  = $pPaths[$index] ?? null;
+                                                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                                                $ico = in_array($ext, ['jpg','jpeg','png','gif']) ? '🖼' : '📄';
+                                                $sz  = $fp && file_exists(storage_path('app/public/'.$fp)) ? round(filesize(storage_path('app/public/'.$fp))/1024,1).' KB' : '';
                                             @endphp
-                                            @if($fullPath)
-                                            <a href="{{ asset('storage/' . $fullPath) }}" target="_blank"
-                                               class="flex items-center gap-2 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors group">
-                                                <span class="text-xl">📄</span>
+                                            @if($fp)
+                                            <button type="button"
+                                                    onclick="gzLightboxOpen('{{ asset('storage/'.$fp) }}','{{ addslashes($filename) }}')"
+                                                    class="w-full flex items-center gap-3 p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors text-right group">
+                                                <span class="text-xl flex-shrink-0">{{ $ico }}</span>
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-xs font-bold text-slate-700 truncate group-hover:text-emerald-600">
-                                                        {{ $filename }}
-                                                    </p>
-                                                    <p class="text-xs text-slate-400">{{ filesize(storage_path('app/public/' . $fullPath)) ? round(filesize(storage_path('app/public/' . $fullPath)) / 1024, 1) . ' KB' : '—' }}</p>
+                                                    <p class="text-xs font-bold text-slate-700 truncate group-hover:text-indigo-700 m-0">{{ $filename }}</p>
+                                                    @if($sz)<p class="text-xs text-slate-400 m-0">{{ $sz }}</p>@endif
                                                 </div>
-                                                <span class="text-slate-400 group-hover:text-emerald-600">↓</span>
-                                            </a>
+                                                <span class="text-xs text-slate-300 group-hover:text-indigo-400 flex-shrink-0">👁</span>
+                                            </button>
                                             @endif
                                             @endforeach
                                         </div>
