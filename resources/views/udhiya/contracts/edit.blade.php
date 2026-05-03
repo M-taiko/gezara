@@ -362,10 +362,18 @@
             <input type="hidden" class="share-type-hidden" name="" value="{{ $cItem->share_type }}">
         </td>
         <td class="px-4 py-3">
+            @php $lockedShares = !empty($cItem->group_id) && ($cItem->shares_count ?? 0) > 0; @endphp
             <input type="number" name="items[{{ $i }}][shares_count]"
-                   class="shares-count w-full rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2 px-2 text-sm font-bold text-center text-slate-800 transition-colors"
-                   min="1" max="{{ max(7, $cItem->shares_count ?? 1) }}" value="{{ $cItem->shares_count ?? 1 }}" required>
-            <div class="shares-limit-label text-xs font-bold text-slate-400 mt-1 text-center"></div>
+                   class="shares-count w-full rounded-xl border border-slate-200 py-2 px-2 text-sm font-bold text-center text-slate-800 transition-colors
+                          {{ $lockedShares ? 'bg-purple-50 text-purple-700 cursor-not-allowed' : 'bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100' }}"
+                   min="{{ $lockedShares ? ($cItem->shares_count ?? 1) : 1 }}"
+                   max="{{ $lockedShares ? ($cItem->shares_count ?? 1) : max(7, $cItem->shares_count ?? 1) }}"
+                   value="{{ $cItem->shares_count ?? 1 }}"
+                   {{ $lockedShares ? 'readonly' : '' }}
+                   required>
+            <div class="shares-limit-label text-xs font-bold text-slate-400 mt-1 text-center">
+                {{ $lockedShares ? '🔒 محجوز للعميل: '.($cItem->shares_count ?? 1).' نصيب' : '' }}
+            </div>
         </td>
         <td class="px-4 py-3 text-center">
             <input type="number" name="items[{{ $i }}][unit_price]"
