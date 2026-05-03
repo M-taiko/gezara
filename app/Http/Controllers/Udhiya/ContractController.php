@@ -97,7 +97,11 @@ class ContractController extends Controller
     public function store(StoreContractRequest $request)
     {
         try {
-            $contract   = $this->service->store($request->validated());
+            $data = $request->validated();
+            $data['attachments'] = $request->hasFile('attachments')
+                ? array_filter($request->file('attachments'), fn($f) => $f && $f->isValid())
+                : [];
+            $contract   = $this->service->store($data);
             $printAfter = $request->input('print_after') === '1';
 
             if ($request->wantsJson()) {
@@ -241,7 +245,11 @@ class ContractController extends Controller
     public function update(StoreContractRequest $request, Contract $contract)
     {
         try {
-            $this->service->update($contract, $request->validated());
+            $data = $request->validated();
+            $data['attachments'] = $request->hasFile('attachments')
+                ? array_filter($request->file('attachments'), fn($f) => $f && $f->isValid())
+                : [];
+            $this->service->update($contract, $data);
 
             return redirect()->route('udhiya.contracts.show', $contract)
                 ->with('toast_success', 'تم تحديث بيانات الصك بنجاح.');
