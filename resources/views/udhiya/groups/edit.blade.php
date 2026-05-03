@@ -248,6 +248,23 @@
 
                 <div class="p-8 flex flex-col gap-6">
 
+                    {{-- Min Price --}}
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            أقل سعر اشتراك <span class="text-slate-400 font-normal text-xs">(للعرض في الموقع)</span>
+                        </label>
+                        <div class="relative">
+                            <input type="number" name="min_price" step="0.01" min="0"
+                                   value="{{ old('min_price', $group->min_price) }}"
+                                   placeholder="0.00"
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors py-3 px-4 pl-14 text-sm font-semibold text-slate-800 shadow-inner">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                        @error('min_price')
+                            <p class="text-rose-500 text-xs font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- Slaughter Day --}}
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">

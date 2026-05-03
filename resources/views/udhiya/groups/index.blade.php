@@ -8,7 +8,17 @@
         </h1>
         <p class="text-slate-500 font-medium text-sm mt-1">تتبع التشارك في الرؤوس ومتابعة اكتمال الحصص</p>
     </div>
-    <div class="flex h-full items-center">
+    <div class="flex h-full items-center gap-3">
+        @php
+            $standaloneCount = \App\Models\Contract::whereHas('items', fn($q) => $q->whereNull('group_id'))->count();
+        @endphp
+        <a href="{{ route('udhiya.contracts.index', ['type' => 'standalone']) }}"
+           class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl transition-all bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm">
+            📄 الصكوك المنفردة
+            @if($standaloneCount > 0)
+            <span class="mr-2 inline-flex items-center justify-center min-w-[1.4rem] h-6 px-1.5 rounded-full text-xs font-black bg-slate-100 text-slate-600">{{ $standaloneCount }}</span>
+            @endif
+        </a>
         <a href="{{ route('udhiya.groups.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl transition-all bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transform hover:-translate-y-0.5">
             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             تكوين مجموعة مقفولة

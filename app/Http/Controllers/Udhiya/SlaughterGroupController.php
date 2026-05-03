@@ -58,6 +58,7 @@ class SlaughterGroupController extends Controller
             'animal_id'          => 'nullable|exists:animals,id',
             'animal_type_label'  => 'nullable|string|max:255',
             'share_type'         => 'required|in:' . implode(',', array_keys(\App\Models\SlaughterGroup::SHARE_MAP)),
+            'min_price'          => 'nullable|numeric|min:0',
             'slaughter_day'      => 'nullable|date',
             'notes'              => 'nullable|string',
         ]);
@@ -472,6 +473,7 @@ class SlaughterGroupController extends Controller
             'name' => 'required|string|max:255',
             'animal_id' => 'nullable|exists:animals,id',
             'animal_type_label' => 'nullable|string|max:255',
+            'min_price' => 'nullable|numeric|min:0',
             'slaughter_day' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);

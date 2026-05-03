@@ -20,7 +20,7 @@ class SlaughterGroup extends Model
         'full'    => 'كامل',
     ];
 
-    protected $fillable = ['name', 'animal_id', 'animal_type_label', 'share_type', 'slaughter_day', 'notes', 'updated_by_user_id', 'edit_history'];
+    protected $fillable = ['name', 'animal_id', 'animal_type_label', 'share_type', 'min_price', 'slaughter_day', 'notes', 'updated_by_user_id', 'edit_history'];
 
     protected $casts = ['slaughter_day' => 'date', 'edit_history' => 'array'];
 

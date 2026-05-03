@@ -362,18 +362,13 @@
             <input type="hidden" class="share-type-hidden" name="" value="{{ $cItem->share_type }}">
         </td>
         <td class="px-4 py-3">
-            @php $lockedShares = !empty($cItem->group_id) && ($cItem->shares_count ?? 0) > 0; @endphp
             <input type="number" name="items[{{ $i }}][shares_count]"
-                   class="shares-count w-full rounded-xl border border-slate-200 py-2 px-2 text-sm font-bold text-center text-slate-800 transition-colors
-                          {{ $lockedShares ? 'bg-purple-50 text-purple-700 cursor-not-allowed' : 'bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100' }}"
-                   min="{{ $lockedShares ? ($cItem->shares_count ?? 1) : 1 }}"
-                   max="{{ $lockedShares ? ($cItem->shares_count ?? 1) : max(7, $cItem->shares_count ?? 1) }}"
+                   class="shares-count w-full rounded-xl border border-slate-200 py-2 px-2 text-sm font-bold text-center text-slate-800 bg-white focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-colors"
+                   min="1"
+                   max="{{ max(7, $cItem->shares_count ?? 1) }}"
                    value="{{ $cItem->shares_count ?? 1 }}"
-                   {{ $lockedShares ? 'readonly' : '' }}
                    required>
-            <div class="shares-limit-label text-xs font-bold text-slate-400 mt-1 text-center">
-                {{ $lockedShares ? '🔒 محجوز للعميل: '.($cItem->shares_count ?? 1).' نصيب' : '' }}
-            </div>
+            <div class="shares-limit-label text-xs font-bold text-slate-400 mt-1 text-center"></div>
         </td>
         <td class="px-4 py-3 text-center">
             <input type="number" name="items[{{ $i }}][unit_price]"
@@ -486,23 +481,19 @@ function updateGroupInfo(row) {
     label.textContent = g.used + ' محجوز / ' + g.total + ' (متبقي: ' + g.remaining + ')';
     infoDiv.style.display = '';
 
-    if (!sharesIn.readOnly) {
-        // For unlocked (new) shares: can use remaining slots or share_type max
-        const typeMax = SHARE_MAX[_getShareType(row)] || 7;
-        const maxAllowed = Math.min(typeMax, g.remaining);
+    {
+        // Available = remaining free slots + what this row currently holds (already counted as used)
+        const currentVal = parseInt(sharesIn.value) || 1;
+        const typeMax    = SHARE_MAX[_getShareType(row)] || 7;
+        // remaining is the free slots NOT counting this customer's own allocation
+        const maxAllowed = Math.min(typeMax, currentVal + (g.remaining || 0));
         sharesIn.min = 1;
-        sharesIn.max = Math.max(1, maxAllowed);  // At least 1, even if no remaining
+        sharesIn.max = Math.max(1, maxAllowed);
         row.querySelector('.shares-limit-label').textContent =
-            g.remaining > 0 ? 'الحد: ' + maxAllowed : 'المجموعة ممتلئة - لا توجد أماكن متاحة';
-        if (parseInt(sharesIn.value) > maxAllowed && maxAllowed > 0) {
-            sharesIn.value = maxAllowed;
-        }
-    } else {
-        // For locked shares (customer's existing allocation): preserve exactly what they have
-        const currentValue = parseInt(sharesIn.value) || 1;
-        sharesIn.min = currentValue;
-        sharesIn.max = currentValue;
-        row.querySelector('.shares-limit-label').textContent = '🔒 محجوز للعميل: ' + currentValue + ' نصيب';
+            g.remaining > 0
+                ? 'الحد: ' + maxAllowed + ' (متاح: ' + g.remaining + ')'
+                : (maxAllowed >= currentVal ? 'الحد: ' + maxAllowed : 'المجموعة ممتلئة');
+        if (parseInt(sharesIn.value) > maxAllowed) sharesIn.value = maxAllowed;
     }
 }
 
@@ -551,18 +542,11 @@ function updateRow(row) {
     totalIn.value = (unitPrice * quantity).toFixed(2);
 
     if (sharesIn.parentElement.parentElement.style.display !== 'none') {
-        if (!sharesIn.readOnly) {
-            // Unlocked shares - set min/max based on share type
-            const typeMax = SHARE_MAX[shareType] || 7;
-            sharesIn.min = 1;
-            sharesIn.max = Math.max(1, typeMax);
+        const typeMax = SHARE_MAX[shareType] || 7;
+        sharesIn.min = 1;
+        sharesIn.max = Math.max(1, typeMax);
+        if (!row.querySelector('.shares-limit-label').textContent) {
             row.querySelector('.shares-limit-label').textContent = 'أقصاها: ' + typeMax;
-        } else {
-            // Locked shares - keep current value as both min and max (don't change it)
-            const currentValue = parseInt(sharesIn.value) || 1;
-            sharesIn.min = currentValue;
-            sharesIn.max = currentValue;
-            row.querySelector('.shares-limit-label').textContent = '🔒 محجوز للعميل: ' + currentValue + ' نصيب';
         }
     }
 
@@ -581,50 +565,34 @@ function calcGrand() {
 }
 
 function updateFinancialSummary() {
-    // Get current contract data from attributes
     const summaryEl = document.querySelector('[data-current-paid]');
     if (!summaryEl) return;
 
-    const currentPaid = parseFloat(summaryEl.getAttribute('data-current-paid') || 0);
-    const currentTotal = parseFloat(summaryEl.getAttribute('data-current-total') || 0);
+    const currentPaid  = parseFloat(summaryEl.getAttribute('data-current-paid') || 0);
+    // Use live grand total from items, not the stale DB value
+    const newTotal     = parseFloat(document.getElementById('grandTotal')?.textContent?.replace(/,/g, '') || 0);
+    const newRemaining = newTotal - currentPaid;
 
-    // Calculate remaining
-    const remaining = currentTotal - currentPaid;
+    const fmt = (n) => Number(n).toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-    // Update all financial summary elements
-    const totalEl = summaryEl.querySelector('div:nth-child(1) span:last-child') ||
-                   document.querySelector('[data-current-total] + div .space-y-3 div:nth-child(1) span:last-child');
-    const paidEl = summaryEl.querySelector('div:nth-child(2) span:last-child') ||
-                  document.querySelector('[data-current-total] + div .space-y-3 div:nth-child(2) span:last-child');
-    const remainingEl = summaryEl.querySelector('div:nth-child(3) span:last-child') ||
-                       document.querySelector('[data-current-total] + div .space-y-3 div:nth-child(3) span:last-child');
+    const rows = summaryEl.querySelectorAll('.space-y-3 > div');
+    // row 0 = إجمالي الصك, row 1 = المحصّل, row 2 = المتبقي
+    if (rows[0]) rows[0].querySelector('span:last-child').innerHTML =
+        `${fmt(newTotal)} <span class="text-xs text-slate-400">ج.م</span>`;
+    if (rows[1]) rows[1].querySelector('span:last-child').innerHTML =
+        `${fmt(currentPaid)} <span class="text-xs text-emerald-400">ج.م</span>`;
+    if (rows[2]) {
+        const sp = rows[2].querySelector('span:last-child');
+        sp.innerHTML = `${fmt(newRemaining)} <span class="text-xs ${newRemaining > 0 ? 'text-rose-400' : 'text-emerald-400'}">ج.م</span>`;
+        sp.className  = newRemaining > 0 ? 'font-black text-rose-600' : 'font-black text-emerald-600';
+    }
+
     const statusEl = document.getElementById('contractStatusBadge');
-
-    // Format numbers with thousand separators
-    const formatNumber = (num) => Number(num).toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    // Update display values
-    if (totalEl) {
-        totalEl.innerHTML = `${formatNumber(currentTotal)} <span class="text-xs text-slate-400">ج.م</span>`;
-    }
-    if (paidEl) {
-        paidEl.innerHTML = `${formatNumber(currentPaid)} <span class="text-xs text-emerald-400">ج.م</span>`;
-    }
-    if (remainingEl) {
-        remainingEl.innerHTML = `${formatNumber(remaining)} <span class="text-xs ${remaining > 0 ? 'text-rose-400' : 'text-emerald-400'}">ج.م</span>`;
-        remainingEl.parentElement.className = remaining > 0 ? 'flex justify-between items-center' : 'flex justify-between items-center';
-        remainingEl.classList = remaining > 0 ? 'font-black text-rose-600' : 'font-black text-emerald-600';
-    }
-
-    // Update status badge
     if (statusEl) {
-        if (remaining <= 0) {
-            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700';
-            statusEl.textContent = 'مكتمل';
-        } else {
-            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-700';
-            statusEl.textContent = 'نشط';
-        }
+        statusEl.className   = newRemaining <= 0
+            ? 'px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-700'
+            : 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-700';
+        statusEl.textContent = newRemaining <= 0 ? 'مكتمل' : 'نشط';
     }
 }
 
@@ -762,15 +730,19 @@ function filterCustomersByGroup(gid) {
         if (!group) return;
 
         panel.style.display = '';
-        const freeMembers = group.members.filter(m => !m.has_contract);
-        list.innerHTML = freeMembers.length
-            ? freeMembers.map(m =>
-                `<div class="flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-purple-50 transition-colors" data-cid="${m.customer_id}">
+        list.innerHTML = group.members.length
+            ? group.members.map(m =>
+                `<div class="flex items-center justify-between px-3 py-2 text-xs">
                     <span class="font-bold text-slate-700">${m.customer_name}${m.customer_phone ? '<span class="font-normal text-slate-400 mr-1"> ' + m.customer_phone + '</span>' : ''}</span>
-                    <span class="font-black text-purple-600">${m.shares_count} نصيب</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-black text-purple-600">${m.shares_count} نصيب</span>
+                        ${m.has_contract
+                            ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">✅ صك</span>'
+                            : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">بدون صك</span>'}
+                    </div>
                 </div>`
               ).join('')
-            : `<div class="px-3 py-4 text-xs text-center text-slate-400 font-semibold">✅ تم إصدار صكوك لجميع أعضاء المجموعة</div>`;
+            : `<div class="px-3 py-4 text-xs text-center text-slate-400 font-semibold">لا يوجد أعضاء في هذه المجموعة</div>`;
         return;
     }
 
@@ -855,12 +827,15 @@ function autoFillFromGroup(gid) {
 function lockRowToMember(row, group, member) {
     _lockShareType(row, group.share_type);
 
-    const sharesIn  = row.querySelector('.shares-count');
+    const sharesIn = row.querySelector('.shares-count');
     sharesIn.value    = member.shares_count;
-    sharesIn.max      = member.shares_count;
-    sharesIn.readOnly = true;
-    sharesIn.classList.add('bg-purple-50', 'text-purple-700');
-    row.querySelector('.shares-limit-label').textContent = '🔒 محدد من المجموعة';
+    sharesIn.min      = 1;
+    // Max = current allocation + any remaining free slots in the group
+    sharesIn.max      = member.shares_count + (group.remaining || 0);
+    sharesIn.readOnly = false;
+    sharesIn.classList.remove('bg-purple-50', 'text-purple-700', 'cursor-not-allowed');
+    row.querySelector('.shares-limit-label').textContent =
+        'الحد: ' + sharesIn.max + (group.remaining > 0 ? ' (متاح: ' + group.remaining + ')' : '');
 
     updateRow(row);
 }
@@ -898,7 +873,34 @@ function clearGroupLock() {
 
 function enableStandaloneMode() {
     const sel = document.getElementById('customerSelect');
-    if (!sel) return;
+    if (!sel) {
+        // Edit page: check if this contract is currently in a group and warn
+        const groupFilter = document.getElementById('groupFilter');
+        const currentGroup = groupFilter && groupFilter.value
+            ? allGroups.find(g => String(g.id) === String(groupFilter.value))
+            : null;
+
+        if (currentGroup) {
+            const confirmed = confirm(
+                '⚠️ تحذير: إصدار صك منفرد\n\n' +
+                'هذا الصك حالياً منتسب إلى مجموعة "' + currentGroup.name + '".\n\n' +
+                'إذا أكملت، سيتم استخراج هذا العميل من المجموعة وإلغاء ارتباطه بها.\n\n' +
+                'هل تريد المتابعة؟'
+            );
+            if (!confirmed) return;
+        }
+
+        // No customerSelect on edit page — just toggle the UI elements
+        if (groupFilter) groupFilter.value = '';
+        const gmp = document.getElementById('groupMembersPanel');
+        if (gmp) gmp.style.display = 'none';
+        const sr = document.getElementById('standaloneRow');
+        if (sr) sr.style.display = 'none';
+        const sb = document.getElementById('standaloneBadge');
+        if (sb) sb.style.display = '';
+        clearGroupLock();
+        return;
+    }
 
     sel.innerHTML = '';
     sel.appendChild(new Option('-- اختر العميل --', ''));

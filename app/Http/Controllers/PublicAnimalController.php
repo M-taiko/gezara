@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Animal;
 use App\Models\ContractRequest;
+use App\Models\SlaughterGroup;
 use Illuminate\Http\Request;
 
 class PublicAnimalController extends Controller
@@ -89,7 +90,33 @@ class PublicAnimalController extends Controller
             ];
         })->filter()->values()->toArray(); // Remove null values
 
-        return view('public.animals', compact('categoriesData'));
+        // Load active groups for display
+        $groups = SlaughterGroup::with('animal.product.mainCategory', 'members')
+            ->get()
+            ->filter(fn($g) => $g->remainingSlots() > 0)
+            ->map(function ($g) {
+                $priceField = 'price_' . $g->share_type;
+                $priceFromAnimal = $g->animal ? (float)($g->animal->$priceField ?? 0) : 0;
+                return [
+                    'id'            => $g->id,
+                    'name'          => $g->name,
+                    'share_type'    => $g->share_type,
+                    'share_label'   => $g->shareLabel(),
+                    'total'         => $g->totalSlots(),
+                    'used'          => $g->usedSlots(),
+                    'remaining'     => $g->remainingSlots(),
+                    'slaughter_day' => $g->slaughter_day?->format('Y/m/d'),
+                    'animal_type'   => $g->animal_type_label ?? $g->animal?->product?->name,
+                    'category_code' => $g->animal?->product?->mainCategory?->code ?? '',
+                    'category_name' => $g->animal?->product?->mainCategory?->name ?? '',
+                    'min_price'     => $g->min_price ?? ($priceFromAnimal > 0 ? $priceFromAnimal : null),
+                    'notes'         => $g->notes,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        return view('public.animals', compact('categoriesData', 'groups'));
     }
 
     /**
@@ -98,28 +125,37 @@ class PublicAnimalController extends Controller
     public function submitRequest(Request $request)
     {
         $validated = $request->validate([
-            'category_id'    => 'required|exists:main_categories,id',
+            'group_id'       => 'nullable|exists:slaughter_groups,id',
+            'category_id'    => 'nullable|exists:main_categories,id',
             'customer_name'  => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'required|email|max:255',
+            'customer_email' => 'nullable|email|max:255',
             'share_type'     => 'required|in:full,seven,six,five,quarter,third,half',
-            'share_price'    => 'required|numeric|min:0',
+            'share_price'    => 'nullable|numeric|min:0',
             'notes'          => 'nullable|string|max:500',
         ]);
 
-        // Get the category to store with the request
-        $category = \App\Models\MainCategory::findOrFail($validated['category_id']);
+        // Build notes with group/category context
+        $contextNote = '';
+        if (!empty($validated['group_id'])) {
+            $group = SlaughterGroup::find($validated['group_id']);
+            $contextNote = 'طلب انضمام للمجموعة: ' . ($group?->name ?? $validated['group_id']);
+        } elseif (!empty($validated['category_id'])) {
+            $category = \App\Models\MainCategory::find($validated['category_id']);
+            $contextNote = 'نوع الأضحية: ' . ($category?->name ?? '');
+        }
+        if (!empty($validated['notes'])) {
+            $contextNote .= ($contextNote ? ' | ' : '') . $validated['notes'];
+        }
 
-        // Store request with category info - no specific animal yet
-        // We'll match animals later when converting to contract
         ContractRequest::create([
-            'animal_id'      => null, // Will be assigned when converting to contract
+            'animal_id'      => null,
             'customer_name'  => $validated['customer_name'],
             'customer_phone' => $validated['customer_phone'],
-            'customer_email' => $validated['customer_email'],
+            'customer_email' => $validated['customer_email'] ?? null,
             'share_type'     => $validated['share_type'],
-            'share_price'    => $validated['share_price'],
-            'notes'          => 'نوع الأضحية: ' . $category->name . (!empty($validated['notes']) ? ' | ' . $validated['notes'] : ''),
+            'share_price'    => $validated['share_price'] ?? null,
+            'notes'          => $contextNote ?: null,
             'status'         => 'pending',
         ]);
 

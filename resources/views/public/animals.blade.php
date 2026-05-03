@@ -2,517 +2,249 @@
 <html lang="ar" dir="rtl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج الأضاحي - منصة إدارة الأضاحي الاحترافية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>برنامج الأضاحي - احجز نصيبك الآن</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Cairo', sans-serif; }
-        body { background: #f8f9fa; }
-
-        .navbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-
-        .hero {
-            background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
-            padding: 80px 20px;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #1a1a1a;
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: #555;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.8;
-        }
-
-        .btn-primary {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 40px;
-            border-radius: 8px;
-            font-weight: 900;
-            font-size: 1.1rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
-            text-decoration: none;
-        }
-
-        .btn-primary:hover {
-            background: #1a252f;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(44, 62, 80, 0.3);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #2c3e50;
-            border: 2px solid #2c3e50;
-            padding: 13px 38px;
-            border-radius: 8px;
-            font-weight: 900;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
-            text-decoration: none;
-            margin-right: 15px;
-        }
-
-        .btn-secondary:hover {
-            background: #f5f7fa;
-            transform: translateY(-2px);
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin: 80px 0;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .feature-card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border-top: 4px solid #2c3e50;
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        }
-
-        .feature-icon {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-        }
-
-        .feature-card h3 {
-            font-size: 1.3rem;
-            font-weight: 900;
-            color: #1a1a1a;
-            margin-bottom: 15px;
-        }
-
-        .feature-card p {
-            color: #666;
-            font-size: 1rem;
-            line-height: 1.8;
-        }
-
-        .cta-section {
-            background: white;
-            padding: 60px 20px;
-            text-align: center;
-            margin-top: 80px;
-            border-top: 2px solid #e0e0e0;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .cta-section h2 {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #1a1a1a;
-            margin-bottom: 20px;
-        }
-
-        .cta-section p {
-            font-size: 1.1rem;
-            color: #666;
-            margin-bottom: 30px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 60px 0;
-            flex-wrap: wrap;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #2c3e50;
-        }
-
-        .stat-label {
-            color: #666;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .services {
-            max-width: 1200px;
-            margin: 80px auto;
-            padding: 0 20px;
-        }
-
-        .services h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #1a1a1a;
-            margin-bottom: 50px;
-        }
-
-        .service-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-        }
-
-        .service-item {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
-        }
-
-        .service-item h4 {
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .service-item p {
-            color: #666;
-            line-height: 1.8;
-        }
-
-        .footer {
-            background: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 30px 20px;
-            margin-top: 80px;
-        }
-
-        .footer p {
-            margin: 0;
-            font-size: 0.9rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.2rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .btn-secondary {
-                margin-bottom: 10px;
-                display: block;
-                width: 100%;
-                max-width: 300px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .stats {
-                gap: 20px;
-            }
-
-            .stat-number {
-                font-size: 2rem;
-            }
-        }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body>
-    {{-- Navigation --}}
-    <nav class="navbar sticky top-0 z-40">
-        <div class="container">
-            <div class="flex justify-between items-center py-5">
-                <div class="flex items-center gap-3">
-                    <div style="font-size: 2rem;">🐑</div>
-                    <span style="font-size: 1.3rem; font-weight: 900; color: #2c3e50;">برنامج الأضاحي</span>
-                </div>
-                <div class="flex items-center gap-4">
-                    @auth
-                        <a href="{{ route('udhiya.dashboard') }}" class="btn-primary" style="padding: 10px 25px; font-size: 1rem;">
-                            لوحة التحكم
-                        </a>
-                    @else
-                        <a href="{{ route('signin') }}" class="btn-secondary" style="margin: 0; padding: 10px 25px; font-size: 1rem; border: 2px solid #2c3e50;">
-                            تسجيل الدخول
-                        </a>
-                    @endauth
-                </div>
+<body class="bg-slate-50 text-slate-800 antialiased overflow-x-hidden">
+
+{{-- ═══ NAVBAR ═══ --}}
+<nav class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center text-white text-lg shadow-md">🐄</div>
+                <span class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-l from-indigo-700 to-blue-600">برنامج الأضاحي</span>
             </div>
-        </div>
-    </nav>
-
-    {{-- Hero Section --}}
-    <section class="hero">
-        <div class="container">
-            <h1>🐑 منصة إدارة الأضاحي الاحترافية</h1>
-            <p>
-                نوفر لك حلاً متكاملاً لإدارة عملية الأضاحي من البداية إلى النهاية، مع تتبع العملاء والعقود والمدفوعات بكل سهولة
-            </p>
-
-            <div style="margin-top: 40px;">
-                <a href="#order-now" class="btn-primary">اطلب الآن</a>
-                <a href="#features" class="btn-secondary">تعرف على المزيد</a>
-            </div>
-
-            {{-- Toast Messages --}}
-            @if(session('toast_success'))
-            <div style="margin-top: 30px; padding: 15px 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724; text-align: right;">
-                ✅ {{ session('toast_success') }}
-            </div>
-            @endif
-
-            @if(session('toast_error'))
-            <div style="margin-top: 30px; padding: 15px 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24; text-align: right;">
-                ❌ {{ session('toast_error') }}
-            </div>
-            @endif
-        </div>
-    </section>
-
-    {{-- Features Section --}}
-    <section id="features" class="container">
-        <h2 style="text-align: center; font-size: 2.5rem; font-weight: 900; color: #1a1a1a; margin-bottom: 50px;">المميزات الرئيسية</h2>
-
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">📋</div>
-                <h3>إدارة العقود</h3>
-                <p>إنشاء وتحرير وطباعة عقود الأضاحي بسهولة مع تتبع حالة كل عقد</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">👥</div>
-                <h3>إدارة العملاء</h3>
-                <p>حفظ بيانات العملاء وتاريخ تعاملاتهم والتواصل معهم بسهولة</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>المدفوعات والفواتير</h3>
-                <p>تسجيل المدفوعات وتوليد الفواتير والتقارير المالية</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">🐄</div>
-                <h3>إدارة الحيوانات</h3>
-                <p>تسجيل الأضاحي ومتابعة حالتها والأسعار والأوزان</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>التقارير والإحصائيات</h3>
-                <p>الحصول على تقارير شاملة عن الأرباح والمبيعات والعملاء</p>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">🔔</div>
-                <h3>إشعارات فورية</h3>
-                <p>تنبيهات للطلبات الجديدة والمدفوعات المستحقة والتحديثات</p>
-            </div>
-        </div>
-    </section>
-
-    {{-- Stats Section --}}
-    <section class="cta-section">
-        <div class="container">
-            <h2>لماذا تختار برنامج الأضاحي؟</h2>
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">احترافية عالية</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">24/7</div>
-                    <div class="stat-label">متاح دائماً</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">آمن</div>
-                    <div class="stat-label">حماية البيانات</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">سهل</div>
-                    <div class="stat-label">واجهة بسيطة</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- Services Section --}}
-    <section class="services">
-        <h2>خدماتنا</h2>
-        <div class="service-grid">
-            <div class="service-item">
-                <h4>🏪 عرض الأضاحي</h4>
-                <p>اعرض أضاحيك المتاحة بسهولة وادع العملاء لطلب الحصص المفضلة لهم</p>
-            </div>
-
-            <div class="service-item">
-                <h4>📱 طلبات سهلة</h4>
-                <p>العميل يقدم طلبه من الموقع بخطوات بسيطة وسهلة جداً</p>
-            </div>
-
-            <div class="service-item">
-                <h4>✅ إدارة الطلبات</h4>
-                <p>استقبل الطلبات وحولها إلى عقود مع اختيار الأضاحي المناسبة</p>
-            </div>
-
-            <div class="service-item">
-                <h4>📄 عقود احترافية</h4>
-                <p>عقود جاهزة للطباعة بشكل احترافي وسهل التخزين</p>
-            </div>
-
-            <div class="service-item">
-                <h4>💵 تتبع المدفوعات</h4>
-                <p>سجل جميع المدفوعات والفواتير ومتابعة الأرصدة</p>
-            </div>
-
-            <div class="service-item">
-                <h4>📈 تقارير مفصلة</h4>
-                <p>احصل على تقارير شاملة عن أرباحك والعملاء والبيانات</p>
-            </div>
-        </div>
-    </section>
-
-    {{-- CTA Section --}}
-    <section id="order-now" style="background: white; padding: 60px 20px; text-align: center; margin-top: 80px; border-top: 2px solid #e0e0e0;">
-        <div class="container">
-            <h2 style="font-size: 2.5rem; font-weight: 900; color: #1a1a1a; margin-bottom: 20px;">ابدأ الآن!</h2>
-            <p style="font-size: 1.1rem; color: #666; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                اختر الأضحية المفضلة لديك وقدم طلبك الآن، أو قم بإدارة أضاحيك بكل سهولة من خلال لوحة التحكم الاحترافية
-            </p>
-
-            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                @if(count($categoriesData) > 0)
-                <a href="#categories" class="btn-primary">🛍️ تصفح الأضاحي</a>
-                @endif
+            <div class="flex items-center gap-3">
+                <a href="#groups" class="hidden sm:inline-flex text-sm font-bold text-slate-600 hover:text-indigo-600 transition">المجموعات</a>
+                <a href="#request" class="hidden sm:inline-flex text-sm font-bold text-slate-600 hover:text-indigo-600 transition">سجّل طلبك</a>
                 @auth
-                <a href="{{ route('udhiya.dashboard') }}" class="btn-primary">📊 إدارة الأضاحي</a>
+                    <a href="{{ route('udhiya.dashboard') }}" class="inline-flex items-center px-4 py-2 text-sm font-bold text-white rounded-xl bg-indigo-600 hover:bg-indigo-700 transition shadow-sm">لوحة التحكم</a>
                 @else
-                <a href="{{ route('signin') }}" class="btn-secondary">🔐 تسجيل الدخول</a>
+                    <a href="{{ route('signin') }}" class="inline-flex items-center px-4 py-2 text-sm font-bold text-indigo-700 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition border border-indigo-200">تسجيل الدخول</a>
                 @endauth
             </div>
         </div>
-    </section>
+    </div>
+</nav>
 
-    {{-- Categories Section (if authenticated or showing) --}}
-    @if(count($categoriesData) > 0)
-    <section id="categories" style="background: #f8f9fa; padding: 80px 20px;">
-        <div class="container">
-            <h2 style="text-align: center; font-size: 2.5rem; font-weight: 900; color: #1a1a1a; margin-bottom: 50px;">الأضاحي المتاحة</h2>
+{{-- ═══ HERO ═══ --}}
+<section class="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50 pt-20 pb-24">
+    <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute top-[-15%] end-[-10%] w-[600px] h-[600px] bg-blue-100 rounded-full blur-3xl opacity-40"></div>
+        <div class="absolute bottom-[-10%] start-[-5%] w-[500px] h-[500px] bg-indigo-100 rounded-full blur-3xl opacity-40"></div>
+    </div>
+    <div class="relative max-w-4xl mx-auto px-4 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 text-sm font-bold mb-6">
+            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+            التسجيل متاح الآن
+        </div>
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
+            احجز نصيبك في<br/>
+            <span class="bg-clip-text text-transparent bg-gradient-to-l from-indigo-600 to-blue-500">مجموعات الأضاحي</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-600 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+            انضم إلى مجموعة ذبح أو سجّل طلب اشتراكك الآن. سنتواصل معك للتأكيد وترتيب التفاصيل.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#groups" class="inline-flex items-center justify-center px-8 py-3.5 text-base font-bold text-white rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition shadow-xl shadow-indigo-200 transform hover:-translate-y-0.5">
+                🐄 استعرض المجموعات
+            </a>
+            <a href="#request" class="inline-flex items-center justify-center px-8 py-3.5 text-base font-bold text-slate-700 rounded-2xl bg-white hover:bg-slate-50 transition shadow-md border border-slate-200 transform hover:-translate-y-0.5">
+                📋 سجّل طلبك الآن
+            </a>
+        </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
-                @foreach($categoriesData as $category)
-                <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 3px 15px rgba(0,0,0,0.08); text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">
-                        @switch($category['name'])
-                            @case('عجول') 🐄 @break
-                            @case('جمال') 🐪 @break
-                            @case('خرفان') 🐑 @break
-                            @case('جديان') 🐐 @break
-                            @default 🐑
-                        @endswitch
+        @if(session('toast_success'))
+        <div class="mt-8 inline-flex items-center gap-3 px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 font-bold text-sm">
+            ✅ {{ session('toast_success') }}
+        </div>
+        @endif
+        @if(session('toast_error'))
+        <div class="mt-8 inline-flex items-center gap-3 px-5 py-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 font-bold text-sm">
+            ❌ {{ session('toast_error') }}
+        </div>
+        @endif
+    </div>
+</section>
+
+{{-- ═══ GROUPS SECTION ═══ --}}
+@if(count($groups) > 0)
+<section id="groups" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl sm:text-4xl font-black text-slate-900 mb-3">مجموعات الذبح المتاحة</h2>
+            <p class="text-slate-500 font-medium">اختر المجموعة المناسبة لك وسجّل طلب انضمامك</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach($groups as $group)
+            @php
+                $emoji = match($group['category_code']) { 'BQR' => '🐄', 'GHN' => '🐑', 'JDN' => '🐐', 'JML' => '🐪', default => '🐾' };
+                $pct   = $group['total'] > 0 ? round(($group['used'] / $group['total']) * 100) : 0;
+                $full  = $group['remaining'] === 0;
+            @endphp
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
+                {{-- Card Header --}}
+                <div class="px-5 py-4 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100 flex justify-between items-start gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-2xl flex-shrink-0">{{ $emoji }}</span>
+                        <h3 class="font-black text-slate-800 text-base leading-snug truncate">{{ $group['name'] }}</h3>
                     </div>
-                    <h3 style="font-size: 1.3rem; font-weight: 900; color: #1a1a1a; margin-bottom: 10px;">{{ $category['name'] }}</h3>
-                    <p style="color: #666; margin-bottom: 15px;">أضحية مختارة بعناية</p>
+                    @if($full)
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">مكتمل</span>
+                    @else
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">{{ $group['remaining'] }} متبقي</span>
+                    @endif
+                </div>
 
-                    <div style="margin: 20px 0;">
-                        @foreach($category['availableShares'] as $type => $shareData)
-                        <button type="button" onclick="openRequestModal({{ $category['id'] }}, '{{ $category['name'] }}', '{{ $type }}', {{ $shareData['minPrice'] }})"
-                                style="display: inline-block; margin: 5px; padding: 10px 15px; background: #f5f7fa; border: 2px solid #2c3e50; color: #2c3e50; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.3s;">
-                            {{ $shareData['label'] }}: من {{ number_format($shareData['minPrice'], 0) }} ج.م
-                        </button>
-                        @endforeach
+                <div class="p-5 flex-1 flex flex-col gap-4">
+                    {{-- Info rows --}}
+                    <div class="space-y-2">
+                        @if($group['animal_type'])
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500 font-semibold">نوع الذبيحة</span>
+                            <span class="text-slate-800 font-bold">{{ $group['animal_type'] }}</span>
+                        </div>
+                        @endif
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500 font-semibold">نوع التقسيم</span>
+                            <span class="text-slate-800 font-bold">{{ $group['share_label'] }}</span>
+                        </div>
+                        @if($group['slaughter_day'])
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500 font-semibold">يوم الذبح</span>
+                            <span class="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-lg">📅 {{ $group['slaughter_day'] }}</span>
+                        </div>
+                        @endif
+                        @if($group['min_price'])
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500 font-semibold">السعر من</span>
+                            <span class="text-indigo-700 font-black text-base">{{ number_format($group['min_price'], 0) }} <span class="text-xs font-bold text-indigo-400">ج.م</span></span>
+                        </div>
+                        @endif
                     </div>
 
-                    <button type="button" onclick="openRequestModal({{ $category['id'] }}, '{{ $category['name'] }}')"
-                            class="btn-primary" style="width: 100%; margin-top: 15px;">
-                        اطلب الآن
+                    {{-- Progress bar --}}
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-slate-400 mb-1.5">
+                            <span>حالة الاكتمال</span>
+                            <span>{{ $group['used'] }} / {{ $group['total'] }}</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-2 rounded-full transition-all duration-500 {{ $full ? 'bg-rose-400' : ($pct > 60 ? 'bg-amber-400' : 'bg-emerald-400') }}"
+                                 style="width:{{ $pct }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Action button --}}
+                <div class="px-5 pb-5">
+                    @if(!$full)
+                    <button type="button"
+                            onclick="openGroupModal({{ json_encode($group) }})"
+                            class="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white rounded-xl bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 transform hover:-translate-y-0.5">
+                        سجّل اشتراكك ←
+                    </button>
+                    @else
+                    <div class="w-full text-center py-2.5 text-sm font-bold text-slate-400">المجموعة اكتملت</div>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- ═══ CATEGORIES SECTION ═══ --}}
+@if(count($categoriesData) > 0)
+<section id="categories" class="py-20 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl sm:text-4xl font-black text-slate-900 mb-3">الأضاحي المتاحة</h2>
+            <p class="text-slate-500 font-medium">اختر نوع الأضحية والحصة المناسبة لك</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach($categoriesData as $category)
+            @php
+                $catEmoji = match($category['name']) { 'عجول' => '🐄', 'جمال' => '🐪', 'خرفان' => '🐑', 'جديان' => '🐐', default => '🐾' };
+            @endphp
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white flex items-center gap-3">
+                    <span class="text-3xl">{{ $catEmoji }}</span>
+                    <h3 class="font-black text-slate-800 text-lg">{{ $category['name'] }}</h3>
+                </div>
+                <div class="p-5 space-y-3">
+                    @foreach($category['availableShares'] as $type => $shareData)
+                    <button type="button"
+                            onclick="openCategoryModal({{ $category['id'] }}, '{{ $category['name'] }}', '{{ $type }}', {{ $shareData['minPrice'] }}, {{ json_encode($category['availableShares']) }})"
+                            class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors text-sm font-bold text-slate-700 hover:text-indigo-700">
+                        <span>{{ $shareData['label'] }}</span>
+                        <span class="text-indigo-600 font-black">من {{ number_format($shareData['minPrice'], 0) }} ج.م</span>
+                    </button>
+                    @endforeach
+                    <button type="button"
+                            onclick="openCategoryModal({{ $category['id'] }}, '{{ $category['name'] }}', '', 0, {{ json_encode($category['availableShares']) }})"
+                            class="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white rounded-xl bg-indigo-600 hover:bg-indigo-700 transition shadow-md">
+                        اطلب الآن ←
                     </button>
                 </div>
-                @endforeach
             </div>
+            @endforeach
         </div>
-    </section>
-    @endif
+    </div>
+</section>
+@endif
 
-    {{-- Request Modal --}}
-    <div id="requestModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
-        <div style="background: white; border-radius: 12px; max-width: 600px; width: 100%; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            {{-- Header --}}
-            <div style="padding: 25px; background: #2c3e50; color: white; display: flex; justify-content: space-between; align-items: center;">
-                <h6 style="margin: 0; font-size: 1.3rem; font-weight: 900;">إكمال الطلب</h6>
-                <button type="button" onclick="closeRequestModal()" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">×</button>
-            </div>
+{{-- ═══ REQUEST SECTION (standalone form) ═══ --}}
+<section id="request" class="py-20 bg-white border-t border-slate-100">
+    <div class="max-w-2xl mx-auto px-4">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl sm:text-4xl font-black text-slate-900 mb-3">سجّل طلبك</h2>
+            <p class="text-slate-500 font-medium">سجّل طلبك وسنتواصل معك لتأكيد التفاصيل والسعر</p>
+        </div>
 
-            <form action="{{ route('public-animals.submit-request') }}" method="POST" style="padding: 30px; space-y: 20px;">
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-xl p-8">
+            <form action="{{ route('public-animals.submit-request') }}" method="POST" class="space-y-5">
                 @csrf
+                <input type="hidden" name="group_id" id="standAloneGroupId">
+                <input type="hidden" name="category_id" id="standAloneCategoryId">
 
-                <input type="hidden" id="categoryIdInput" name="category_id">
-
-                {{-- Customer Info --}}
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">الاسم الكامل <span style="color: red;">*</span></label>
-                    <input type="text" name="customer_name" required
-                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">الاسم الكامل <span class="text-rose-500">*</span></label>
+                        <input type="text" name="customer_name" required
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-3 px-4 text-sm font-semibold text-slate-800 transition-colors"
+                               placeholder="اسمك الكامل">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">رقم الهاتف <span class="text-rose-500">*</span></label>
+                        <input type="tel" name="customer_phone" required
+                               class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-3 px-4 text-sm font-semibold text-slate-800 transition-colors"
+                               placeholder="01xxxxxxxxx">
+                    </div>
                 </div>
 
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">رقم الهاتف <span style="color: red;">*</span></label>
-                    <input type="tel" name="customer_phone" required
-                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">البريد الإلكتروني <span class="text-slate-400 font-normal">(اختياري)</span></label>
+                    <input type="email" name="customer_email"
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-3 px-4 text-sm font-semibold text-slate-800 transition-colors"
+                           placeholder="example@mail.com">
                 </div>
 
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">البريد الإلكتروني <span style="color: red;">*</span></label>
-                    <input type="email" name="customer_email" required
-                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">نوع الحصة <span style="color: red;">*</span></label>
-                    <select id="shareTypeSelect" name="share_type" required
-                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">نوع الحصة <span class="text-rose-500">*</span></label>
+                    <select name="share_type" required
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-3 px-4 text-sm font-semibold text-slate-800 transition-colors">
                         <option value="">— اختر الحصة —</option>
                         <option value="full">كامل</option>
                         <option value="half">نصف</option>
@@ -524,107 +256,268 @@
                     </select>
                 </div>
 
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">السعر المبدئي (قابل للتغيير)</label>
-                    <input type="text" id="sharePriceDisplay" readonly
-                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; background: #f5f7fa;">
-                    <p style="font-size: 0.85rem; color: #999; margin-top: 5px;">ℹ️ هذا السعر مبدئي فقط ويتم تأكيده بعد التواصل معك</p>
-                    <input type="hidden" id="sharePriceInput" name="share_price" value="0">
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">ملاحظات (اختياري)</label>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات <span class="text-slate-400 font-normal">(اختياري)</span></label>
                     <textarea name="notes" rows="3"
-                              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; resize: none;"
-                              placeholder="أي طلبات خاصة..."></textarea>
+                              class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-3 px-4 text-sm font-semibold text-slate-800 transition-colors resize-none"
+                              placeholder="أي تفاصيل أو طلبات خاصة..."></textarea>
                 </div>
 
-                <div style="display: flex; gap: 15px;">
-                    <button type="submit" class="btn-primary" style="flex: 1;">✅ تقديم الطلب</button>
-                    <button type="button" onclick="closeRequestModal()" class="btn-secondary" style="flex: 1;">إلغاء</button>
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700 font-semibold">
+                    📞 سيتم التواصل معك قريباً لتأكيد الطلب والسعر النهائي
                 </div>
 
-                <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: right;">
-                    <p style="margin: 0; color: #1565c0; font-weight: 600;">📞 سيتم التواصل معك قريباً لتأكيد الطلب والسعر النهائي</p>
-                </div>
+                <button type="submit"
+                        class="w-full inline-flex items-center justify-center px-6 py-3.5 text-base font-bold text-white rounded-xl bg-indigo-600 hover:bg-indigo-700 transition shadow-xl shadow-indigo-200 transform hover:-translate-y-0.5">
+                    ✅ تقديم الطلب
+                </button>
             </form>
         </div>
     </div>
+</section>
 
-    {{-- Footer --}}
-    <footer class="footer">
-        <div class="container">
-            <p>© 2026 برنامج الأضاحي - جميع الحقوق محفوظة</p>
+{{-- ═══ FOOTER ═══ --}}
+<footer class="bg-slate-900 py-10 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <div class="flex items-center justify-center gap-2.5 mb-4">
+            <span class="text-2xl">🐄</span>
+            <span class="text-xl font-bold text-white">برنامج الأضاحي</span>
         </div>
-    </footer>
+        <p class="text-slate-400 font-medium text-sm">&copy; {{ date('Y') }} جميع الحقوق محفوظة</p>
+    </div>
+</footer>
 
-    <script>
-        let modalShares = {};
+{{-- ═══ GROUP MODAL ═══ --}}
+<div id="groupModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4"
+     onclick="if(event.target===this) closeGroupModal()">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden" onclick="event.stopPropagation()">
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-indigo-50 to-white flex justify-between items-center">
+            <div>
+                <h3 id="modalGroupName" class="text-lg font-black text-slate-800"></h3>
+                <p id="modalGroupInfo" class="text-sm text-slate-500 font-semibold mt-0.5"></p>
+            </div>
+            <button onclick="closeGroupModal()" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold text-lg transition-colors">✕</button>
+        </div>
 
-        function openRequestModal(categoryId, categoryName, shareType = null, sharePrice = null) {
-            document.getElementById('categoryIdInput').value = categoryId;
+        <form action="{{ route('public-animals.submit-request') }}" method="POST" class="p-6 space-y-4">
+            @csrf
+            <input type="hidden" name="group_id" id="modalGroupId">
+            <input type="hidden" name="share_type" id="modalShareType">
+            <input type="hidden" name="share_price" id="modalSharePrice" value="0">
 
-            const categoryGrid = document.querySelector(`.share-grid[data-category-id="${categoryId}"]`);
-            modalShares = {};
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">الاسم <span class="text-rose-500">*</span></label>
+                    <input type="text" name="customer_name" required
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors"
+                           placeholder="اسمك الكامل">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">الهاتف <span class="text-rose-500">*</span></label>
+                    <input type="tel" name="customer_phone" required
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors"
+                           placeholder="01xxxxxxxxx">
+                </div>
+            </div>
 
-            if (categoryGrid) {
-                const shareButtons = categoryGrid.querySelectorAll('[data-share-type]');
-                shareButtons.forEach(btn => {
-                    const type = btn.getAttribute('data-share-type');
-                    const label = btn.getAttribute('data-share-label');
-                    const price = parseFloat(btn.getAttribute('data-share-price'));
-                    modalShares[type] = { label, price };
-                });
-            }
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">البريد <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                <input type="email" name="customer_email"
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
 
-            document.getElementById('shareTypeSelect').value = '';
-            document.getElementById('sharePriceDisplay').value = '';
-            document.getElementById('sharePriceInput').value = '0';
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">ملاحظات <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                <textarea name="notes" rows="2"
+                          class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none"
+                          placeholder="أي ملاحظات..."></textarea>
+            </div>
 
-            if (shareType && shareType !== 'undefined') {
-                document.getElementById('shareTypeSelect').value = shareType;
-                if (sharePrice && sharePrice !== 'undefined') {
-                    const minPrice = parseFloat(sharePrice);
-                    if (minPrice > 0) {
-                        document.getElementById('sharePriceDisplay').value = minPrice.toLocaleString('ar-EG');
-                        document.getElementById('sharePriceInput').value = minPrice;
-                    }
-                }
-            }
+            {{-- Price display --}}
+            <div id="priceRow" class="hidden bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                <span class="text-sm font-bold text-indigo-700">السعر المبدئي</span>
+                <span id="priceDisplay" class="text-lg font-black text-indigo-800"></span>
+            </div>
 
-            document.getElementById('requestModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+            <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-semibold">
+                📞 سيتم التواصل معك لتأكيد الطلب والسعر النهائي
+            </div>
 
-        function closeRequestModal() {
-            document.getElementById('requestModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+            <div class="flex gap-3 pt-1">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white rounded-xl bg-indigo-600 hover:bg-indigo-700 transition shadow-md">
+                    ✅ تقديم الطلب
+                </button>
+                <button type="button" onclick="closeGroupModal()" class="flex-1 inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-slate-700 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        document.getElementById('shareTypeSelect')?.addEventListener('change', function() {
-            const shareType = this.value;
+{{-- ═══ CATEGORY MODAL ═══ --}}
+<div id="categoryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4"
+     onclick="if(event.target===this) closeCategoryModal()">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden" onclick="event.stopPropagation()">
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white flex justify-between items-center">
+            <h3 id="catModalTitle" class="text-lg font-black text-slate-800"></h3>
+            <button onclick="closeCategoryModal()" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold text-lg transition-colors">✕</button>
+        </div>
 
-            if (shareType && modalShares[shareType]) {
-                const price = modalShares[shareType].price;
-                document.getElementById('sharePriceDisplay').value = price.toLocaleString('ar-EG');
-                document.getElementById('sharePriceInput').value = price;
-            } else {
-                document.getElementById('sharePriceDisplay').value = '';
-                document.getElementById('sharePriceInput').value = '0';
-            }
-        });
+        <form action="{{ route('public-animals.submit-request') }}" method="POST" class="p-6 space-y-4">
+            @csrf
+            <input type="hidden" name="category_id" id="catModalCategoryId">
 
-        document.getElementById('requestModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeRequestModal();
-            }
-        });
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">نوع الحصة <span class="text-rose-500">*</span></label>
+                <select name="share_type" id="catModalShareType" required
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <option value="">— اختر —</option>
+                </select>
+            </div>
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeRequestModal();
-            }
-        });
-    </script>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">الاسم <span class="text-rose-500">*</span></label>
+                    <input type="text" name="customer_name" required
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">الهاتف <span class="text-rose-500">*</span></label>
+                    <input type="tel" name="customer_phone" required
+                           class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">البريد <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                <input type="email" name="customer_email"
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">ملاحظات <span class="text-slate-400 font-normal text-xs">(اختياري)</span></label>
+                <textarea name="notes" rows="2"
+                          class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors resize-none"></textarea>
+            </div>
+
+            <div id="catPriceRow" class="hidden bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                <span class="text-sm font-bold text-indigo-700">السعر المبدئي</span>
+                <span id="catPriceDisplay" class="text-lg font-black text-indigo-800"></span>
+                <input type="hidden" name="share_price" id="catSharePrice" value="0">
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-semibold">
+                📞 سيتم التواصل معك لتأكيد الطلب والسعر النهائي
+            </div>
+
+            <div class="flex gap-3 pt-1">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white rounded-xl bg-indigo-600 hover:bg-indigo-700 transition shadow-md">
+                    ✅ تقديم الطلب
+                </button>
+                <button type="button" onclick="closeCategoryModal()" class="flex-1 inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-slate-700 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const SHARE_LABELS = {
+    full: 'كامل', half: 'نصف', third: 'ثُلث', quarter: 'ربع',
+    five: 'خُمس', six: 'سُدس', seven: 'سُبع'
+};
+
+/* ── Group Modal ── */
+function openGroupModal(group) {
+    document.getElementById('modalGroupId').value   = group.id;
+    document.getElementById('modalShareType').value = group.share_type;
+    document.getElementById('modalGroupName').textContent = group.name;
+
+    let info = group.share_label;
+    if (group.slaughter_day) info += ' · يوم الذبح: ' + group.slaughter_day;
+    document.getElementById('modalGroupInfo').textContent = info;
+
+    const priceRow = document.getElementById('priceRow');
+    if (group.min_price && group.min_price > 0) {
+        document.getElementById('modalSharePrice').value = group.min_price;
+        document.getElementById('priceDisplay').textContent =
+            Number(group.min_price).toLocaleString('ar-EG') + ' ج.م';
+        priceRow.classList.remove('hidden');
+        priceRow.classList.add('flex');
+    } else {
+        priceRow.classList.add('hidden');
+        priceRow.classList.remove('flex');
+    }
+
+    const modal = document.getElementById('groupModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeGroupModal() {
+    const modal = document.getElementById('groupModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+/* ── Category Modal ── */
+let _catShares = {};
+
+function openCategoryModal(categoryId, categoryName, shareType, sharePrice, shares) {
+    _catShares = shares || {};
+
+    document.getElementById('catModalCategoryId').value = categoryId;
+    document.getElementById('catModalTitle').textContent = categoryName;
+
+    // Build share_type options from available shares
+    const sel = document.getElementById('catModalShareType');
+    sel.innerHTML = '<option value="">— اختر الحصة —</option>';
+    Object.entries(_catShares).forEach(([type, data]) => {
+        const opt = new Option(data.label + ' — من ' + Number(data.minPrice).toLocaleString('ar-EG') + ' ج.م', type);
+        sel.appendChild(opt);
+    });
+    if (shareType) sel.value = shareType;
+
+    _updateCatPrice();
+
+    const modal = document.getElementById('categoryModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCategoryModal() {
+    const modal = document.getElementById('categoryModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+function _updateCatPrice() {
+    const type = document.getElementById('catModalShareType').value;
+    const priceRow = document.getElementById('catPriceRow');
+    if (type && _catShares[type] && _catShares[type].minPrice > 0) {
+        const price = _catShares[type].minPrice;
+        document.getElementById('catPriceDisplay').textContent = Number(price).toLocaleString('ar-EG') + ' ج.م';
+        document.getElementById('catSharePrice').value = price;
+        priceRow.classList.remove('hidden');
+        priceRow.classList.add('flex');
+    } else {
+        priceRow.classList.add('hidden');
+        priceRow.classList.remove('flex');
+    }
+}
+
+document.getElementById('catModalShareType')?.addEventListener('change', _updateCatPrice);
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeGroupModal(); closeCategoryModal(); }
+});
+</script>
+
 </body>
 </html>
