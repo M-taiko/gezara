@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <th class="px-5 py-3 text-left hidden md:table-cell">المحصّل</th>
                     <th class="px-5 py-3 text-left hidden md:table-cell">المتبقي</th>
                     <th class="px-5 py-3">الحالة</th>
+                    <th class="px-5 py-3 text-center hidden md:table-cell">مرفقات</th>
                     <th class="px-5 py-3 text-center w-40">إجراءات</th>
                 </tr>
             </thead>
@@ -319,6 +320,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-rose-100 text-rose-700">ملغى</span>
                         @endif
                     </td>
+                    {{-- Attachments --}}
+                    <td class="px-5 py-4 text-center hidden md:table-cell">
+                        @if($contract->attachments && count($contract->attachments) > 0)
+                        <button type="button"
+                                onclick="openAttachModal('attach-modal-{{ $contract->id }}')"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors text-xs font-bold">
+                            📎 {{ count($contract->attachments) }}
+                        </button>
+                        @else
+                        <span class="text-slate-300 text-xs">—</span>
+                        @endif
+                    </td>
                     {{-- Actions --}}
                     <td class="px-5 py-4">
                         <div class="flex items-center justify-center gap-1.5">
@@ -385,6 +398,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 @endforelse
             </tbody>
         </table>
+
+        {{-- Attachment Modals --}}
+        @foreach($contracts as $contract)
+        @if($contract->attachments && count($contract->attachments) > 0)
+        @php $attachPaths = json_decode($contract->attachment_paths, true) ?? []; @endphp
+        <div id="attach-modal-{{ $contract->id }}"
+             class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+             onclick="if(event.target===this) closeAttachModal('attach-modal-{{ $contract->id }}')">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                    <h6 class="font-black text-slate-800 text-sm m-0">📎 مرفقات الصك #{{ $contract->contract_number }}</h6>
+                    <button onclick="closeAttachModal('attach-modal-{{ $contract->id }}')"
+                            class="text-slate-400 hover:text-slate-700 text-lg font-bold leading-none">✕</button>
+                </div>
+                <div class="px-5 py-4 space-y-2">
+                    @foreach($contract->attachments as $idx => $filename)
+                    @php
+                        $filePath = $attachPaths[$idx] ?? '';
+                        $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                        $icon     = in_array($ext, ['jpg','jpeg','png','gif']) ? '🖼' : '📄';
+                        $fullPath = storage_path('app/public/' . $filePath);
+                        $size     = file_exists($fullPath) ? round(filesize($fullPath)/1024,1).' KB' : '';
+                    @endphp
+                    <div class="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-base flex-shrink-0">{{ $icon }}</span>
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-slate-700 truncate m-0">{{ $filename }}</p>
+                                @if($size)<p class="text-xs text-slate-400 m-0">{{ $size }}</p>@endif
+                            </div>
+                        </div>
+                        <a href="{{ asset('storage/' . $filePath) }}" target="_blank" download
+                           class="flex-shrink-0 mr-2 text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors">
+                            ⬇
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+        @endforeach
     </div>
     
     {{-- Group Modal --}}
@@ -440,6 +495,18 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             document.getElementById('createGroupModal').classList.remove('hidden');
         });
+    }
+});
+
+function openAttachModal(id) {
+    document.getElementById(id)?.classList.remove('hidden');
+}
+function closeAttachModal(id) {
+    document.getElementById(id)?.classList.add('hidden');
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('[id^="attach-modal-"]').forEach(m => m.classList.add('hidden'));
     }
 });
 </script>
