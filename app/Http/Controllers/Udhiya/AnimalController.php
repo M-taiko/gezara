@@ -291,23 +291,16 @@ class AnimalController extends Controller
         $count = Animal::where('product_id', $data['product_id'])
             ->update($updateData);
 
-        // Update related contracts
+        // Only update contracts linked to animals with animal_id (not standalone shares)
         if ($oldPrices) {
             $animals = Animal::where('product_id', $data['product_id'])->pluck('id')->toArray();
 
-            // Extract share types being updated (e.g., ['price_full', 'price_five'] -> ['full', 'five'])
+            // Extract share types being updated
             $shareTypesUpdated = array_map(fn($k) => substr($k, 6), array_keys($updateData));
 
-            // Find and update contract items:
-            // 1. Linked to animals of this product, OR
-            // 2. Standalone items with matching share type
-            $contractItems = \App\Models\ContractItem::where(function ($q) use ($animals, $shareTypesUpdated) {
-                $q->whereIn('animal_id', $animals)
-                  ->orWhere(function ($q2) use ($shareTypesUpdated) {
-                      $q2->whereNull('animal_id')
-                         ->whereIn('share_type', $shareTypesUpdated);
-                  });
-            })->get();
+            // Only update contract items that are LINKED to animals (animal_id NOT null)
+            // Standalone items (animal_id = null) should NOT be auto-updated as they are independent contract records
+            $contractItems = \App\Models\ContractItem::whereIn('animal_id', $animals)->get();
 
             foreach ($contractItems as $item) {
                 $shareType = $item->share_type;
