@@ -381,12 +381,22 @@
                    step="0.01" readonly placeholder="—" value="{{ $cItem->total_price }}">
         </td>
         <td class="px-4 py-3 text-center">
-            <button type="button"
-                    class="remove-row w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors mx-auto">
-                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
+            <div class="flex items-center justify-center gap-1">
+                <button type="button"
+                        class="save-item-quick w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-colors"
+                        data-item-id="{{ $cItem->id }}"
+                        title="حفظ التغييرات للعنصر فقط">
+                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </button>
+                <button type="button"
+                        class="remove-row w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
         </td>
     </tr>
     @endforeach
@@ -967,6 +977,65 @@ function attachItemsBodyListeners() {
     });
 
     itemsBody.addEventListener('click', function (e) {
+        // Save item quickly
+        if (e.target.closest('.save-item-quick')) {
+            e.preventDefault();
+            const btn = e.target.closest('.save-item-quick');
+            const itemId = btn.dataset.itemId;
+            const row = btn.closest('.item-row');
+
+            const unitPrice = parseFloat(row.querySelector('.item-price').value);
+            const sharesCount = parseInt(row.querySelector('.shares-count').value);
+
+            if (!unitPrice || !sharesCount) {
+                alert('يجب إدخال السعر وعدد الأنصبة');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+
+            const token = document.querySelector('input[name="_token"]').value;
+
+            fetch(`/udhiya/contract-items/${itemId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({
+                    unit_price: unitPrice,
+                    shares_count: sharesCount
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to save');
+                return response.json();
+            })
+            .then(data => {
+                btn.innerHTML = '<svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+                btn.disabled = false;
+
+                // Flash success
+                const originalBg = btn.className;
+                btn.className = originalBg.replace('bg-emerald-50', 'bg-emerald-100').replace('text-emerald-500', 'text-emerald-600');
+                setTimeout(() => {
+                    btn.className = originalBg;
+                }, 500);
+
+                // Update grand total from response
+                updateRow(row);
+                calcGrand();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('حدث خطأ في الحفظ');
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+            });
+        }
+
+        // Remove row
         if (e.target.closest('.remove-row')) {
             if (document.querySelectorAll('.item-row').length > 1) {
                 const row = e.target.closest('.item-row');
