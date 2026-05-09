@@ -271,7 +271,6 @@ class AnimalController extends Controller
 
         // Build update data with only non-null prices
         $updateData = [];
-        $priceMap = []; // Store old->new price mapping for contract update
         foreach (['full', 'seven', 'six', 'five', 'quarter', 'third', 'half'] as $type) {
             $key = 'price_' . $type;
             if ($data[$key] !== null) {
@@ -283,7 +282,7 @@ class AnimalController extends Controller
             return back()->with('toast_warning', 'لم تدخل أي أسعار للتحديث');
         }
 
-        // Get old prices before update
+        // Get old prices from any animal of this product
         $oldPrices = Animal::where('product_id', $data['product_id'])
             ->get(['id', 'price_full', 'price_seven', 'price_six', 'price_five', 'price_quarter', 'price_third', 'price_half'])
             ->first();
@@ -296,31 +295,43 @@ class AnimalController extends Controller
         if ($oldPrices) {
             $animals = Animal::where('product_id', $data['product_id'])->pluck('id')->toArray();
 
-            // Find and update contract items linked to these animals by share_type
-            $contractItems = \App\Models\ContractItem::whereIn('animal_id', $animals)->get();
+            // Extract share types being updated (e.g., ['price_full', 'price_five'] -> ['full', 'five'])
+            $shareTypesUpdated = array_map(fn($k) => substr($k, 6), array_keys($updateData));
+
+            // Find and update contract items:
+            // 1. Linked to animals of this product, OR
+            // 2. Standalone items with matching share type
+            $contractItems = \App\Models\ContractItem::where(function ($q) use ($animals, $shareTypesUpdated) {
+                $q->whereIn('animal_id', $animals)
+                  ->orWhere(function ($q2) use ($shareTypesUpdated) {
+                      $q2->whereNull('animal_id')
+                         ->whereIn('share_type', $shareTypesUpdated);
+                  });
+            })->get();
 
             foreach ($contractItems as $item) {
                 $shareType = $item->share_type;
-                $oldPriceKey = 'price_' . ($shareType === 'full' ? 'full' : $shareType);
-                $newPriceKey = $oldPriceKey;
+                $priceKey = 'price_' . ($shareType === 'full' ? 'full' : $shareType);
 
-                if (isset($updateData[$newPriceKey]) && $oldPrices->$oldPriceKey) {
-                    $oldPrice = $oldPrices->$oldPriceKey;
-                    $newPrice = $updateData[$newPriceKey];
-                    $priceRatio = $newPrice / $oldPrice; // Calculate ratio for multi-share contracts
+                if (isset($updateData[$priceKey]) && $oldPrices->$priceKey && $oldPrices->$priceKey > 0) {
+                    $oldPrice = $oldPrices->$priceKey;
+                    $newPrice = $updateData[$priceKey];
+                    $priceRatio = $newPrice / $oldPrice;
 
-                    // Update contract item with new price
-                    $newTotal = $item->unit_price * $priceRatio * $item->shares_count;
+                    // Calculate new values BEFORE updating
+                    $oldItemTotal = $item->total_price;
+                    $newUnitPrice = $item->unit_price * $priceRatio;
+                    $newTotal = $newUnitPrice * $item->shares_count;
+                    $priceDiff = $newTotal - $oldItemTotal;
+
+                    // Update contract item
                     $item->update([
-                        'unit_price' => $item->unit_price * $priceRatio,
+                        'unit_price' => $newUnitPrice,
                         'total_price' => $newTotal,
                     ]);
 
                     // Update contract totals
                     $contract = $item->contract;
-                    $oldItemTotal = $item->getOriginal('total_price'); // Get old value before update
-                    $priceDiff = $newTotal - $oldItemTotal;
-
                     $contract->update([
                         'total_amount' => $contract->total_amount + $priceDiff,
                         'remaining_amount' => ($contract->total_amount + $priceDiff) - $contract->paid_amount,
