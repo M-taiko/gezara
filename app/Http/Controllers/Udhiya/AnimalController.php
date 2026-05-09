@@ -291,39 +291,41 @@ class AnimalController extends Controller
         $count = Animal::where('product_id', $data['product_id'])
             ->update($updateData);
 
-        // Only update contracts linked to animals with animal_id (not standalone shares)
-        if ($oldPrices) {
+        // Update all contract items with the new prices directly (not via ratio)
+        if (!empty($updateData)) {
             $animals = Animal::where('product_id', $data['product_id'])->pluck('id')->toArray();
-
-            // Extract share types being updated
             $shareTypesUpdated = array_map(fn($k) => substr($k, 6), array_keys($updateData));
 
-            // Only update contract items that are LINKED to animals (animal_id NOT null)
-            // Standalone items (animal_id = null) should NOT be auto-updated as they are independent contract records
-            $contractItems = \App\Models\ContractItem::whereIn('animal_id', $animals)->get();
+            // Update ALL contract items (both linked and standalone) that match the share types
+            $contractItems = \App\Models\ContractItem::where(function ($q) use ($animals, $shareTypesUpdated) {
+                $q->whereIn('animal_id', $animals)
+                  ->orWhere(function ($q2) use ($shareTypesUpdated) {
+                      $q2->whereNull('animal_id')
+                         ->whereIn('share_type', $shareTypesUpdated);
+                  });
+            })->get();
 
             foreach ($contractItems as $item) {
                 $shareType = $item->share_type;
                 $priceKey = 'price_' . ($shareType === 'full' ? 'full' : $shareType);
 
-                if (isset($updateData[$priceKey]) && $oldPrices->$priceKey && $oldPrices->$priceKey > 0) {
-                    $oldPrice = $oldPrices->$priceKey;
+                // Update with NEW PRICE directly (not via ratio calculation)
+                if (isset($updateData[$priceKey])) {
                     $newPrice = $updateData[$priceKey];
-                    $priceRatio = $newPrice / $oldPrice;
-
-                    // Calculate new values BEFORE updating
                     $oldItemTotal = $item->total_price;
-                    $newUnitPrice = $item->unit_price * $priceRatio;
-                    $newTotal = $newUnitPrice * $item->shares_count;
+
+                    // New values: unit_price = new price, total = new price × shares_count
+                    $newUnitPrice = $newPrice;
+                    $newTotal = $newPrice * $item->shares_count;
                     $priceDiff = $newTotal - $oldItemTotal;
 
-                    // Update contract item
+                    // Update contract item with direct new price
                     $item->update([
                         'unit_price' => $newUnitPrice,
                         'total_price' => $newTotal,
                     ]);
 
-                    // Update contract totals
+                    // Update contract totals: add the difference to maintain paid amount
                     $contract = $item->contract;
                     $contract->update([
                         'total_amount' => $contract->total_amount + $priceDiff,
