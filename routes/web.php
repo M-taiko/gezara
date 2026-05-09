@@ -143,6 +143,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
     Route::post('animals/{animal}/transfer', [AnimalController::class, 'transfer'])->name('animals.transfer');
     Route::patch('animals/{animal}/prices', [AnimalController::class, 'updatePrices'])->name('animals.update-prices');
     Route::patch('animals/{animal}/code', [AnimalController::class, 'updateCode'])->name('animals.update-code');
+    Route::post('animals/bulk-update-prices', [AnimalController::class, 'bulkUpdatePrices'])->name('animals.bulk-update-prices');
 
     // Products (Modal CRUD — from animals page)
     Route::post('products', [ProductController::class, 'store'])->name('products.store');

@@ -19,6 +19,10 @@
             <span class="mr-2 inline-flex items-center justify-center min-w-[1.4rem] h-6 px-1.5 rounded-full text-xs font-black bg-slate-100 text-slate-600">{{ $standaloneCount }}</span>
             @endif
         </a>
+        <button type="button" onclick="openBulkPriceModal()"
+           class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 shadow-sm" title="تحديث أسعار الأنصبة">
+            💰 تحديث الأسعار
+        </button>
         <a href="{{ route('udhiya.groups.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-xl transition-all bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transform hover:-translate-y-0.5">
             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             تكوين مجموعة مقفولة
@@ -584,5 +588,185 @@ document.getElementById('purchaseModal')?.addEventListener('click', function(e) 
     }
 });
 </script>
+
+{{-- ═══════════════════════════════════════
+    BULK PRICE UPDATE MODAL
+════════════════════════════════════════ --}}
+<div class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4" id="bulkPriceModal" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+        {{-- Header --}}
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50 flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-black text-slate-800">💰 تحديث أسعار الأنصبة</h3>
+                <p class="text-xs text-slate-500 font-semibold mt-1">تحديث سعر جميع الأنصبة لنوع ذبيحة معين</p>
+            </div>
+            <button type="button" onclick="closeBulkPriceModal()" class="w-8 h-8 rounded-lg bg-white text-slate-500 hover:text-slate-700 flex items-center justify-center font-bold transition-colors">✕</button>
+        </div>
+
+        <form id="bulkPriceForm" method="POST" action="{{ route('udhiya.animals.bulk-update-prices') }}" class="p-6 space-y-5">
+            @csrf
+
+            {{-- Select Product --}}
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">نوع الذبيحة <span class="text-rose-500">*</span></label>
+                <select name="product_id" id="bulkProductSelect" required
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 py-3 px-4 text-sm font-semibold text-slate-800 transition-colors">
+                    <option value="">— اختر نوع الذبيحة —</option>
+                    @foreach(\App\Models\Product::with('mainCategory')->orderBy('name')->get() as $product)
+                    <option value="{{ $product->id }}">
+                        {{ $product->mainCategory?->name ?? '' }}{{ $product->mainCategory ? ' / ' : '' }}{{ $product->name }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Price fields grid --}}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+                <p class="text-xs font-bold text-slate-600 uppercase">أسعار الأنصبة (ج.م)</p>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">كامل (7/7)</label>
+                        <div class="relative">
+                            <input type="number" name="price_full" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">سُبع (1/7)</label>
+                        <div class="relative">
+                            <input type="number" name="price_seven" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">سُدس (1/6)</label>
+                        <div class="relative">
+                            <input type="number" name="price_six" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">خُمس (1/5)</label>
+                        <div class="relative">
+                            <input type="number" name="price_five" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">ربع (1/4)</label>
+                        <div class="relative">
+                            <input type="number" name="price_quarter" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">ثُلث (1/3)</label>
+                        <div class="relative">
+                            <input type="number" name="price_third" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">نصف (1/2)</label>
+                        <div class="relative">
+                            <input type="number" name="price_half" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 pl-8 text-sm font-semibold text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                                   placeholder="0.00">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">ج.م</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-semibold">
+                ⚠️ هذا التحديث سيغير السعر لجميع الذبائح من هذا النوع
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white rounded-xl bg-amber-600 hover:bg-amber-700 transition shadow-md">
+                    ✅ تحديث الأسعار
+                </button>
+                <button type="button" onclick="closeBulkPriceModal()" class="flex-1 inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-slate-700 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Store product prices for quick lookup
+const productPrices = {
+    @foreach(\App\Models\Product::all() as $product)
+    {{ $product->id }}: {
+        full: {{ $product->animals->first()?->price_full ?? 0 }},
+        seven: {{ $product->animals->first()?->price_seven ?? 0 }},
+        six: {{ $product->animals->first()?->price_six ?? 0 }},
+        five: {{ $product->animals->first()?->price_five ?? 0 }},
+        quarter: {{ $product->animals->first()?->price_quarter ?? 0 }},
+        third: {{ $product->animals->first()?->price_third ?? 0 }},
+        half: {{ $product->animals->first()?->price_half ?? 0 }},
+    },
+    @endforeach
+};
+
+function openBulkPriceModal() {
+    document.getElementById('bulkPriceModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBulkPriceModal() {
+    document.getElementById('bulkPriceModal').style.display = 'none';
+    document.body.style.overflow = '';
+    document.getElementById('bulkPriceForm').reset();
+}
+
+// Load prices when product is selected
+document.getElementById('bulkProductSelect')?.addEventListener('change', function() {
+    const productId = parseInt(this.value);
+    if (productId && productPrices[productId]) {
+        const prices = productPrices[productId];
+        document.querySelector('input[name="price_full"]').value = prices.full || '';
+        document.querySelector('input[name="price_seven"]').value = prices.seven || '';
+        document.querySelector('input[name="price_six"]').value = prices.six || '';
+        document.querySelector('input[name="price_five"]').value = prices.five || '';
+        document.querySelector('input[name="price_quarter"]').value = prices.quarter || '';
+        document.querySelector('input[name="price_third"]').value = prices.third || '';
+        document.querySelector('input[name="price_half"]').value = prices.half || '';
+    } else {
+        document.querySelectorAll('#bulkPriceForm input[type="number"]').forEach(input => {
+            input.value = '';
+        });
+    }
+});
+
+document.getElementById('bulkPriceModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeBulkPriceModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeBulkPriceModal();
+});
+</script>
+
 
 @endsection

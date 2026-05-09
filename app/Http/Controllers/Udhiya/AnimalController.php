@@ -256,6 +256,82 @@ class AnimalController extends Controller
             ->with('toast_success', 'تم تحديث بيانات الحيوان بنجاح.');
     }
 
+    public function bulkUpdatePrices(Request $request)
+    {
+        $data = $request->validate([
+            'product_id'     => 'required|exists:products,id',
+            'price_full'     => 'nullable|numeric|min:0',
+            'price_seven'    => 'nullable|numeric|min:0',
+            'price_six'      => 'nullable|numeric|min:0',
+            'price_five'     => 'nullable|numeric|min:0',
+            'price_quarter'  => 'nullable|numeric|min:0',
+            'price_third'    => 'nullable|numeric|min:0',
+            'price_half'     => 'nullable|numeric|min:0',
+        ]);
+
+        // Build update data with only non-null prices
+        $updateData = [];
+        $priceMap = []; // Store old->new price mapping for contract update
+        foreach (['full', 'seven', 'six', 'five', 'quarter', 'third', 'half'] as $type) {
+            $key = 'price_' . $type;
+            if ($data[$key] !== null) {
+                $updateData[$key] = $data[$key];
+            }
+        }
+
+        if (empty($updateData)) {
+            return back()->with('toast_warning', 'لم تدخل أي أسعار للتحديث');
+        }
+
+        // Get old prices before update
+        $oldPrices = Animal::where('product_id', $data['product_id'])
+            ->get(['id', 'price_full', 'price_seven', 'price_six', 'price_five', 'price_quarter', 'price_third', 'price_half'])
+            ->first();
+
+        // Update all animals of this product
+        $count = Animal::where('product_id', $data['product_id'])
+            ->update($updateData);
+
+        // Update related contracts
+        if ($oldPrices) {
+            $animals = Animal::where('product_id', $data['product_id'])->pluck('id')->toArray();
+
+            // Find and update contract items linked to these animals by share_type
+            $contractItems = \App\Models\ContractItem::whereIn('animal_id', $animals)->get();
+
+            foreach ($contractItems as $item) {
+                $shareType = $item->share_type;
+                $oldPriceKey = 'price_' . ($shareType === 'full' ? 'full' : $shareType);
+                $newPriceKey = $oldPriceKey;
+
+                if (isset($updateData[$newPriceKey]) && $oldPrices->$oldPriceKey) {
+                    $oldPrice = $oldPrices->$oldPriceKey;
+                    $newPrice = $updateData[$newPriceKey];
+                    $priceRatio = $newPrice / $oldPrice; // Calculate ratio for multi-share contracts
+
+                    // Update contract item with new price
+                    $newTotal = $item->unit_price * $priceRatio * $item->shares_count;
+                    $item->update([
+                        'unit_price' => $item->unit_price * $priceRatio,
+                        'total_price' => $newTotal,
+                    ]);
+
+                    // Update contract totals
+                    $contract = $item->contract;
+                    $oldItemTotal = $item->getOriginal('total_price'); // Get old value before update
+                    $priceDiff = $newTotal - $oldItemTotal;
+
+                    $contract->update([
+                        'total_amount' => $contract->total_amount + $priceDiff,
+                        'remaining_amount' => ($contract->total_amount + $priceDiff) - $contract->paid_amount,
+                    ]);
+                }
+            }
+        }
+
+        return back()->with('toast_success', "تم تحديث أسعار $count ذبيحة وجميع الصكوك المرتبطة بنجاح");
+    }
+
     public function destroy(Animal $animal)
     {
         // Check if animal is being used
