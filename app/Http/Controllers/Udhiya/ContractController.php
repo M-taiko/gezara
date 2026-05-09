@@ -271,6 +271,49 @@ class ContractController extends Controller
         }
     }
 
+    public function bulkUpdatePrices(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate([
+            'share_type' => 'required|in:full,seven,six,five,quarter,third,half',
+            'unit_price' => 'required|numeric|min:0.01',
+        ]);
+
+        // Find all standalone contract items with matching share type
+        $items = \App\Models\ContractItem::where('share_type', $data['share_type'])
+            ->whereNull('group_id')
+            ->with('contract')
+            ->get();
+
+        if ($items->isEmpty()) {
+            return back()->with('toast_warning', 'لا توجد صكوك منفردة من هذا النوع');
+        }
+
+        // Update each item and its contract
+        foreach ($items as $item) {
+            $oldItemTotal = $item->total_price;
+            $newUnitPrice = $data['unit_price'];
+            $newTotal = $newUnitPrice * $item->shares_count;
+            $priceDiff = $newTotal - $oldItemTotal;
+
+            // Update contract item
+            $item->update([
+                'unit_price' => $newUnitPrice,
+                'total_price' => $newTotal,
+            ]);
+
+            // Update contract totals
+            $contract = $item->contract;
+            $contract->update([
+                'total_amount' => $contract->total_amount + $priceDiff,
+                'remaining_amount' => ($contract->total_amount + $priceDiff) - $contract->paid_amount,
+            ]);
+        }
+
+        $shareLabel = ['full' => 'كامل', 'seven' => 'سُبع', 'six' => 'سُدس', 'five' => 'خُمس', 'quarter' => 'ربع', 'third' => 'ثُلث', 'half' => 'نصف'][$data['share_type']] ?? $data['share_type'];
+
+        return back()->with('toast_success', "تم تحديث أسعار {$items->count()} صك منفرد من نوع '{$shareLabel}' بنجاح");
+    }
+
     public function printView(Contract $contract)
     {
         $contract->load('customer', 'items.animal.product.mainCategory', 'payments');

@@ -156,6 +156,7 @@ Route::middleware('auth')->prefix('udhiya')->name('udhiya.')->group(function () 
 
     // Contracts
     Route::post('contracts/quick', [ContractController::class, 'storeQuick'])->name('contracts.quick');
+    Route::post('contracts/bulk-update-prices', [ContractController::class, 'bulkUpdatePrices'])->name('contracts.bulk-update-prices');
     Route::resource('contracts', ContractController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::get('contracts/{contract}/print', [ContractController::class, 'printView'])->name('contracts.print');
     Route::patch('contract-items/{item}/assign-animal', [ContractController::class, 'assignAnimal'])->name('contract-items.assign-animal');
