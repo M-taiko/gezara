@@ -64,6 +64,24 @@
     // معلومات المنتجات
     $products = \App\Models\Product::with('mainCategory')->get();
     $productMap = $products->keyBy('id');
+
+    // تجميع المجموعات حسب نوع النصيب والمنتج
+    $shareTypeEmojis = ['full' => '🐄', 'seven' => '7️⃣', 'six' => '6️⃣', 'five' => '5️⃣', 'quarter' => '4️⃣', 'third' => '3️⃣', 'half' => '2️⃣'];
+    $shareTypeLabels = ['full' => 'كامل', 'seven' => 'سُبع', 'six' => 'سُدس', 'five' => 'خُمس', 'quarter' => 'ربع', 'third' => 'ثُلث', 'half' => 'نصف'];
+
+    $groupsByShareAndProduct = $allGroups
+        ->groupBy('share_type')
+        ->map(function($shareGroups) {
+            return $shareGroups->groupBy(function($g) {
+                return $g->animal?->product?->name ?? 'بدون حيوان';
+            })->map(function($productGroups) {
+                return [
+                    'count' => $productGroups->count(),
+                    'totalSlots' => $productGroups->sum(fn($g) => $g->totalSlots()),
+                    'usedSlots' => $productGroups->sum(fn($g) => $g->usedSlots()),
+                ];
+            });
+        });
 @endphp
 
 {{-- Statistics Cards --}}
@@ -121,6 +139,72 @@
             </div>
             <div class="w-12 h-12 bg-violet-200 rounded-xl flex items-center justify-center text-2xl">🎯</div>
         </div>
+    </div>
+</div>
+
+{{-- Share Types Summary Cards --}}
+<div class="mb-8">
+    <h5 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
+        <span class="text-2xl">📊</span> ملخص الأنصبة حسب نوع الذبيحة
+    </h5>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        @forelse($groupsByShareAndProduct as $shareType => $products)
+        @php
+            $emoji = $shareTypeEmojis[$shareType] ?? '📌';
+            $label = $shareTypeLabels[$shareType] ?? $shareType;
+            $totalGroups = collect($products)->sum('count');
+            $totalSlots = collect($products)->sum('totalSlots');
+            $usedSlots = collect($products)->sum('usedSlots');
+        @endphp
+        <div class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <p class="text-sm font-bold text-slate-600">{{ $label }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ $totalGroups }} مجموعات</p>
+                </div>
+                <span class="text-2xl">{{ $emoji }}</span>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-600">الأنصبة المستخدمة:</span>
+                    <span class="text-sm font-black text-indigo-600">{{ $usedSlots }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-600">إجمالي الأنصبة:</span>
+                    <span class="text-sm font-black text-slate-800">{{ $totalSlots }}</span>
+                </div>
+
+                {{-- Progress Bar --}}
+                <div class="mt-3">
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                             style="width: {{ $totalSlots > 0 ? round(($usedSlots / $totalSlots) * 100) : 0 }}%"></div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1 text-center font-semibold">
+                        {{ $totalSlots > 0 ? round(($usedSlots / $totalSlots) * 100) : 0 }}%
+                    </p>
+                </div>
+
+                {{-- Products in this share type --}}
+                <div class="mt-2 pt-2 border-t border-slate-100">
+                    <p class="text-xs font-bold text-slate-500 mb-1">أنواع الذبائح:</p>
+                    <div class="flex flex-wrap gap-1">
+                        @foreach($products as $productName => $data)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                            {{ strlen($productName) > 15 ? substr($productName, 0, 15) . '...' : $productName }}
+                            <span class="text-slate-400 mr-1">({{ $data['count'] }})</span>
+                        </span>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-full text-center py-8 text-slate-400">
+            <p class="text-sm">لا توجد مجموعات بعد</p>
+        </div>
+        @endforelse
     </div>
 </div>
 
