@@ -521,8 +521,9 @@ class ContractService
             // Reverse contract creation accounting entry
             $this->accounting->reverseContract($contract);
 
-            // Reset contract amounts when cancelled
+            // Reset contract amounts when cancelled and disconnect from customer
             $contract->update([
+                'customer_id' => null,
                 'paid_amount' => 0,
                 'remaining_amount' => 0,
                 'status' => 'cancelled'
