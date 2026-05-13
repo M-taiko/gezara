@@ -88,6 +88,15 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
             🖨️ طباعة الصك
         </a>
         @if($contract->status !== 'cancelled')
+        @php
+            $hasGroupItem = $contract->items->some(fn($item) => $item->group_id !== null);
+        @endphp
+        @if($hasGroupItem)
+        <button onclick="openTransferGroupModal()"
+           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all">
+            🔄 نقل إلى مجموعة أخرى
+        </button>
+        @endif
         <a href="{{ route('udhiya.contracts.edit', $contract) }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 transition-all">
             ✏️ تعديل صك
@@ -693,6 +702,51 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
     </div>
 </div>
 
+{{-- Transfer to Group Modal --}}
+<div id="transferGroupModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-lg max-w-md w-full overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-blue-50 to-white">
+            <h6 class="text-lg font-black text-blue-900 m-0">نقل إلى مجموعة أخرى</h6>
+        </div>
+        <form action="{{ route('udhiya.contracts.transfer-group', $contract) }}" method="POST" class="p-6 space-y-4">
+            @csrf
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">المجموعة الجديدة <span class="text-rose-500">*</span></label>
+                <select name="group_id" required
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
+                    <option value="">-- اختر مجموعة --</option>
+                    @php
+                        $currentGroupId = $contract->items->first()?->group_id;
+                        $groups = \App\Models\SlaughterGroup::with('animal')->get();
+                    @endphp
+                    @foreach($groups as $group)
+                        @if($group->id !== $currentGroupId)
+                        <option value="{{ $group->id }}">
+                            {{ $group->name }} ({{ $group->shareLabel() }}) —
+                            متاح: {{ $group->remainingSlots() }}/{{ $group->totalSlots() }}
+                        </option>
+                        @endif
+                    @endforeach
+                </select>
+            </div>
+
+            <p class="text-xs text-slate-500 bg-blue-50 rounded-lg p-3 border border-blue-100">
+                ℹ️ سيتم إلغاء الصك الحالي ونقل العميل إلى المجموعة الجديدة مع الاحتفاظ بالدفعات السابقة.
+            </p>
+
+            <div class="flex gap-3 pt-3">
+                <button type="submit" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200/60 transition-all">
+                    ✅ نقل العميل
+                </button>
+                <button type="button" onclick="closeTransferGroupModal()" class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-2.5 text-sm font-black rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">
+                    ✕ إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function togglePaymentForm() {
     const body = document.getElementById('paymentFormBody');
@@ -776,6 +830,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         unitPriceInput.addEventListener('input', updateTotal);
         sharesCountInput.addEventListener('input', updateTotal);
+    }
+});
+
+function openTransferGroupModal() {
+    document.getElementById('transferGroupModal').classList.remove('hidden');
+}
+
+function closeTransferGroupModal() {
+    document.getElementById('transferGroupModal').classList.add('hidden');
+}
+
+document.getElementById('transferGroupModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeTransferGroupModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeTransferGroupModal();
     }
 });
 </script>

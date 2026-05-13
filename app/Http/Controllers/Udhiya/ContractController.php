@@ -319,4 +319,24 @@ class ContractController extends Controller
         $contract->load('customer', 'items.animal.product.mainCategory', 'payments');
         return view('udhiya.print.contract', compact('contract'));
     }
+
+    public function transferToGroup(\Illuminate\Http\Request $request, Contract $contract)
+    {
+        try {
+            $newGroupId = $request->input('group_id');
+            if (!$newGroupId) {
+                return back()->with('toast_error', 'يجب تحديد المجموعة المراد النقل إليها');
+            }
+
+            $newGroup = \App\Models\SlaughterGroup::findOrFail($newGroupId);
+            $oldGroupName = $contract->items->first()?->group?->name ?? 'unknown';
+
+            $newContract = $this->service->transferToGroup($contract, $newGroup);
+
+            return redirect()->route('udhiya.contracts.show', $newContract)
+                ->with('toast_success', "تم نقل العميل من المجموعة '{$oldGroupName}' إلى '{$newGroup->name}' بنجاح. الصك الجديد: #{$newContract->contract_number}");
+        } catch (\Throwable $e) {
+            return back()->with('toast_error', $e->getMessage());
+        }
+    }
 }

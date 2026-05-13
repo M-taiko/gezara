@@ -6,6 +6,7 @@ use App\Models\Animal;
 use App\Models\AnimalShareSetting;
 use App\Models\Contract;
 use App\Models\ContractItem;
+use App\Models\SlaughterGroup;
 use App\Models\SlaughterGroupMember;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -528,6 +529,93 @@ class ContractService
                 'remaining_amount' => 0,
                 'status' => 'cancelled'
             ]);
+        });
+    }
+
+    public function transferToGroup(Contract $contract, SlaughterGroup $newGroup): Contract
+    {
+        return DB::transaction(function () use ($contract, $newGroup) {
+            $oldCustomerId = $contract->customer_id;
+            $oldPayments = $contract->payments;
+            $oldPaidAmount = $contract->paid_amount;
+
+            // Get shares_count from the contract item (assuming one item per contract in a group context)
+            $oldItem = $contract->items->first();
+            if (!$oldItem) {
+                throw new \RuntimeException('الصك لا يحتوي على أي بنود.');
+            }
+
+            $sharesCount = $oldItem->shares_count;
+            $shareType = $oldItem->share_type;
+
+            // Check if new group has available slots
+            if ($newGroup->remainingSlots() < $sharesCount) {
+                throw new \RuntimeException(
+                    "المجموعة {$newGroup->name} لا تحتوي على {$sharesCount} أنصبة متاحة. "
+                    . "الأنصبة المتاحة: {$newGroup->remainingSlots()}"
+                );
+            }
+
+            // Cancel old contract but restore animal statuses only (don't delete payments yet)
+            foreach ($contract->items as $item) {
+                $animal = $item->animal;
+                if (!$animal) continue;
+                if ($item->share_type === 'full') {
+                    $animal->update(['status' => 'available']);
+                } else {
+                    $setting = $animal->shareSetting;
+                    if ($setting) {
+                        $setting->decrement('sold_shares', $item->shares_count);
+                        $setting->increment('remaining_shares', $item->shares_count);
+                        $setting->refresh();
+                        $newStatus = $setting->sold_shares === 0 ? 'available' : 'partially_allocated';
+                        $animal->update(['status' => $newStatus]);
+                    }
+                }
+            }
+
+            // Remove group members association from old contract
+            SlaughterGroupMember::where('contract_item_id', $contract->items()->pluck('id'))->delete();
+
+            // Delete old contract items
+            $contract->items()->delete();
+
+            // Mark old contract as cancelled and disconnect customer
+            $contract->update([
+                'customer_id' => null,
+                'status' => 'cancelled',
+                'notes' => ($contract->notes ? $contract->notes . ' | ' : '') . "تم نقل العميل إلى مجموعة أخرى في " . now()->format('Y-m-d H:i'),
+            ]);
+
+            // Create new contract in new group with same customer and shares
+            $newContractData = [
+                'customer_id' => $oldCustomerId,
+                'notes' => "تحويل من الصك #{$contract->contract_number}",
+                'items' => [
+                    [
+                        'animal_id' => null,
+                        'share_type' => $shareType,
+                        'shares_count' => $sharesCount,
+                        'group_id' => $newGroup->id,
+                        'unit_price' => $newGroup->animal ? ($newGroup->animal->{'price_' . $shareType} ?? 0) : 0,
+                    ]
+                ]
+            ];
+
+            $newContract = $this->store($newContractData);
+
+            // Transfer old payments to new contract
+            foreach ($oldPayments as $payment) {
+                $payment->update(['contract_id' => $newContract->id]);
+            }
+
+            // Update new contract with transferred paid amount
+            $newContract->update([
+                'paid_amount' => $oldPaidAmount,
+                'remaining_amount' => $newContract->total_amount - $oldPaidAmount,
+            ]);
+
+            return $newContract;
         });
     }
 }
