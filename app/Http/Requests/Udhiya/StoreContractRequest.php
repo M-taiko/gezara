@@ -53,17 +53,21 @@ class StoreContractRequest extends FormRequest
         // Get the contract ID from route if updating
         $contractId = $this->route('contract')?->id;
 
+        // Check if contract is cancelled (editing only)
+        $contract = $this->route('contract');
+        $isCancelled = $contract && $contract->status === 'cancelled';
+
         return [
-            'customer_id'              => 'required|exists:customers,id',
+            'customer_id'              => $isCancelled ? 'nullable|exists:customers,id' : 'required|exists:customers,id',
             'contract_number'          => $contractId
                 ? "nullable|string|unique:contracts,contract_number,{$contractId}"
                 : 'nullable|string|unique:contracts',
             'slaughter_day'            => 'nullable|date',
             'slaughter_order'          => 'nullable|integer|min:1',
             'notes'                    => 'nullable|string',
-            'items'                    => 'required|array|min:1',
+            'items'                    => $isCancelled ? 'nullable|array' : 'required|array|min:1',
             'items.*.animal_id'        => 'nullable|exists:animals,id',
-            'items.*.unit_price'       => 'required|numeric|min:0',
+            'items.*.unit_price'       => 'nullable|numeric|min:0',
             'items.*.share_type'       => 'nullable|in:full,seven,six,five,quarter,third,half',
             'items.*.shares_count'     => 'nullable|integer|min:1|max:7',
             'items.*.weight'           => 'nullable|numeric|min:0.01',

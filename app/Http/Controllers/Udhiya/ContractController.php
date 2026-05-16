@@ -265,7 +265,7 @@ class ContractController extends Controller
             $totalAmount = $contract->total_amount;
             $this->service->cancel($contract);
             return redirect()->route('udhiya.contracts.index')
-                ->with('toast_success', "تم إلغاء الصك #{$contractNumber} — تم استرجاع المبالغ من الحسابات والتحصيلات (ج.م {$totalAmount})");
+                ->with('toast_success', "تم إلغاء الصك #{$contractNumber} / ملغي — تم استرجاع المبالغ من الحسابات والتحصيلات (ج.م {$totalAmount})");
         } catch (\Throwable $e) {
             return back()->with('toast_error', $e->getMessage());
         }

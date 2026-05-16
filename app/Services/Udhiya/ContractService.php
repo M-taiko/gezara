@@ -250,6 +250,16 @@ class ContractService
     public function update(Contract $contract, array $data): Contract
     {
         return DB::transaction(function () use ($contract, $data) {
+            // Special handling for cancelled contracts: only update contract_number and basic info
+            if ($contract->status === 'cancelled') {
+                $updateData = [
+                    'contract_number' => $data['contract_number'] ?? $contract->contract_number,
+                    'notes' => !empty($data['notes']) ? $data['notes'] : $contract->notes,
+                ];
+                $contract->update($updateData);
+                return $contract;
+            }
+
             // Restore animal statuses for existing items
             foreach ($contract->items as $item) {
                 $animal = $item->animal;
