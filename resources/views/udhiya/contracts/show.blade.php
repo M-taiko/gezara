@@ -87,20 +87,22 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition-all">
             🖨️ طباعة الصك
         </a>
-        @if($contract->status !== 'cancelled')
         @php
             $hasGroupItem = $contract->items->some(fn($item) => $item->group_id !== null);
         @endphp
+        @if($contract->status !== 'cancelled')
         @if($hasGroupItem)
         <button onclick="openTransferGroupModal()"
            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all">
             🔄 نقل إلى مجموعة أخرى
         </button>
         @endif
+        @endif
         <a href="{{ route('udhiya.contracts.edit', $contract) }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 transition-all">
-            ✏️ تعديل صك
+            {{ $contract->status === 'cancelled' ? '✏️ تعديل رقم الصك' : '✏️ تعديل صك' }}
         </a>
+        @if($contract->status !== 'cancelled')
         <form action="{{ route('udhiya.contracts.destroy', $contract) }}" method="POST"
               onsubmit="return confirm('هل تريد إلغاء هذا الصك؟')">
             @csrf @method('DELETE')
@@ -109,6 +111,11 @@ $waUrl = $waPhone ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($waMes
                 🚫 إلغاء الصك
             </button>
         </form>
+        @else
+        <a href="{{ route('udhiya.contracts.create') }}?contract_number={{ $contract->contract_number }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-all">
+            ➕ صك جديد برقم نفس
+        </a>
         @endif
     </div>
 </div>

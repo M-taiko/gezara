@@ -4,6 +4,9 @@
     <div>
         <h1 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
             <span class="text-indigo-600 text-4xl">🧾</span> تعديل الصك #{{ $contract->contract_number }}
+            @if($contract->status === 'cancelled')
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-black bg-rose-100 text-rose-700 border border-rose-200">ملغى</span>
+            @endif
         </h1>
         <p class="text-slate-500 font-medium text-sm mt-1">
             <a href="{{ route('udhiya.contracts.index') }}" class="text-indigo-500 hover:text-indigo-700 hover:underline">إدارة الصكوك</a> / إضافة

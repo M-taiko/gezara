@@ -94,6 +94,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1.5">رقم الصك <span class="text-slate-400 font-normal">(اختياري)</span></label>
                         <input type="text" name="contract_number" placeholder="سيتم إنشاء رقم تلقائي إن تركته فارغاً"
+                               value="{{ request('contract_number', '') }}"
                                class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 py-2.5 px-3 text-sm font-semibold text-slate-800 transition-colors">
                         <p class="text-xs text-slate-500 mt-1.5">إذا لم تكتب رقم، سيتم إنشاء رقم تلقائي (CNT-2026-0001)</p>
                     </div>
